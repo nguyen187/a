@@ -1454,7 +1454,7 @@ function runQuiz(el,qs,onDone){
   const wDetail=w=>`<span class="han" style="font-size:1.2rem">${w.h}</span> · <span class="py">${pyHTML(w.p)}</span> · ${esc(w.m)}`;
   function next(){i++;show()}
   function feedback(ok,detail,say,label){
-    const q=qs[i];q.answered=true;S.stats.ans++;if(ok){score++;S.stats.ok++;if(q.w&&S.miss&&S.miss[q.w.h])S.miss[q.w.h]--}else if(q.w){wrong.push(q.w);S.miss=S.miss||{};S.miss[q.w.h]=(S.miss[q.w.h]||0)+1}
+    const q=qs[i];q.answered=true;q.ok=ok;S.stats.ans++;if(ok){score++;S.stats.ok++;if(q.w&&S.miss&&S.miss[q.w.h])S.miss[q.w.h]--}else if(q.w){wrong.push(q.w);S.miss=S.miss||{};S.miss[q.w.h]=(S.miss[q.w.h]||0)+1}
     $("#fbslot").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${label||(ok?"Chính xác":"Chưa đúng")}</b><span class="detail">${detail}</span><span class="spacer"></span>${say?`<button class="say" data-say="${esc(say)}" aria-label="Nghe">${SPK}</button>`:""}<button class="btn primary" id="nextQ">${i+1<qs.length?"Câu tiếp":"Xem kết quả"}</button></div>`;
     if(!ok&&say)speak(say);
     const nb=$("#nextQ");nb.focus();nb.onclick=next;
@@ -1510,6 +1510,21 @@ function runQuiz(el,qs,onDone){
 }
 
 /* ===================== VIEW: HÔM NAY ===================== */
+function runPlacement(){const box=$("#placeBox");if(!box)return;
+  const qs=[];for(let wk=1;wk<=4;wk++){const ws=ALL.filter(w=>DAYS[w.day-1].week===wk&&!w.p.includes("…"));
+    pick(ws,5).forEach(w=>{const q=makeQ(w,ws,["mean","hanzi","py"]);q.stage=wk;qs.push(q)})}
+  runQuiz(box,qs,()=>{const per=[1,2,3,4].map(wk=>qs.filter(q=>q.stage===wk&&q.ok).length);let pass=0;while(pass<4&&per[pass]>=4)pass++;
+    const lastDay=pass*7;
+    box.innerHTML=`<div class="result" style="width:100%"><div class="eyebrow">Kết quả xếp lớp</div>
+      <div class="row" style="gap:8px">${per.map((c,i)=>`<span class="chip num" style="${c>=4?"background:var(--jade-soft);color:var(--jade)":""}">Chặng ${i+1}: ${c}/5</span>`).join("")}</div>
+      <div>${pass?`Bạn nắm khá chắc <b>Chặng 1${pass>1?"–"+pass:""}</b>. Có thể bắt đầu từ <b>Ngày ${lastDay+1}</b>; từ vựng Ngày 1–${lastDay} sẽ vào bộ thẻ ôn ở mức “đã biết” và được rải đều trong 7 ngày tới.`:"Nên bắt đầu từ Ngày 1 để chắc nền tảng pinyin và thanh điệu."}</div>
+      <div class="row">${pass?`<button class="btn primary" id="placeApply">Bắt đầu từ Ngày ${lastDay+1}</button>`:""}<button class="btn" id="placeNo">${pass?"Vẫn học từ Ngày 1":"Bắt đầu Ngày 1"}</button></div></div>`;
+    $("#placeNo").onclick=()=>{location.hash="#day-1"};
+    const ap=$("#placeApply");if(ap)ap.onclick=()=>{const t=today();
+      DAYS.filter(d=>d.n<=lastDay).forEach(d=>{S.done[d.n]=true;S.best[d.n]=Math.max(S.best[d.n]||0,80);d.words.forEach(w=>{if(!S.srs[w.h])S.srs[w.h]={b:2,d:t+1+Math.floor(Math.random()*7)}})});
+      touchStreak();save();updateChrome();toast(`Đã đánh dấu Ngày 1–${lastDay}. Bắt đầu Ngày ${lastDay+1} thôi!`);location.hash="#day-"+(lastDay+1)};
+  });
+}
 function heat(){const t=today();let out="";for(let i=34;i>=0;i--){const d=t-i,c=S.log[d]||0,lv=!c?0:c>=20?4:c>=10?3:c>=4?2:1;
   out+=`<i class="h${lv}${i===0?" today":""}" title="${new Date(d*DAYMS).toLocaleDateString("vi-VN",{timeZone:"UTC"})}: ${c} hoạt động"></i>`}return out}
 function viewToday(){
@@ -1532,6 +1547,7 @@ function viewToday(){
   </section>
   <section class="card" style="display:grid;gap:10px"><div class="row"><span class="eyebrow">35 ngày gần nhất</span><span class="spacer"></span><span class="muted" style="font-size:.8rem">Ô càng đậm là ngày học càng nhiều</span></div>
     <div class="heat" aria-label="Lịch hoạt động 35 ngày">${heat()}</div></section>
+  ${Object.keys(S.done).length?"":`<section class="card sect" id="placeBox"><div class="row"><div style="min-width:0;flex:1 1 260px"><div class="eyebrow">Đã biết một ít tiếng Trung?</div><h3>Làm bài xếp lớp 20 câu để bỏ qua phần đã biết</h3><div class="muted" style="font-size:.88rem;margin-top:4px">Mỗi chặng 5 câu. Chặng nào đúng từ 4/5 trở lên có thể bỏ qua; từ vựng của chặng đó vẫn vào bộ thẻ ôn để bạn giữ trí nhớ.</div></div><button class="btn" id="placeGo">Làm bài xếp lớp</button></div></section>`}
   <section class="two">
     <div class="card lesson-card">
       <div class="eyebrow">${allDone?"Đã hoàn thành khóa":"Bài học hôm nay"}</div>
@@ -1565,6 +1581,7 @@ function viewToday(){
       <div class="stat"><b>${Object.keys(S.speak||{}).length}</b><span>câu đã luyện nói</span></div></div>
     <div class="muted" style="font-size:.84rem">${remote?"Tiến độ được lưu vào tài khoản của bạn, chỉ bạn xem được, mở trên máy khác vẫn còn.":"Tiến độ đang được lưu trên trình duyệt này."}</div>
     <div id="resetBox" class="row"><button class="btn ghost" id="resetBtn">Đặt lại toàn bộ tiến độ</button></div></section>`;
+  const pg=$("#placeGo");if(pg)pg.onclick=runPlacement;
   $("#resetBtn").onclick=()=>{$("#resetBox").innerHTML=`<span><b>Xóa toàn bộ tiến độ, thẻ ôn và chuỗi ngày?</b> Không thể hoàn tác.</span><button class="btn" id="resetYes" style="color:var(--bad);border-color:var(--bad)">Xóa hết</button><button class="btn" id="resetNo">Giữ lại</button>`;
     $("#resetNo").onclick=viewToday;$("#resetYes").onclick=()=>{S=blank();save();updateChrome();toast("Đã đặt lại tiến độ.");viewToday()}};
 }
