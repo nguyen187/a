@@ -2117,7 +2117,7 @@ const RQ={
 38:[["Bức ảnh được treo ở đâu?","Trên tường","Trên bàn","Trong phòng ngủ"],["Trong ảnh, mẹ đang làm gì?","Ngồi","Đứng","Chạy"],["Em trai cầm gì trong tay?","Một quả táo","Một cuốn sách","Một chiếc mũ"]],
 39:[["Minh đến Bắc Kinh du học khi nào?","Năm ngoái","Năm nay","Tuần trước"],["Lúc mới đến, Minh đọc không hiểu cái gì?","Thực đơn","Bản đồ","Sách giáo khoa"],["Quán ăn cạnh trường thế nào?","Rẻ và sạch","Đắt nhưng ngon","Xa và đông"]]};
 function rcHTML(n){return RQ[n]?`<div class="row"><button class="btn" data-rc="${n}">Câu hỏi đọc hiểu (${RQ[n].length})</button></div><div id="rcBox"></div>`:""}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-rc]");if(!b)return;const n=+b.dataset.rc,box=$("#rcBox");
+document.addEventListener("click",e=>{const b=e.target.closest("[data-rc]");if(!b)return;const n=isNaN(+b.dataset.rc)?b.dataset.rc:+b.dataset.rc,box=$("#rcBox");
   const qs=RQ[n].map(([q,a,x,y])=>({type:"rc",prompt:`<span class="eyebrow">Đọc hiểu</span><div class="m">${esc(q)}</div>`,opts:shuffle([{html:esc(a),ok:true},{html:esc(x),ok:false},{html:esc(y),ok:false}]),explain:"Đáp án: "+esc(a)}));
   runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Đọc hiểu</div><div class="score num">${sc}/${tot}</div><div>${sc===tot?"Hiểu trọn bài, tuyệt vời!":"Đọc lại bài, chạm vào từ chưa rõ để tra nghĩa rồi thử lại."}</div><button class="btn" data-rc="${n}">Làm lại</button></div>`})});
 const CULTURE={
@@ -2257,7 +2257,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-bm]");if(!
   if(e.target.closest("#savedBox")){const box=$("#savedBox");if(box)box.outerHTML=savedHTML()}},true);
 function randReadHTML(){const ds=gramDays().filter(d=>d.rds.length);if(!ds.length)return"";
   return `<div class="card sect" id="rrCard"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Đọc ngẫu nhiên</div><h3>Ôn một bài đọc đã học</h3>
-  <div class="muted" style="font-size:.86rem">Pinyin được ẩn sẵn để bạn luyện đọc chữ Hán. Chạm vào từ chưa nhớ để tra, rồi làm câu hỏi đọc hiểu.</div></div><div class="row"><button class="btn primary" id="rrGo">Bốc một bài</button><button class="btn" id="rrListen" ${canSpeak()?"":"disabled title=\"Cần giọng đọc tiếng Trung\""}>Nghe hiểu</button></div></div><div id="rrBox"></div></div>`}
+  <div class="muted" style="font-size:.86rem">Pinyin được ẩn sẵn để bạn luyện đọc chữ Hán. Chạm vào từ chưa nhớ để tra, rồi làm câu hỏi đọc hiểu.</div></div><div class="row"><button class="btn primary" id="rrGo">Bốc một bài</button><button class="btn" id="rrListen" ${canSpeak()?"":"disabled title=\"Cần giọng đọc tiếng Trung\""}>Nghe hiểu</button>${aiNS&&!aiOff?`<button class="btn" id="rrAI">Bài mới do AI viết</button>`:""}</div></div><div id="rrBox"></div></div>`}
 document.addEventListener("click",e=>{const lis=e.target.closest("#rrListen");if(!e.target.closest("#rrGo")&&!lis)return;const ds=gramDays().filter(d=>d.rds.length);if(!ds.length)return;
   const box=$("#rrBox"),prev=box.dataset.day;let d=ds[Math.floor(Math.random()*ds.length)];if(ds.length>1)while(String(d.n)===prev)d=ds[Math.floor(Math.random()*ds.length)];
   box.dataset.day=d.n;box.innerHTML=readingHTML(d).replace('Bài đọc · Chặng','Ngày '+d.n+' · Chặng');wireReading(d);const c=$("#rdPy");if(c){c.checked=true;c.dispatchEvent(new Event("change"))}
@@ -2509,6 +2509,18 @@ async function askRun(){const inp=$("#askIn"),out=$("#askOut");if(!inp||!out||!a
   go.disabled=false}
 document.addEventListener("click",e=>{if(e.target.closest("#askGo"))askRun()});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="askIn"){e.preventDefault();askRun()}});
+
+async function aiReading(){const box=$("#rrBox"),btn=$("#rrAI");if(!box||!aiNS)return;btn.disabled=true;box.classList.remove("blind");box.dataset.day="";
+  const ws=Object.keys(S.srs).filter(h=>BYH[h]);const weak=weakList().slice(0,8).map(x=>x.w.h);
+  const known=(ws.length>=15?ws:DAYS.slice(0,4).flatMap(d=>d.words.map(w=>w.h))).join("、");
+  box.innerHTML=`<p class="muted">AI đang viết một bài đọc chỉ dùng từ bạn đã học…</p>`;
+  const prompt=`Viết một bài đọc tiếng Trung ngắn cho người Việt trình độ ${chatLevel()}: 5-7 câu, mỗi câu dưới 18 chữ Hán, nội dung đời thường, có cốt truyện nhỏ. CHỈ dùng các từ sau (cùng số đếm, đại từ, trợ từ 的 了 吗 呢 吧): ${known}. Cố gắng dùng các từ người học hay sai: ${weak.join("、")||"(không có)"}. Thêm 3 câu hỏi đọc hiểu bằng tiếng Việt, mỗi câu có 1 đáp án đúng và 2 đáp án sai hợp lý (tiếng Việt, ngắn). Trả về JSON: {"title":"tiêu đề tiếng Việt ngắn","lines":[["câu chữ Hán","pinyin có dấu","nghĩa tiếng Việt"]],"qs":[["câu hỏi","đáp án đúng","sai 1","sai 2"]]}`;
+  try{const r=await aiNS.json(prompt,{cache:false});const lines=(r.lines||[]).filter(l=>Array.isArray(l)&&l[0]).map(l=>[String(l[0]).replace(/[<>&"]/g,""),String(l[1]||"").replace(/[<>&"]/g,""),String(l[2]||"").replace(/[<>&"]/g,"")]).slice(0,10);
+    if(!lines.length)throw {code:"empty"};RQ.ai=(r.qs||[]).filter(q=>Array.isArray(q)&&q.length>=4).map(q=>q.slice(0,4).map(String)).slice(0,4);if(!RQ.ai.length)delete RQ.ai;
+    const d={n:"ai",rds:lines,rdt:String(r.title||"Bài đọc mới"),week:"AI"};box.innerHTML=readingHTML(d).replace("Bài đọc · Chặng AI","Bài đọc do AI viết riêng cho bạn");wireReading(d);touchStreak(2);save();updateChrome()}
+  catch(err){const c=err&&err.code;if(c==="not_granted"){aiOff=true;btn.remove();box.innerHTML="";return}box.innerHTML=`<p class="muted">${c==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa tạo được bài đọc, thử lại nhé."}</p>`}
+  if(btn.isConnected){btn.disabled=false;btn.textContent="Viết bài khác"}}
+document.addEventListener("click",e=>{if(e.target.closest("#rrAI"))aiReading()});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
