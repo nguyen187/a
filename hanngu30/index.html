@@ -1720,7 +1720,7 @@ function makeQ(w,pool,types){
     const close=sim.filter(x=>pyBare(x.p)===pyBare(w.p)),near=sim.filter(x=>pyBare(x.p)[0]===pyBare(w.p)[0]);
     const same=Math.random()<.5,alt=pick(close.length?close:near.length?near:sim,1)[0];if(!same&&!alt)return makeQ(w,pool,types.filter(t=>t!=="tf"));
     const shown=same?w:alt;
-    return {type,w,listen:true,prompt:`<span class="eyebrow">Nghe rồi chọn Đúng / Sai</span><button class="btn primary" data-say="${esc(w.h)}">${SPK} Nghe lại</button><div class="h" style="margin-top:8px">${shown.h}</div><div class="muted" style="font-size:.86rem">Từ bạn nghe có phải là từ này không?</div>`,
+    return {type,w,shown,listen:true,prompt:`<span class="eyebrow">Nghe rồi chọn Đúng / Sai</span><button class="btn primary" data-say="${esc(w.h)}">${SPK} Nghe lại</button><div class="h" style="margin-top:8px">${shown.h}</div><div class="muted" style="font-size:.86rem">Từ bạn nghe có phải là từ này không?</div>`,
       opts:[{html:"Đúng",ok:same},{html:"Sai",ok:!same}]}}
   const ds=pick(others,3);
   if(type==="mean")return {type,w,prompt:`<span class="eyebrow">Nghĩa là gì?</span><div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div>`,
@@ -1794,7 +1794,7 @@ function runQuiz(el,qs,onDone,resume){
   }
   function pickOpt(k){const q=qs[i];if(q.answered)return;const ok=q.opts[k].ok;
     el.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;if(q.opts[j].ok)b.classList.add("ok");else if(j===k)b.classList.add("no")});
-    feedback(ok,q.type==="sandhi"?q.explain:q.w?wDetail(q.w):(q.explain||""),q.w?q.w.h:q.say)}
+    feedback(ok,q.type==="sandhi"?q.explain:q.w?(q.type==="tf"&&q.shown&&q.shown.h!==q.w.h?`<div>Bạn nghe: ${wDetail(q.w)}</div><div style="font-size:.9rem">Trên màn hình: ${wDetail(q.shown)}</div>`:wDetail(q.w)):(q.explain||""),q.w?q.w.h:q.say)}
   function showType(q){
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt"><span class="eyebrow">Gõ pinyin của từ này</span><div class="h">${q.w.h}</div><div class="muted">${esc(q.w.m)}</div></div>
       <form class="typein" id="tf"><input id="typ" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="vd: ni3hao3 hoặc nǐhǎo" aria-label="Pinyin"><button class="btn primary">Kiểm tra</button></form>
