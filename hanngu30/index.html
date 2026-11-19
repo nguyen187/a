@@ -1709,6 +1709,10 @@ function makeQ(w,pool,types){
     return {type,w,prompt:`<span class="eyebrow">Chọn pinyin đúng</span><div class="h">${w.h}</div><div class="muted">${esc(w.m)}</div>`,
       opts:shuffle([{html:`<span class="py">${pyHTML(w.p)}</span>`,ok:true},...v.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])};
   }
+  if(type==="hv"){const hvo=others.filter(x=>x.v&&x.v!==w.v&&[...x.h].length===[...w.h].length);const ds2=pick(hvo.length>=3?hvo:others.filter(x=>x.v&&x.v!==w.v),3);
+    if(!w.v||ds2.length<3)return makeQ(w,pool,types.filter(t=>t!=="hv"));
+    return {type,w,prompt:`<span class="eyebrow">Âm Hán Việt</span><div class="m">“${esc(w.v)}”</div><div class="muted" style="font-size:.86rem">Từ nào đọc Hán Việt như trên?</div>`,
+      opts:shuffle([{html:`<span class="hz">${w.h}</span>`,ok:true},...ds2.map(x=>({html:`<span class="hz">${x.h}</span>`,ok:false}))])}}
   const ds=pick(others,3);
   if(type==="mean")return {type,w,prompt:`<span class="eyebrow">Nghĩa là gì?</span><div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div>`,
     opts:shuffle([{html:esc(w.m),ok:true},...ds.map(x=>({html:esc(x.m),ok:false}))])};
@@ -1743,6 +1747,7 @@ function makeClozeQ(ex,pool,prefer){const [zh,py,vi]=ex;if(!zh||zh.includes("—
   return {type:"cloze",w,prompt:`<span class="eyebrow">Điền vào chỗ trống</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div><div class="muted">${esc(vi)}</div>`,
     opts:shuffle([{html:`<span class="hz">${w.h}</span>`,ok:true},...ds.map(o=>({html:`<span class="hz">${o.h}</span>`,ok:false}))])}}
 function exPool(d){return d.words.length?d.exs.concat(d.rds):d.ext?DAYS.slice(30,39).flatMap(x=>x.exs.concat(x.rds)):DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
+function hvUseful(w){const v=(w.v||"").toLowerCase().normalize("NFC"),m=(w.m||"").toLowerCase().normalize("NFC");return v&&!/\(|…/.test(v)&&[...w.h].length>=2&&v.split(/\s+/).length===[...w.h].length&&v!==m}
 function buildQuiz(words,pool,count,exs){
   exs=exs||[];
   const nEx=exs.length?(count>=30?6:count>=20?5:4):0;const prefer=new Set(words.map(w=>w.h));
@@ -1750,7 +1755,7 @@ function buildQuiz(words,pool,count,exs){
   const types=["mean","hanzi","py","type"].concat(canSpeak()?["listen"]:[]);
   const n=count-oq.length;
   let list=shuffle(words);while(list.length<n&&words.length)list=list.concat(shuffle(words));
-  const wq=list.slice(0,n).map(w=>makeQ(w,pool,w.p.includes("…")?types.filter(t=>t!=="type"):types));
+  const wq=list.slice(0,n).map(w=>{let t=w.p.includes("…")?types.filter(t=>t!=="type"):types;if(w.v&&hvUseful(w))t=t.concat("hv");return makeQ(w,pool,t)});
   return shuffle(wq.concat(oq));
 }
 let QZ=null;
