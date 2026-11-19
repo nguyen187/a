@@ -1200,6 +1200,12 @@ const READ={
 因为我每天都练习，所以我比以前说得更流利。|Yīnwèi wǒ měitiān dōu liànxí, suǒyǐ wǒ bǐ yǐqián shuō de gèng liúlì.|Vì ngày nào tôi cũng luyện tập nên tôi nói lưu loát hơn trước.
 如果明年有机会，我就去中国旅游。|Rúguǒ míngnián yǒu jīhuì, wǒ jiù qù Zhōngguó lǚyóu.|Nếu năm sau có cơ hội, tôi sẽ đi du lịch Trung Quốc.
 我已经把护照准备好了！|Wǒ yǐjīng bǎ hùzhào zhǔnbèi hǎo le!|Tôi đã chuẩn bị xong hộ chiếu rồi!`],
+35:["Thói quen tập thể dục",`去年我越来越胖，所以我决定每天锻炼身体。|Qùnián wǒ yuè lái yuè pàng, suǒyǐ wǒ juédìng měitiān duànliàn shēntǐ.|Năm ngoái tôi ngày càng béo, nên tôi quyết định ngày nào cũng tập thể dục.
+每天早上起床以后，我马上去跑步。|Měitiān zǎoshang qǐchuáng yǐhòu, wǒ mǎshàng qù pǎobù.|Mỗi sáng ngủ dậy xong, tôi đi chạy bộ ngay.
+开始的时候很累，但是现在我已经习惯了。|Kāishǐ de shíhou hěn lèi, dànshì xiànzài wǒ yǐjīng xíguàn le.|Lúc đầu rất mệt, nhưng bây giờ tôi đã quen rồi.
+我的身体越来越健康，也瘦了五公斤。|Wǒ de shēntǐ yuè lái yuè jiànkāng, yě shòu le wǔ gōngjīn.|Sức khỏe của tôi ngày càng tốt, tôi cũng gầy đi năm cân.
+医生说，只要我每天坚持，就会越来越好。|Yīshēng shuō, zhǐyào wǒ měitiān jiānchí, jiù huì yuè lái yuè hǎo.|Bác sĩ nói chỉ cần tôi kiên trì mỗi ngày thì sẽ ngày càng tốt.
+现在我的朋友也跟我一起锻炼。|Xiànzài wǒ de péngyou yě gēn wǒ yìqǐ duànliàn.|Bây giờ bạn tôi cũng tập cùng tôi.`],
 39:["Cuộc sống du học ở Bắc Kinh",`我是去年来北京留学的。|Wǒ shì qùnián lái Běijīng liúxué de.|Tôi đến Bắc Kinh du học từ năm ngoái.
 刚来的时候，我连菜单都看不懂。|Gāng lái de shíhou, wǒ lián càidān dōu kàn bu dǒng.|Lúc mới đến, tôi ngay cả thực đơn cũng đọc không hiểu.
 现在我的汉语越来越好了。|Xiànzài wǒ de Hànyǔ yuè lái yuè hǎo le.|Bây giờ tiếng Trung của tôi ngày càng tốt.
@@ -1268,7 +1274,10 @@ const EXTRA=`辣|là|cay|lạt
 几位|jǐ wèi|mấy vị, mấy người|kỷ vị
 碗|wǎn|bát|oản
 一共|yí gòng|tổng cộng|nhất cộng
-分钟|fēn zhōng|phút (khoảng thời gian)|phân chung`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
+分钟|fēn zhōng|phút (khoảng thời gian)|phân chung
+跑步|pǎo bù|chạy bộ|bào bộ
+公斤|gōng jīn|ki-lô-gam (cân)|công cân
+坚持|jiān chí|kiên trì|kiên trì`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
 EXTRA.forEach(w=>{if(!BYH[w.h])BYH[w.h]=w});
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
 /* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
@@ -1696,13 +1705,14 @@ const RQ={
 21:[["Họ đến Bắc Kinh bằng gì?","Máy bay","Tàu hỏa","Taxi"],["Thời tiết ở Bắc Kinh thế nào?","Lạnh, có tuyết rơi","Nóng, nắng to","Mưa to"],["Về nhà, Minh gặp chuyện gì?","Bị cảm, hơi khó chịu","Mất hộ chiếu","Bị lạc đường"]],
 28:[["Minh học tiếng Trung được bao lâu?","4 tuần","4 tháng","4 năm"],["Vì sao Minh nói lưu loát hơn trước?","Ngày nào cũng luyện tập","Có thầy dạy riêng","Đang sống ở Trung Quốc"],["Minh đã chuẩn bị xong cái gì?","Hộ chiếu","Vé máy bay","Hành lý"]],
 29:[["A đã học tiếng Trung bao lâu?","30 ngày","3 tháng","3 năm"],["A đã đến Trung Quốc chưa?","Chưa từng đến","Đã đến rồi","Đang ở đó"],["Hai người hẹn sẽ cùng làm gì?","Đi Trường Thành, ăn vịt quay","Đi Thượng Hải","Cùng học tiếng Anh"]],
+35:[["Vì sao người viết quyết định tập thể dục?","Vì ngày càng béo","Vì bác sĩ bắt buộc","Vì muốn thi chạy"],["Người viết đi chạy bộ lúc nào?","Ngay sau khi ngủ dậy","Buổi tối","Cuối tuần"],["Sau một thời gian tập, kết quả thế nào?","Khỏe hơn, gầy đi 5 cân","Bị ốm phải nghỉ","Tăng thêm 5 cân"]],
 39:[["Minh đến Bắc Kinh du học khi nào?","Năm ngoái","Năm nay","Tuần trước"],["Lúc mới đến, Minh đọc không hiểu cái gì?","Thực đơn","Bản đồ","Sách giáo khoa"],["Quán ăn cạnh trường thế nào?","Rẻ và sạch","Đắt nhưng ngon","Xa và đông"]]};
 function rcHTML(n){return RQ[n]?`<div class="row"><button class="btn" data-rc="${n}">Câu hỏi đọc hiểu (${RQ[n].length})</button></div><div id="rcBox"></div>`:""}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rc]");if(!b)return;const n=+b.dataset.rc,box=$("#rcBox");
   const qs=RQ[n].map(([q,a,x,y])=>({type:"rc",prompt:`<span class="eyebrow">Đọc hiểu</span><div class="m">${esc(q)}</div>`,opts:shuffle([{html:esc(a),ok:true},{html:esc(x),ok:false},{html:esc(y),ok:false}]),explain:"Đáp án: "+esc(a)}));
   runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Đọc hiểu</div><div class="score num">${sc}/${tot}</div><div>${sc===tot?"Hiểu trọn bài, tuyệt vời!":"Đọc lại bài, chạm vào từ chưa rõ để tra nghĩa rồi thử lại."}</div><button class="btn" data-rc="${n}">Làm lại</button></div>`})});
 function readingHTML(d){if(!d.rds.length)return"";
-  return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc cuối chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
+  return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc · Chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
   <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div>
   <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
