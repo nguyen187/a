@@ -2259,6 +2259,13 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-rad]");if(
   box.innerHTML=`<div class="card" style="margin-top:12px"><div class="row"><span class="han" style="font-size:1.8rem">${r}</span><div style="min-width:0;flex:1"><div class="eyebrow">Bộ ${esc(m)}</div><div class="muted" style="font-size:.84rem">${rows.length} chữ trong khóa · <span class="num">${rows.filter(x=>S.srs[x[1].h]).length}</span> chữ bạn đã học</div></div></div>
   <div class="dlist" style="margin-top:10px">${rows.map(([c,w])=>`<div class="drow" style="grid-template-columns:44px 1fr auto;align-items:center"><span class="han" style="font-size:1.7rem;${S.srs[w.h]?"":"opacity:.55"}">${c}</span><div style="min-width:0"><span class="han">${esc(w.h)}</span> <span class="muted">${esc(w.p)}</span><div style="font-size:.86rem;overflow-wrap:anywhere">${esc(w.m)}${w.v?` <span class="muted">· ${esc(w.v)}</span>`:""}</div></div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe ${esc(w.h)}">${SPK}</button></div>`).join("")}</div></div>`;
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
+
+document.addEventListener("click",e=>{if(!e.target.closest("#trapGo"))return;const box=$("#trapQuiz");if(!box)return;
+  const qs=shuffle(TRAPS.slice()).slice(0,10).map(([h,p,hv,wrong,right])=>{const oth=pick(TRAPS.filter(t=>t[0]!==h),2).map(t=>t[4]);
+    return {type:"trap",w:BYH[h],prompt:`<span class="eyebrow">Bẫy Hán Việt · đọc là “${esc(hv)}”</span><div class="h">${h}</div><div class="py">${pyHTML(p)}</div><div class="muted" style="font-size:.86rem">Trong tiếng Trung hiện đại, từ này nghĩa là gì?</div>`,
+      opts:shuffle([{html:esc(right),ok:true},{html:esc(wrong),ok:false},...oth.map(x=>({html:esc(x),ok:false}))])}});
+  runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=8?"Bạn đã tránh được hầu hết các bẫy!":"Đọc lại danh sách bên trên: âm Hán Việt giúp đoán nghĩa, nhưng không phải lúc nào cũng đúng."}</p><button class="btn" id="trapGo">Làm lại</button></div>`});
+  box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2656,7 +2663,19 @@ const TRAPS=[["东西","dōngxi","đông tây","phương đông và phương tâ
 ["大家","dàjiā","đại gia","người giàu có","mọi người"],
 ["先生","xiānsheng","tiên sinh","thầy giáo (cách gọi xưa)","ông, ngài; chồng"],
 ["点心","diǎnxin","điểm tâm","bữa sáng","bánh ngọt, đồ ăn nhẹ"],
-["老婆","lǎopo","lão bà","bà già","vợ (khẩu ngữ, thân mật)"]];
+["老婆","lǎopo","lão bà","bà già","vợ (khẩu ngữ, thân mật)"],
+["困难","kùnnan","khốn nan","khốn nạn, đồ tồi","khó khăn"],
+["表情","biǎoqíng","biểu tình","biểu tình, tuần hành","nét mặt, vẻ mặt"],
+["方便","fāngbiàn","phương tiện","phương tiện đi lại","thuận tiện, tiện"],
+["床","chuáng","sàng","cái sàng gạo","cái giường"],
+["地道","dìdao","địa đạo","đường hầm","chính gốc, chuẩn vị"],
+["算了","suànle","toán liễu","đã tính toán xong","thôi, bỏ đi"],
+["故事","gùshi","cố sự","chuyện đã cũ","câu chuyện, truyện kể"],
+["热闹","rènao","nhiệt náo","nóng nực","đông vui, náo nhiệt"],
+["客气","kèqi","khách khí","không khí của khách","khách sáo, lịch sự"],
+["丈夫","zhàngfu","trượng phu","bậc anh hùng","chồng"],
+["生活","shēnghuó","sinh hoạt","sinh hoạt tập thể","cuộc sống"],
+["小姐","xiǎojiě","tiểu thư","tiểu thư nhà giàu","cô (gọi phụ nữ trẻ)"]];
 const PAIRS=[
  {a:["知道","zhīdào","biết (thông tin, sự việc)"],b:["认识","rènshi","quen biết (người, chữ)"],note:"知道 + thông tin; 认识 + người hoặc chữ.",q:[["我不___他叫什么名字。",0],["我___你的老师，她人很好。",1]]},
  {a:["会","huì","biết (kỹ năng học được)"],b:["能","néng","có thể (điều kiện, khả năng)"],note:"会: đã học nên biết làm; 能: hoàn cảnh cho phép.",q:[["我___说一点儿汉语。",0],["我今天有事，不___去。",1]]},
@@ -2799,6 +2818,7 @@ function pairQuestions(){const out=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>{
   return shuffle(out).slice(0,10)}
 function trapsHTML(){return `<section class="sect" id="trapSec">
   <details class="card" id="sec-traps"><summary><b>Bẫy Hán Việt</b> <span class="muted">· ${TRAPS.length} từ có âm Hán Việt dễ khiến bạn hiểu sai</span></summary>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="trapGo">Luyện 10 bẫy Hán Việt</button></div><div id="trapQuiz"></div>
     <div class="dlist" style="margin-top:12px">${TRAPS.map(([h,p,hv,wrong,right])=>`<div class="drow" style="grid-template-columns:minmax(64px,auto) 1fr auto"><span class="han dh">${h}</span><div style="min-width:0"><div class="py">${p}</div><div class="hvs" style="font-size:.74rem">Hán Việt: ${hv}</div><div class="muted" style="font-size:.86rem">Không phải: <s>${esc(wrong)}</s></div><div style="font-size:.92rem">Mà là: <b>${esc(right)}</b></div></div><button class="say" data-say="${h}" aria-label="Nghe">${SPK}</button></div>`).join("")}</div></details>
   <details class="card" id="pairBox"><summary><b>Cặp từ dễ nhầm</b> <span class="muted">· ${PAIRS.length} cặp người Việt hay dùng sai</span></summary>
     <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
