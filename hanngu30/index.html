@@ -254,6 +254,20 @@ details.card summary::marker{color:var(--jade)}
 .heat i.h4{background:var(--jade)}
 .heat i.today{outline:2px solid var(--seal);outline-offset:1px}
 @media (max-width:520px){.drow{grid-template-columns:minmax(48px,auto) 1fr auto}.dmeta{display:none}}
+.bnav{display:none}
+@media (max-width:600px){
+  nav.tabs{display:none}
+  .bnav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+  .bnav a{display:grid;justify-items:center;gap:2px;padding:8px 0 6px;font-size:.68rem;font-weight:600;color:var(--muted);text-decoration:none;position:relative}
+  .bnav a[aria-current="page"]{color:var(--jade)}
+  .bnav svg{width:22px;height:22px}
+  .bnav .badge{position:absolute;top:3px;left:calc(50% + 5px);background:var(--seal);color:#fff;border-radius:99px;font-size:.62rem;padding:0 5px;line-height:16px;font-variant-numeric:tabular-nums}
+  main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  .lkbar{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+  #lk:not([hidden]) + .toast{bottom:calc(190px + env(safe-area-inset-bottom,0px))}
+}
 @media (max-width:720px){
   .hero,.two{grid-template-columns:1fr}
   .stats{grid-template-columns:repeat(2,1fr)}
@@ -289,6 +303,7 @@ details.card summary::marker{color:var(--jade)}
 <main class="wrap" id="app"></main>
 <div class="lkbar" id="lk" hidden></div>
 <div class="toast" id="toast" hidden></div>
+<nav class="bnav" id="bnav" aria-label="Điều hướng"><a href="#today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Hôm nay</span></a><a href="#plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Lộ trình</span></a><a href="#review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v11"/></svg><span>Ôn tập</span><b class="badge" id="dueBadge" hidden></b></a><a href="#dict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg><span>Từ điển</span></a><a href="#tones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12c3-6 5-6 7 0s4 6 7 0 4-6 6 0"/></svg><span>Phát âm</span></a><a href="#write"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg><span>Viết</span></a></nav>
 
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js"></script>
 <script>
@@ -2058,7 +2073,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 });
 
 /* ===================== ĐIỀU HƯỚNG ===================== */
-function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày`}
+function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày`;const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
   document.onkeydown=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;
@@ -2066,7 +2081,7 @@ function route(){
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
   else{lastDay=null;if(h==="plan")viewPlan();else if(h==="review"){revQueue=null;viewReview()}else if(h==="tones")viewTones();else if(h==="write")viewWrite();else if(h==="dict")viewDict();else{key="today";viewToday()}}
-  document.querySelectorAll("#nav a").forEach(a=>a.setAttribute("aria-current",a.getAttribute("href")==="#"+key?"page":"false"));
+  document.querySelectorAll("#nav a, #bnav a").forEach(a=>a.setAttribute("aria-current",a.getAttribute("href")==="#"+key?"page":"false"));
   updateChrome();refreshAudioHints();
 }
 window.addEventListener("hashchange",()=>{route();window.scrollTo({top:0})});
