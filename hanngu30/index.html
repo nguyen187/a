@@ -2298,7 +2298,13 @@ function trShow(){const box=$("#trWork");if(!box||!TR)return;
     $("#trAns").innerHTML=`<div class="ex" style="margin-top:12px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span></div></div>
      ${mark?`<div class="muted" style="font-size:.84rem;margin-top:6px">Khớp ${Math.round(lm.score*100)}%: <span class="zh">${mark}</span></div>`:""}
      ${auto===true?`<p style="margin:10px 0 0"><b>Chính xác!</b></p>`:""}
+     ${auto!==true&&t&&aiNS&&!aiOff?`<div style="margin-top:8px"><button class="btn ghost" id="trAI">Câu của mình có đúng không? Nhờ gia sư chấm</button><div id="trAIo" aria-live="polite" style="white-space:pre-wrap;font-size:.92rem;line-height:1.55;margin-top:6px"></div></div>`:""}
      <div class="row" style="margin-top:12px">${auto===true?`<button class="btn primary" data-tr="1">Tiếp</button>`:`<button class="btn" data-tr="0">Chưa đúng</button><button class="btn primary" data-tr="1">Đúng ý</button>`}</div>`;
+    const ab=$("#trAI");if(ab)ab.onclick=async()=>{ab.disabled=true;const o=$("#trAIo");o.textContent="Gia sư đang chấm…";
+      const prompt=`Người học tiếng Trung (người Việt, ${chatLevel()}) dịch câu tiếng Việt "${v}" thành: "${t}". Đáp án mẫu: "${zh}" (${p}). Hãy chấm bằng tiếng Việt, tối đa 70 từ: dòng đầu chỉ ghi "ĐÚNG", "GẦN ĐÚNG" hoặc "SAI"; sau đó giải thích ngắn lỗi (nếu có) và đưa câu sửa của chính người học. Chữ Hán kèm pinyin. Chấp nhận cách diễn đạt khác nếu tự nhiên và đúng nghĩa. Nếu người học gõ pinyin thì chấm theo pinyin. Không dùng markdown.`;
+      try{const r=await aiNS(prompt,{modelTier:"quick",onText:({text})=>{o.textContent=text}});o.textContent=r.text;
+        const v1=(r.text.split("\n")[0]||"").toUpperCase();if(/^\s*ĐÚNG/.test(v1)){const y=document.querySelector('#trAns [data-tr="1"]');if(y){y.textContent="Đúng ý (gia sư xác nhận)";y.classList.add("primary")}}}
+      catch(err){const c=err&&err.code;if(c==="not_granted"){aiOff=true;ab.remove();o.textContent=""}else{o.textContent=c==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa chấm được, thử lại.";ab.disabled=false}}};
     say(zh)}};
 document.addEventListener("click",e=>{
   if(e.target.closest("#trGo")){const L=transPool();if(!L.length)return;TR={q:shuffle(L.slice()).slice(0,8),i:0,ok:0};trShow();return}
