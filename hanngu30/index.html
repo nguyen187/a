@@ -329,8 +329,8 @@ details.card summary::marker{color:var(--jade)}
   </div>
 </header>
 <main class="wrap" id="app"></main>
-<div class="lkbar" id="lk" hidden></div>
-<div class="toast" id="toast" hidden></div>
+<div class="lkbar" id="lk" hidden role="dialog" aria-live="polite" aria-label="Tra từ"></div>
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 <nav class="bnav" id="bnav" aria-label="Điều hướng"><a href="#today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Hôm nay</span></a><a href="#plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Lộ trình</span></a><a href="#review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v11"/></svg><span>Ôn tập</span><b class="badge" id="dueBadge" hidden></b></a><a href="#dict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg><span>Từ điển</span></a><a href="#tones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12c3-6 5-6 7 0s4 6 7 0 4-6 6 0"/></svg><span>Phát âm</span></a><a href="#write"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg><span>Viết</span></a></nav>
 
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js"></script>
@@ -1727,7 +1727,7 @@ function runQuiz(el,qs,onDone){
     if(q.type==="type")return showType(q);
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt">${q.prompt}</div>
       <div class="opts">${q.opts.map((o,k)=>`<button class="opt" data-k="${k}"><span class="k">${k+1}</span><span>${o.html}</span></button>`).join("")}</div>
-      <div id="fbslot"></div></div>`;
+      <div id="fbslot" aria-live="polite"></div></div>`;
     if(q.listen)setTimeout(()=>speak(q.w.h),150);if(q.autoSay)setTimeout(()=>speak(q.autoSay),150);
     el.querySelectorAll(".opt").forEach(b=>b.onclick=()=>pickOpt(+b.dataset.k));
   }
@@ -1737,7 +1737,7 @@ function runQuiz(el,qs,onDone){
   function showType(q){
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt"><span class="eyebrow">Gõ pinyin của từ này</span><div class="h">${q.w.h}</div><div class="muted">${esc(q.w.m)}</div></div>
       <form class="typein" id="tf"><input id="typ" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="vd: ni3hao3 hoặc nǐhǎo" aria-label="Pinyin"><button class="btn primary">Kiểm tra</button></form>
-      <div class="muted" style="font-size:.84rem">Gõ số thanh 1–4 sau mỗi âm tiết, thanh nhẹ không cần số. Dùng v thay cho ü (nv3 = nǚ).</div><div id="fbslot"></div></div>`;
+      <div class="muted" style="font-size:.84rem">Gõ số thanh 1–4 sau mỗi âm tiết, thanh nhẹ không cần số. Dùng v thay cho ü (nv3 = nǚ).</div><div id="fbslot" aria-live="polite"></div></div>`;
     const inp=$("#typ");inp.focus();
     $("#tf").onsubmit=e=>{e.preventDefault();if(q.answered)return;const v=inp.value.trim();if(!v)return;
       const r=checkPy(v,q.w.p);inp.disabled=true;inp.classList.add(r===2?"ok":"no");
@@ -1749,7 +1749,7 @@ function runQuiz(el,qs,onDone){
     let placed=[];
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt">${q.listen?`<span class="eyebrow">Nghe rồi sắp xếp lại câu</span><button class="btn primary" data-say="${esc(q.zh)}">${SPK} Nghe lại</button>`:`<span class="eyebrow">Sắp xếp thành câu đúng</span><div class="m">${esc(q.vi)}</div>`}</div>
       <div class="slots" id="slots"></div><div class="bank" id="bank"></div>
-      <div class="row"><button class="btn primary" id="chk" disabled>Kiểm tra</button><button class="btn ghost" id="rst">Xếp lại</button></div><div id="fbslot"></div></div>`;
+      <div class="row"><button class="btn primary" id="chk" disabled>Kiểm tra</button><button class="btn ghost" id="rst">Xếp lại</button></div><div id="fbslot" aria-live="polite"></div></div>`;
     const draw=()=>{
       $("#slots").innerHTML=placed.length?placed.map((c,j)=>`<button class="chunk" data-s="${j}">${c.t}</button>`).join(""):`<span class="muted">Chạm các ô bên dưới theo đúng thứ tự</span>`;
       $("#bank").innerHTML=order.map(c=>`<button class="chunk" data-b="${c.k}" ${placed.includes(c)?"disabled":""}>${c.t}</button>`).join("");
@@ -2700,21 +2700,22 @@ function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=
 
 /* ===================== TỪ ĐIỂN ===================== */
 ALL.forEach(w=>w.k=[nrm(w.p),nrm(w.m),nrm(w.v||"")]);
-let dictQ="",dictWk="0",dictOnly=false;
+let dictQ="",dictWk="0",dictOnly=false,dictDay="0";
 function viewDict(){
   app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="lookBox">Chữ giống nhau</button><button data-jump="mwBox">Lượng từ</button><button data-jump="rpBox">Nhập vai</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Tìm bằng chữ Hán, pinyin không dấu (nihao), nghĩa tiếng Việt hoặc âm Hán Việt (nhĩ hảo).</p></div>
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
-      <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
+      <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select><select id="dd" class="btn" aria-label="Lọc theo bài" style="flex:1 1 200px;min-width:0;max-width:100%;width:100%;text-overflow:ellipsis"><option value="0">Mọi bài</option>${DAYS.filter(d=>d.words.length).map(d=>`<option value="${d.n}" ${dictDay==d.n?"selected":""}>Ngày ${d.n}: ${esc(d.t)}</option>`).join("")}</select>
       <label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="donly" ${dictOnly?"checked":""}> Chỉ từ đã học</label></div>
     <div class="eyebrow num" id="dcount"></div><div class="dlist" id="dlist"></div></section>`;
   wirePairs();wirePhrases();rpRole();
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
-    const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
+    const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(dictDay==="0"||w.day==+dictDay)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
     $("#dcount").textContent=res.length+" từ";
     $("#dlist").innerHTML=res.map(w=>{const c=S.srs[w.h];return `<div class="drow"><span class="han dh">${w.h}</span><div style="min-width:0"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div>${noteHTML(w.h)}</div><div class="dmeta"><span class="hvs">${esc(w.v||"")}</span><a href="#day-${w.day}">Ngày ${w.day}</a>${c?`<span class="chip">Ôn: ${BOXL[Math.min(6,c.b)]}</span>`:""}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div>`}).join("")||`<div class="card muted">Không tìm thấy từ nào. Thử gõ không dấu hoặc bỏ bớt bộ lọc.</div>`};
   $("#dq").oninput=e=>{dictQ=e.target.value;draw()};
-  $("#dw").onchange=e=>{dictWk=e.target.value;draw()};
+  $("#dw").onchange=e=>{dictWk=e.target.value;dictDay="0";$("#dd").value="0";draw()};
+  $("#dd").onchange=e=>{dictDay=e.target.value;if(dictDay!=="0"){dictWk="0";$("#dw").value="0"}draw()};
   $("#donly").onchange=e=>{dictOnly=e.target.checked;draw()};
   draw();
 }
@@ -2738,10 +2739,10 @@ function route(){
   updateChrome();refreshAudioHints();
 }
 window.addEventListener("hashchange",()=>{route();window.scrollTo({top:0})});
-function snapshot(){return {dayTab,lastDay,revMode,revQueue:revQueue&&revQueue.length?revQueue.slice():null,dictQ,dictWk,dictOnly,ndType,rpIdx,phraseIdx,scroll:window.scrollY}}
+function snapshot(){return {dayTab,lastDay,revMode,revQueue:revQueue&&revQueue.length?revQueue.slice():null,dictQ,dictWk,dictOnly,dictDay,ndType,rpIdx,phraseIdx,scroll:window.scrollY}}
 function start(data){data=data||{};
   if(data.dayTab)dayTab=data.dayTab;if(data.lastDay!=null)lastDay=data.lastDay;if(data.revMode)revMode=data.revMode;
-  if(typeof data.dictQ==="string")dictQ=data.dictQ;if(data.dictWk)dictWk=data.dictWk;if(data.dictOnly!=null)dictOnly=data.dictOnly;
+  if(typeof data.dictQ==="string")dictQ=data.dictQ;if(data.dictWk)dictWk=data.dictWk;if(data.dictOnly!=null)dictOnly=data.dictOnly;if(data.dictDay)dictDay=data.dictDay;
   if(data.ndType)ndType=data.ndType;if(data.rpIdx!=null)rpIdx=data.rpIdx;if(data.phraseIdx!=null)phraseIdx=data.phraseIdx;
   route();
   if(data.revQueue&&location.hash==="#review"){revQueue=data.revQueue.filter(h=>S.srs[h]);if(revQueue.length)viewReview()}
