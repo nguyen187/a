@@ -1198,12 +1198,24 @@ const READ={
 我妹妹十二岁，她是学生。|Wǒ mèimei shí'èr suì, tā shì xuésheng.|Em gái tôi 12 tuổi, em ấy là học sinh.
 我没有姐姐，也没有弟弟。|Wǒ méiyǒu jiějie, yě méiyǒu dìdi.|Tôi không có chị gái, cũng không có em trai.
 我们都是越南人，我们都很高兴。|Wǒmen dōu shì Yuènán rén, wǒmen dōu hěn gāoxìng.|Chúng tôi đều là người Việt Nam, ai cũng rất vui.`],
+6:["Sinh nhật của tôi",`今天是十一月十九号，星期四。|Jīntiān shì shíyī yuè shíjiǔ hào, xīngqīsì.|Hôm nay là ngày 19 tháng 11, thứ Năm.
+明天是我的生日。|Míngtiān shì wǒ de shēngrì.|Ngày mai là sinh nhật tôi.
+我今年二十岁。|Wǒ jīnnián èrshí suì.|Năm nay tôi hai mươi tuổi.
+我妈妈的生日是五月八号。|Wǒ māma de shēngrì shì wǔ yuè bā hào.|Sinh nhật mẹ tôi là ngày 8 tháng 5.
+现在是八点半。|Xiànzài shì bā diǎn bàn.|Bây giờ là tám giờ rưỡi.
+你的生日是几月几号？|Nǐ de shēngrì shì jǐ yuè jǐ hào?|Sinh nhật của bạn là ngày nào?`],
 7:["Tự giới thiệu",`我叫阿明，我是越南人。|Wǒ jiào Ā Míng, wǒ shì Yuènán rén.|Tôi tên là Minh, tôi là người Việt Nam.
 我二十岁，我是学生。|Wǒ èrshí suì, wǒ shì xuésheng.|Tôi hai mươi tuổi, tôi là sinh viên.
 我家有四口人：爸爸、妈妈、妹妹和我。|Wǒ jiā yǒu sì kǒu rén: bàba, māma, mèimei hé wǒ.|Nhà tôi có bốn người: bố, mẹ, em gái và tôi.
 我的老师是中国人，她很好。|Wǒ de lǎoshī shì Zhōngguó rén, tā hěn hǎo.|Cô giáo của tôi là người Trung Quốc, cô ấy rất tốt.
 今天是星期六，我在家。|Jīntiān shì xīngqīliù, wǒ zài jiā.|Hôm nay là thứ Bảy, tôi ở nhà.
 认识你很高兴！|Rènshi nǐ hěn gāoxìng!|Rất vui được làm quen với bạn!`],
+8:["Hôm nay tôi làm gì?",`今天我不工作。|Jīntiān wǒ bù gōngzuò.|Hôm nay tôi không đi làm.
+我在家学习汉语。|Wǒ zài jiā xuéxí Hànyǔ.|Tôi học tiếng Trung ở nhà.
+我看汉语书，也听老师说汉语。|Wǒ kàn Hànyǔ shū, yě tīng lǎoshī shuō Hànyǔ.|Tôi đọc sách tiếng Trung, cũng nghe thầy nói tiếng Trung.
+我的朋友来我家。|Wǒ de péngyou lái wǒ jiā.|Bạn tôi đến nhà tôi.
+她也学习汉语。|Tā yě xuéxí Hànyǔ.|Cô ấy cũng học tiếng Trung.
+十一点我睡觉。|Shíyī diǎn wǒ shuìjiào.|Mười một giờ tôi đi ngủ.`],
 9:["Đi ăn với bạn",`我饿了，我想吃饭。|Wǒ è le, wǒ xiǎng chī fàn.|Tôi đói rồi, tôi muốn ăn cơm.
 朋友说：“你要米饭还是面条？”|Péngyou shuō: “Nǐ yào mǐfàn háishi miàntiáo?”|Bạn nói: “Cậu muốn cơm hay mì?”
 我说：“我要米饭，也要一个菜。”|Wǒ shuō: “Wǒ yào mǐfàn, yě yào yí gè cài.”|Tôi nói: “Tôi lấy cơm, thêm một món nữa.”
@@ -1927,7 +1939,9 @@ function viewDay(n){
 }
 const RQ={
 5:[["Nhà người viết có mấy người?","5 người","4 người","6 người"],["Bố mẹ người viết làm nghề gì?","Đều là giáo viên","Đều là học sinh","Đều là bác sĩ"],["Người viết KHÔNG có ai?","Chị gái và em trai","Anh trai","Em gái"]],
+6:[["Sinh nhật người viết là ngày nào?","Ngày 20 tháng 11","Ngày 19 tháng 11","Ngày 8 tháng 5"],["Năm nay người viết bao nhiêu tuổi?","20 tuổi","19 tuổi","25 tuổi"],["Sinh nhật mẹ là ngày nào?","Ngày 8 tháng 5","Ngày 5 tháng 8","Ngày 19 tháng 11"]],
 7:[["Minh bao nhiêu tuổi?","20 tuổi","22 tuổi","12 tuổi"],["Nhà Minh có mấy người?","4 người","3 người","5 người"],["Cô giáo của Minh là người nước nào?","Trung Quốc","Việt Nam","Anh"]],
+8:[["Hôm nay người viết làm gì?","Học tiếng Trung ở nhà","Đi làm","Đi du lịch"],["Ai đến nhà người viết?","Một người bạn","Thầy giáo","Bố mẹ"],["Mấy giờ người viết đi ngủ?","11 giờ","10 giờ","12 giờ"]],
 9:[["Người viết muốn ăn gì?","Cơm và một món","Mì","Táo"],["Người bạn muốn uống gì?","Cà phê","Trà","Nước"],["Người viết nhận xét món ăn thế nào?","Rất ngon","Quá cay","Quá đắt"]],
 10:[["Người viết muốn mua gì?","Quần áo","Sách","Trà"],["Lúc đầu người bán đòi bao nhiêu?","150 tệ","120 tệ","100 tệ"],["Giá cuối cùng là bao nhiêu?","120 tệ","150 tệ","50 tệ"]],
 11:[["Nhà người viết có mấy con mèo?","2 con","1 con","3 con"],["Người viết có bao nhiêu cuốn sách?","50 cuốn","15 cuốn","5 cuốn"],["Mẹ muốn mua gì?","Hai bộ quần áo","Một chiếc xe","Một chai nước"]],
