@@ -1292,11 +1292,19 @@ function famHTML(w){const cs=[...new Set([...w.h].filter(c=>/\p{Script=Han}/u.te
   const parts=cs.length>1?`<div class="fam">${cs.map(c=>`<span class="han">${c}</span>${charHV(c)?` <span class="hvs">${charHV(c)}</span>`:""}`).join(" + ")}</div>`:"";
   return parts+cs.map(c=>famLine(c,w.h)).join("")}
 /* tách từ theo từ điển của khóa (khớp dài nhất) */
-function seg(text){const out=[],ch=[...text];let i=0;
+function segGreedy(text){const out=[],ch=[...text];let i=0;
   while(i<ch.length){let hit=null;
     if(/\p{Script=Han}/u.test(ch[i])){for(let L=Math.min(4,ch.length-i);L>=1;L--){const t=ch.slice(i,i+L).join("");if(BYH[t]){hit=t;break}}}
     if(hit){out.push({t:hit,w:BYH[hit]});i+=[...hit].length}else{out.push({t:ch[i]});i++}}
   return out}
+/* tách tối ưu: ít mảnh nhất, chữ Hán lẻ không có trong từ điển bị phạt nặng */
+const SEGC=new Map();
+function seg(text){if(SEGC.has(text))return SEGC.get(text);const ch=[...text],n=ch.length,best=new Array(n+1).fill(Infinity),prev=new Array(n+1);best[0]=0;
+  for(let i=0;i<n;i++){if(best[i]===Infinity)continue;const han=/\p{Script=Han}/u.test(ch[i]);
+    if(han)for(let L=2;L<=Math.min(4,n-i);L++){const t=ch.slice(i,i+L).join("");if(BYH[t]&&best[i]+1<best[i+L]){best[i+L]=best[i]+1;prev[i+L]=[i,t,true]}}
+    const one=ch[i],c=han?(BYH[one]?1:1.6):0.01;if(best[i]+c<best[i+1]){best[i+1]=best[i]+c;prev[i+1]=[i,one,han&&!!BYH[one]]}}
+  const out=[];let j=n;while(j>0){const [i,t,isW]=prev[j];out.unshift(isW?{t,w:BYH[t]}:{t});j=i}
+  SEGC.set(text,out);return out}
 function segHTML(t){return seg(t).map(x=>x.w?`<span class="seg" data-lk="${x.t}">${x.t}</span>`:x.t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))).join("")}
 function orderChunks(zh){const out=[];seg(zh.replace(/[。！？，、：；—\s!?,.]/g,"")).forEach(x=>{if(!x.w&&out.length&&!out[out.length-1].w)out[out.length-1].t+=x.t;else out.push({t:x.t,w:x.w})});return out.map(x=>x.t)}
 function nrm(s){return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/\s+/g,"")}
