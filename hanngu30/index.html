@@ -1192,6 +1192,12 @@ const RADICALS=[["亻","người"],["氵","nước"],["口","miệng"],["女","n
 
 /* bài đọc cuối mỗi chặng */
 const READ={
+5:["Gia đình tôi",`我家有五口人。|Wǒ jiā yǒu wǔ kǒu rén.|Nhà tôi có năm người.
+爸爸是老师，妈妈也是老师。|Bàba shì lǎoshī, māma yě shì lǎoshī.|Bố là giáo viên, mẹ cũng là giáo viên.
+我哥哥二十五岁，他很忙。|Wǒ gēge èrshíwǔ suì, tā hěn máng.|Anh trai tôi 25 tuổi, anh ấy rất bận.
+我妹妹十二岁，她是学生。|Wǒ mèimei shí'èr suì, tā shì xuésheng.|Em gái tôi 12 tuổi, em ấy là học sinh.
+我没有姐姐，也没有弟弟。|Wǒ méiyǒu jiějie, yě méiyǒu dìdi.|Tôi không có chị gái, cũng không có em trai.
+我们都是越南人，我们都很高兴。|Wǒmen dōu shì Yuènán rén, wǒmen dōu hěn gāoxìng.|Chúng tôi đều là người Việt Nam, ai cũng rất vui.`],
 7:["Tự giới thiệu",`我叫阿明，我是越南人。|Wǒ jiào Ā Míng, wǒ shì Yuènán rén.|Tôi tên là Minh, tôi là người Việt Nam.
 我二十岁，我是学生。|Wǒ èrshí suì, wǒ shì xuésheng.|Tôi hai mươi tuổi, tôi là sinh viên.
 我家有四口人：爸爸、妈妈、妹妹和我。|Wǒ jiā yǒu sì kǒu rén: bàba, māma, mèimei hé wǒ.|Nhà tôi có bốn người: bố, mẹ, em gái và tôi.
@@ -1204,6 +1210,12 @@ const READ={
 我说：“太贵了！便宜一点儿吧。”|Wǒ shuō: “Tài guì le! Piányi yìdiǎnr ba.”|Tôi nói: “Đắt quá! Rẻ hơn chút đi.”
 她说：“好吧，一百二十块。”|Tā shuō: “Hǎo ba, yìbǎi èrshí kuài.”|Cô ấy nói: “Thôi được, một trăm hai mươi tệ.”
 我说：“谢谢，我要这个！”|Wǒ shuō: “Xièxie, wǒ yào zhège!”|Tôi nói: “Cảm ơn, tôi lấy cái này!”`],
+12:["Trường học của tôi",`我的学校里有很多人。|Wǒ de xuéxiào li yǒu hěn duō rén.|Trong trường tôi có rất nhiều người.
+学校旁边有一个银行。|Xuéxiào pángbiān yǒu yí gè yínháng.|Bên cạnh trường có một ngân hàng.
+银行左边是医院。|Yínháng zuǒbian shì yīyuàn.|Bên trái ngân hàng là bệnh viện.
+老师的桌子在前边。|Lǎoshī de zhuōzi zài qiánbian.|Bàn của thầy ở phía trước.
+桌子上有三本书、一杯茶。|Zhuōzi shang yǒu sān běn shū, yì bēi chá.|Trên bàn có ba cuốn sách, một cốc trà.
+我的书在哪儿？在桌子下边！|Wǒ de shū zài nǎr? Zài zhuōzi xiàbian!|Sách của tôi đâu rồi? Ở dưới gầm bàn!`],
 14:["Một ngày của Minh",`我每天早上七点起床。|Wǒ měitiān zǎoshang qī diǎn qǐchuáng.|Mỗi ngày tôi dậy lúc bảy giờ sáng.
 我喝一杯咖啡，吃一点儿面条。|Wǒ hē yì bēi kāfēi, chī yìdiǎnr miàntiáo.|Tôi uống một ly cà phê, ăn một chút mì.
 我在银行工作，银行在学校旁边。|Wǒ zài yínháng gōngzuò, yínháng zài xuéxiào pángbiān.|Tôi làm ở ngân hàng, ngân hàng ở cạnh trường học.
@@ -1357,7 +1369,8 @@ const EXTRA=`辣|là|cay|lạt
 这里|zhè lǐ|ở đây|giá lý
 住|zhù|ở, sống|trú
 上个|shàng ge|(tuần, tháng) trước|thượng cá
-只能|zhǐ néng|chỉ có thể|chỉ năng`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
+只能|zhǐ néng|chỉ có thể|chỉ năng
+下边|xià bian|phía dưới|hạ biên`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
 EXTRA.forEach(w=>{if(!BYH[w.h])BYH[w.h]=w});
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
 /* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
@@ -1827,8 +1840,10 @@ function viewDay(n){
   body.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{dayTab=b.dataset.go;viewDay(n);window.scrollTo({top:0})});
 }
 const RQ={
+5:[["Nhà người viết có mấy người?","5 người","4 người","6 người"],["Bố mẹ người viết làm nghề gì?","Đều là giáo viên","Đều là học sinh","Đều là bác sĩ"],["Người viết KHÔNG có ai?","Chị gái và em trai","Anh trai","Em gái"]],
 7:[["Minh bao nhiêu tuổi?","20 tuổi","22 tuổi","12 tuổi"],["Nhà Minh có mấy người?","4 người","3 người","5 người"],["Cô giáo của Minh là người nước nào?","Trung Quốc","Việt Nam","Anh"]],
 10:[["Người viết muốn mua gì?","Quần áo","Sách","Trà"],["Lúc đầu người bán đòi bao nhiêu?","150 tệ","120 tệ","100 tệ"],["Giá cuối cùng là bao nhiêu?","120 tệ","150 tệ","50 tệ"]],
+12:[["Bên cạnh trường có gì?","Một ngân hàng","Một bệnh viện","Một cửa hàng"],["Bên trái ngân hàng là gì?","Bệnh viện","Trường học","Nhà hàng"],["Sách của người viết ở đâu?","Dưới gầm bàn","Trên bàn","Ở nhà"]],
 14:[["Minh dậy lúc mấy giờ?","7 giờ sáng","8 giờ sáng","6 giờ sáng"],["Minh làm việc ở đâu?","Ngân hàng","Trường học","Cửa hàng"],["Minh biết viết bao nhiêu chữ Hán?","100 chữ","10 chữ","1.000 chữ"]],
 17:[["Chiều nào người viết cũng làm gì?","Đá bóng","Bơi","Xem phim"],["Thứ Bảy người viết làm gì?","Đi xem phim với bạn","Đi làm","Học tiếng Trung"],["Người viết muốn đi đâu chơi?","Trung Quốc","Nhật Bản","Thái Lan"]],
 21:[["Họ đến Bắc Kinh bằng gì?","Máy bay","Tàu hỏa","Taxi"],["Thời tiết ở Bắc Kinh thế nào?","Lạnh, có tuyết rơi","Nóng, nắng to","Mưa to"],["Về nhà, Minh gặp chuyện gì?","Bị cảm, hơi khó chịu","Mất hộ chiếu","Bị lạc đường"]],
