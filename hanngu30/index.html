@@ -1363,7 +1363,7 @@ function addToSRS(words){const t=today();words.forEach(w=>{if(!S.srs[w.h])S.srs[
 let zhVoices=[], ttsNS=null;
 const CLAUDE_VOICES=[["buttery","ấm áp"],["airy","nhẹ nhàng"],["glassy","trong trẻo"],["rounded","tròn đầy"]];
 function vRank(v){let r=1;if(/natural|neural|online/i.test(v.name))r=4;else if(/google|premium|enhanced|siri/i.test(v.name))r=3;if(/(zh|cmn)[-_](CN|Hans)/i.test(v.lang))r+=.5;return r}
-function loadVoices(){try{zhVoices=speechSynthesis.getVoices().filter(v=>/^(zh|cmn)/i.test(v.lang)).sort((x,y)=>vRank(y)-vRank(x))}catch(e){}refreshVoicePicker()}
+function loadVoices(){try{viVoice=speechSynthesis.getVoices().find(v=>/^vi/i.test(v.lang))||null}catch(e){}try{zhVoices=speechSynthesis.getVoices().filter(v=>/^(zh|cmn)/i.test(v.lang)).sort((x,y)=>vRank(y)-vRank(x))}catch(e){}refreshVoicePicker()}
 let voicePref="auto";try{voicePref=localStorage.getItem("hanngu30.voice")||"auto"}catch(e){}
 function engine(){
   if(voicePref.startsWith("claude:")&&ttsNS)return {k:"claude",v:voicePref.slice(7)};
@@ -1387,6 +1387,12 @@ function say(text,wait){text=text.replace(/[—…]/g,"，");const e=engine();
   })}
 function speak(t){return say(t,false)}
 function speakWait(t){return say(t,true)}
+let viVoice=null;
+function sayViWait(t){return new Promise(res=>{
+  if(viVoice){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.voice=viVoice;u.lang=viVoice.lang;u.rate=1;u.onend=()=>res(true);u.onerror=()=>res(false);speechSynthesis.speak(u);return}catch(e){}}
+  if(ttsNS){ttsNS.speak(t,{language:"vi"}).then(()=>res(true)).catch(()=>res(false));return}
+  res(false)})}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function refreshVoicePicker(){const sel=document.getElementById("voiceSel");if(!sel)return;
   const opts=[["auto","Tự chọn giọng tự nhiên nhất"]];
   if(ttsNS)CLAUDE_VOICES.forEach(([k,l])=>opts.push(["claude:"+k,"Claude · "+l]));
@@ -1777,6 +1783,7 @@ function viewReview(){
       <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
     <div id="revBody"></div>
     ${weakHTML()}
+    ${passiveHTML()}
     ${speedHTML()}
     ${grammarHTML()}
     <div class="card"><div class="eyebrow" style="margin-bottom:10px">Độ nhớ của ${learned()} từ</div>
@@ -1798,6 +1805,28 @@ function viewReview(){
 function noteOf(h){return (S.notes&&S.notes[h])||""}
 let noteT;function setNote(h,v){S.notes=S.notes||{};v=v.trim();if(v)S.notes[h]=v;else delete S.notes[h];clearTimeout(noteT);noteT=setTimeout(save,600)}
 function noteHTML(h){const n=noteOf(h);return n?`<div class="noteline">✎ ${esc(n)}</div>`:""}
+let psvRun=0;
+function exampleFor(h){let best=null;DAYS.forEach(d=>d.exs.concat(d.rds).forEach(e=>{if(e[0].includes(h)&&e[0]!==h&&(!best||e[0].length<best[0].length))best=e}));return best}
+function passiveHTML(){const ok=canSpeak();return `<div class="card sect" id="psvBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Nghe thụ động</div><h3>Nghe lại từ đã học khi đang bận tay</h3>
+  <div class="muted" style="font-size:.86rem">${ok?"App đọc từng từ, chờ bạn nhẩm theo rồi đọc lại. Màn hình hiện chữ, pinyin và nghĩa.":"Cần giọng đọc tiếng Trung. Hãy chọn giọng trong tab Phát âm hoặc mở bằng Microsoft Edge."}</div></div>
+  <button class="btn primary" id="psvGo" ${ok?"":"disabled"}>Bắt đầu nghe</button></div>
+  <div class="row" style="font-size:.88rem"><label class="row" style="gap:6px"><input type="checkbox" id="psvVi" checked> Đọc nghĩa tiếng Việt (nếu máy có giọng Việt)</label><label class="row" style="gap:6px"><input type="checkbox" id="psvEx" checked> Kèm câu ví dụ</label></div>
+  <div id="psvStage"></div></div>`}
+document.addEventListener("click",async e=>{
+  if(e.target.closest("#psvStop")){psvRun++;try{speechSynthesis.cancel()}catch(x){}try{ttsNS&&ttsNS.stop&&ttsNS.stop()}catch(x){}const st=$("#psvStage");if(st)st.innerHTML=`<div class="muted">Đã dừng.</div>`;const g=$("#psvGo");if(g)g.hidden=false;return}
+  if(e.target.closest("#psvSkip")){psvSkip=true;try{speechSynthesis.cancel()}catch(x){}try{ttsNS&&ttsNS.stop&&ttsNS.stop()}catch(x){}return}
+  if(!e.target.closest("#psvGo"))return;
+  const run=++psvRun;const pool=shuffle(speedPool()).slice(0,40);const st=$("#psvStage");$("#psvGo").hidden=true;
+  for(let i=0;i<pool.length;i++){const w=pool[i];if(run!==psvRun||!st.isConnected)return;psvSkip=false;
+    const ex=$("#psvEx").checked?exampleFor(w.h):null;
+    st.innerHTML=`<div class="fc" style="min-height:200px;cursor:default"><div class="muted num" style="font-size:.8rem">${i+1}/${pool.length}</div><div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${ex?`<div class="han" style="font-size:1.1rem;margin-top:6px">${esc(ex[0])}</div><div class="muted" style="font-size:.84rem">${esc(ex[2])}</div>`:""}</div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="psvSkip">Từ tiếp →</button><button class="btn" id="psvStop">Dừng</button></div>`;
+    const pause=ms=>new Promise(r=>{const t0=Date.now();const iv=setInterval(()=>{if(psvSkip||run!==psvRun||Date.now()-t0>=ms){clearInterval(iv);r()}},50)});
+    const steps=[()=>speakWait(w.h),()=>pause(1500),()=>speakWait(w.h),()=>$("#psvVi").checked?sayViWait(w.m):null,()=>ex?pause(500):null,()=>ex?speakWait(ex[0]):null,()=>pause(1200)];
+    for(const f of steps){if(run!==psvRun||psvSkip)break;await f()}
+  }
+  if(run===psvRun&&st.isConnected){st.innerHTML=`<div class="muted">Đã nghe hết ${pool.length} từ.</div>`;$("#psvGo").hidden=false;touchStreak();save();updateChrome()}});
+let psvSkip=false;
 function speedPool(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);if(ws.length>=8)return ws;const cd=currentDay();return ALL.filter(w=>w.day<=Math.max(3,cd))}
 function speedHTML(){return `<div class="card sect" id="spdBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Thử thách 60 giây</div><h3>Nhận diện nhanh nghĩa của từ</h3>
   <div class="muted" style="font-size:.86rem">Chọn nghĩa đúng càng nhiều càng tốt trong một phút. Kỷ lục của bạn: <b class="num">${S.speedBest||0}</b> từ.</div></div><button class="btn primary" id="spdGo">Bắt đầu</button></div></div>`}
@@ -2273,7 +2302,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày`;const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
-  document.onkeydown=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;
+  document.onkeydown=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
   const h=(location.hash||"#today").slice(1);
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
