@@ -83,7 +83,7 @@ main{padding-block:24px 64px;display:grid;gap:28px}
 .stat span{font-size:.78rem;color:var(--muted);font-weight:500}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .lesson-card{display:grid;gap:12px}
-.lesson-card .han-preview{font-family:var(--f-han);font-size:1.7rem;letter-spacing:.12em;color:var(--ink);overflow-wrap:anywhere}
+.lesson-card .han-preview{font-family:var(--f-han);font-size:1.7rem;word-spacing:.5em;color:var(--ink);overflow-wrap:anywhere}
 .method{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 .method div{border-top:3px solid var(--jade);padding-top:8px;font-size:.86rem}
 .method b{display:block;font-size:.92rem}
@@ -230,6 +230,20 @@ td b{font-size:1.05rem}
 .hvs{text-transform:uppercase;letter-spacing:.04em;font-weight:600;color:var(--muted)}
 .rate{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .rate input{accent-color:var(--jade);flex:1;min-width:120px;max-width:260px}
+.tgt{font-family:var(--f-han);font-size:2rem;line-height:1.4;letter-spacing:.04em;overflow-wrap:anywhere}
+.tgt .hit{color:var(--good)} .tgt .miss{color:var(--bad);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+.heard{padding:12px 14px;border-radius:var(--r);background:var(--sunk);display:grid;gap:4px}
+.heard .han{font-size:1.2rem}
+.mic.on{background:var(--seal);border-color:var(--seal);color:#fff}
+.meter{height:8px;border-radius:9px;background:var(--sunk);overflow:hidden;max-width:320px}
+.meter i{display:block;height:100%}
+.heat{display:grid;grid-template-columns:repeat(35,1fr);gap:3px}
+.heat i{aspect-ratio:1;border-radius:2px;background:var(--sunk);max-width:100%}
+.heat i.h1{background:color-mix(in srgb,var(--jade) 30%,var(--sunk))}
+.heat i.h2{background:color-mix(in srgb,var(--jade) 55%,var(--sunk))}
+.heat i.h3{background:color-mix(in srgb,var(--jade) 80%,var(--sunk))}
+.heat i.h4{background:var(--jade)}
+.heat i.today{outline:2px solid var(--seal);outline-offset:1px}
 @media (max-width:520px){.drow{grid-template-columns:minmax(48px,auto) 1fr auto}.dmeta{display:none}}
 @media (max-width:720px){
   .hero,.two{grid-template-columns:1fr}
@@ -1174,6 +1188,8 @@ function runQuiz(el,qs,onDone){
 }
 
 /* ===================== VIEW: HÔM NAY ===================== */
+function heat(){const t=today();let out="";for(let i=34;i>=0;i--){const d=t-i,c=S.log[d]||0,lv=!c?0:c>=20?4:c>=10?3:c>=4?2:1;
+  out+=`<i class="h${lv}${i===0?" today":""}" title="${new Date(d*DAYMS).toLocaleDateString("vi-VN",{timeZone:"UTC"})}: ${c} hoạt động"></i>`}return out}
 function viewToday(){
   const cd=currentDay(),d=DAYS[cd-1],due=dueList().length,allDone=Object.keys(S.done).length>=30;
   const acc=S.stats.ans?Math.round(S.stats.ok/S.stats.ans*100)+"%":"—";
@@ -1192,11 +1208,13 @@ function viewToday(){
     <div class="stat"><b>${streakNow()}</b><span>ngày học liên tiếp</span></div>
     <div class="stat"><b>${acc}</b><span>tỉ lệ trả lời đúng</span></div>
   </section>
+  <section class="card" style="display:grid;gap:10px"><div class="row"><span class="eyebrow">35 ngày gần nhất</span><span class="spacer"></span><span class="muted" style="font-size:.8rem">Ô càng đậm là ngày học càng nhiều</span></div>
+    <div class="heat" aria-label="Lịch hoạt động 35 ngày">${heat()}</div></section>
   <section class="two">
     <div class="card lesson-card">
       <div class="eyebrow">${allDone?"Đã hoàn thành khóa":"Bài học hôm nay"}</div>
       <h2>Ngày ${cd}: ${esc(d.t)}</h2>
-      ${d.words.length?`<div class="han-preview">${d.words.slice(0,8).map(w=>w.h).join(" ")}</div>`:`<div class="muted">${esc(d.g)}</div>`}
+      ${d.words.length?`<div class="han-preview">${d.words.slice(0,8).map(w=>w.h).join(" · ")}</div>`:`<div class="muted">${esc(d.g)}</div>`}
       <div class="muted">${d.words.length?d.words.length+" từ mới · Ngữ pháp: "+esc(d.g):d.final?"30 câu · cần 80% để hoàn thành":"Hội thoại + 20 câu tổng ôn"}</div>
       <div class="row"><a class="btn primary" href="#day-${cd}">${S.done[cd]?"Học lại":"Bắt đầu học"}</a><a class="btn ghost" href="#plan">Xem lộ trình</a></div>
     </div>
@@ -1234,7 +1252,7 @@ function viewPlan(){
 let dayTab="vocab";
 function viewDay(n){
   const d=DAYS[n-1];if(!d){location.hash="#plan";return}
-  const tabs=d.words.length?[["vocab","Từ vựng"],["gram","Ngữ pháp"],["quiz","Kiểm tra"],["write","Viết chữ"]]:[["vocab",d.final?"Hướng dẫn":"Hội thoại"],["quiz",d.final?"Làm bài":"Tổng ôn"]];
+  const tabs=d.words.length?[["vocab","Từ vựng"],["gram","Ngữ pháp"],["speak","Luyện nói"],["quiz","Kiểm tra"],["write","Viết chữ"]]:d.review?[["vocab","Hội thoại"],["speak","Luyện nói"],["quiz","Tổng ôn"]]:[["vocab","Hướng dẫn"],["quiz","Làm bài"]];
   if(!tabs.find(t=>t[0]===dayTab))dayTab="vocab";
   app.innerHTML=`<section class="dayhead">
     <div class="row"><a href="#plan" class="muted" style="text-decoration:none;font-weight:600">← Lộ trình</a><span class="spacer"></span>
@@ -1265,7 +1283,9 @@ function viewDay(n){
   }else if(dayTab==="gram"){
     body.innerHTML=`<div class="card gram"><div class="eyebrow">Ngữ pháp</div><h3>${esc(d.g)}</h3>${d.gh}</div>
       <div class="row" style="align-items:baseline"><h3>Câu ví dụ</h3><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div class="ex">${d.exs.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>
-      <div class="row"><button class="btn primary" data-go="quiz">Tiếp: Kiểm tra →</button></div>`;
+      <div class="row"><button class="btn primary" data-go="speak">Tiếp: Luyện nói →</button></div>`;
+  }else if(dayTab==="speak"){
+    mountSpeak(body,d.words.length?d.exs.concat(d.rds):DIALOG.split("\n").map(l=>l.split("|").slice(1)),n);
   }else if(dayTab==="quiz"){
     const cnt=d.final?30:d.review?20:Math.min(12,Math.max(10,d.words.length));
     const pass=d.final?80:70;
@@ -1301,6 +1321,69 @@ function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
   $("#rdVi").onchange=e=>b.querySelectorAll(".v").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
   $("#playRd").onclick=async()=>{for(const [zh] of d.rds){if(!await speakWait(zh))break}}}
+/* ===================== LUYỆN NÓI ===================== */
+let dictNS=null,dictZhOff=false,spCtx=null;
+const MIC=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`;
+if(window.claude&&window.claude.use){window.claude.use("dictation").then(d=>{if(!d)return;dictNS=d;
+  d.onPartial(e=>{if(spCtx&&spCtx.onPartial)spCtx.onPartial(e.text)});
+  d.onFinal(e=>{if(spCtx){spCtx.text+=e.text;if(spCtx.onPartial)spCtx.onPartial("");d.stop().catch(()=>{})}});
+  d.onState(e=>{if(spCtx&&spCtx.onState)spCtx.onState(e.state,e.reason)});
+  if(location.hash.startsWith("#day-")&&dayTab==="speak")route();
+}).catch(()=>{})}
+const ZD="零一二三四五六七八九";
+function num2zh(n){n=+n;if(n>=1000)return String(n).split("").map(x=>ZD[x]).join("");if(n<10)return ZD[n];
+  if(n<100){const t=Math.floor(n/10),u=n%10;return (t>1?ZD[t]:"")+"十"+(u?ZD[u]:"")}
+  const h=Math.floor(n/100),r=n%100;return ZD[h]+"百"+(r===0?"":r<10?"零"+ZD[r]:(r<20?"一":"")+num2zh(r))}
+const zhOnly=t=>t.replace(/\d+/g,m=>num2zh(m)).replace(/[^\p{Script=Han}]/gu,"");
+function lcsMarks(tgt,got){const a=[...tgt],b=[...got],m=a.length,n=b.length;const D=Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for(let i=m-1;i>=0;i--)for(let j=n-1;j>=0;j--)D[i][j]=a[i]===b[j]?D[i+1][j+1]+1:Math.max(D[i+1][j],D[i][j+1]);
+  const hit=new Array(m).fill(false);let i=0,j=0;while(i<m&&j<n){if(a[i]===b[j]){hit[i]=true;i++;j++}else if(D[i+1][j]>=D[i][j+1])i++;else j++}
+  return {hit,score:m?D[0][0]/m:0}}
+function mountSpeak(el,sents,dayN){
+  let idx=0;
+  const canMic=()=>!!dictNS&&!dictZhOff;
+  const render=()=>{const [zh,p,v]=sents[idx];
+    el.innerHTML=`<div class="card sect">
+      <div class="row"><span class="eyebrow num">Câu ${idx+1}/${sents.length}</span><span class="spacer"></span><span class="muted" style="font-size:.84rem">${canMic()?"Nghe mẫu, rồi bấm Nói và đọc cả câu":"Nghe mẫu, nói to theo, rồi tự chấm"}</span></div>
+      <div class="tgt" id="tgt">${esc(zh)}</div>
+      <div class="muted">${esc(p)}</div><div>${esc(v)}</div>
+      <div class="row"><button class="btn" data-say="${esc(zh)}">${SPK} Nghe mẫu</button>
+        ${canMic()?`<button class="btn primary mic" id="mic">${MIC} <span>Nói</span></button>`:""}</div>
+      <div id="heard"></div>
+      ${canMic()?"":`<div class="row"><button class="btn" data-self="0">Còn vấp</button><button class="btn" data-self="1">Đọc trôi chảy</button></div>
+        <div class="muted" style="font-size:.84rem;max-width:62ch">${dictZhOff?"Nhận giọng nói tiếng Trung chưa dùng được cho tài khoản này, nên app chuyển sang kiểu nhại theo.":"Chấm điểm phát âm tự động cần Chrome hoặc Edge trên máy tính và tài khoản trong tổ chức của trang này. Kiểu nhại theo (shadowing) vẫn rất hiệu quả: nghe, nói to cùng lúc, lặp lại 3 lần."}</div>`}
+      <div class="row"><button class="btn ghost" id="sPrev" ${idx?"":"disabled"}>← Câu trước</button><button class="btn ghost" id="sNext">${idx+1<sents.length?"Câu sau →":"Về đầu"}</button></div></div>`;
+    $("#sPrev").onclick=()=>{idx--;render()};
+    $("#sNext").onclick=()=>{idx=(idx+1)%sents.length;render()};
+    el.querySelectorAll("[data-self]").forEach(b=>b.onclick=()=>{touchStreak();save();updateChrome();toast(b.dataset.self==="1"?"Tốt lắm! Sang câu tiếp theo.":"Nghe lại mẫu và thử chậm hơn một chút.");if(b.dataset.self==="1"){idx=(idx+1)%sents.length;render()}});
+    const mic=$("#mic");if(!mic)return;
+    const heard=$("#heard");
+    const setBtn=on=>{mic.classList.toggle("on",on);mic.querySelector("span").textContent=on?"Dừng":"Nói"};
+    const grade=()=>{const got=zhOnly(spCtx.text),tgt=zhOnly(zh);
+      if(!got){heard.innerHTML=`<div class="heard"><b>Chưa nghe rõ.</b><span class="muted">Nói to và gần micro hơn, rồi thử lại.</span></div>`;return}
+      const {hit,score}=lcsMarks(tgt,got);const pct=Math.round(score*100);
+      let k=0;$("#tgt").innerHTML=[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span class="${hit[k++]?"hit":"miss"}">${c}</span>`:esc(c)).join("");
+      const col=pct>=85?"var(--good)":pct>=60?"var(--warn)":"var(--bad)";
+      heard.innerHTML=`<div class="heard"><div class="row"><b style="color:${col}" class="num">${pct}%</b><span>${pct>=85?"Rất tốt, máy nghe đúng gần hết câu.":pct>=60?"Khá rồi. Chữ gạch đỏ là chữ máy chưa nghe ra.":"Nghe lại mẫu, chú ý thanh điệu của chữ gạch đỏ."}</span></div>
+        <div class="meter"><i style="width:${pct}%;background:${col}"></i></div><div class="muted" style="font-size:.84rem">Máy nghe được: <span class="han">${esc(spCtx.text.trim())}</span></div></div>`;
+      S.speak=S.speak||{};const key=dayN+":"+idx;S.speak[key]=Math.max(S.speak[key]||0,pct);touchStreak();save();updateChrome();
+    };
+    spCtx={text:"",onPartial:t=>{if(t)heard.innerHTML=`<div class="heard"><span class="muted">Đang nghe…</span><span class="han">${esc(t)}</span></div>`},
+      onState:(st,reason)=>{setBtn(st!=="idle");if(st==="idle"){
+        if(reason==="unavailable"){dictZhOff=true;render();return}
+        if(reason==="not_granted"){heard.innerHTML=`<div class="heard">Micro chưa được cho phép. Bạn có thể bật lại trong menu Permissions của trang.</div>`;return}
+        if(reason==="rate_limited"){heard.innerHTML=`<div class="heard">Đang có quá nhiều lượt nhận giọng nói, đợi vài giây rồi thử lại.</div>`;return}
+        if(spCtx&&spCtx.armed){spCtx.armed=false;grade()}}}};
+    mic.onclick=()=>{if(dictNS.active()){dictNS.stop().catch(()=>{});return}
+      spCtx.text="";spCtx.armed=true;$("#tgt").textContent=zh;heard.innerHTML=`<div class="heard muted">Đang mở micro…</div>`;
+      dictNS.start({language:"zh"}).catch(err=>{spCtx.armed=false;setBtn(false);const c=err&&err.code;
+        if(c==="unavailable"){dictZhOff=true;render()}
+        else if(c==="not_granted")heard.innerHTML=`<div class="heard">Bạn chưa cho phép dùng micro, nên app chuyển sang tự chấm.</div>`;
+        else if(c==="dismissed")heard.innerHTML=`<div class="heard">Bấm Nói lần nữa để cho phép micro.</div>`;
+        else if(c!=="stopped")heard.innerHTML=`<div class="heard">Không mở được micro. Thử lại sau giây lát.</div>`})};
+  };
+  render();
+}
 function speakWait(t){return new Promise(async res=>{
   if(zhVoice){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=zhVoice.lang;u.voice=zhVoice;u.rate=rate;u.onend=()=>setTimeout(()=>res(true),350);u.onerror=()=>res(false);speechSynthesis.speak(u);return}catch(e){}}
   if(ttsNS){try{await ttsNS.speak(t,{language:"zh-CN",rate:Math.max(.7,rate)});setTimeout(()=>res(true),300);return}catch(e){res(false);return}}
@@ -1479,7 +1562,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày`}
 let lastDay=null;
 function route(){
-  document.onkeydown=null;$("#lk").hidden=true;
+  document.onkeydown=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;
   const h=(location.hash||"#today").slice(1);
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
