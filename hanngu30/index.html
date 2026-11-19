@@ -1286,10 +1286,12 @@ ALL.forEach(w=>{const cs=[...w.h].filter(c=>/\p{Script=Han}/u.test(c));const hv=
   cs.forEach((c,i)=>{const o=CHAR[c]=CHAR[c]||{hv:{},words:[]};if(!o.words.includes(w))o.words.push(w);
     if(hv.length===cs.length&&hv[i]){const k=hv[i].toLowerCase();o.hv[k]=(o.hv[k]||0)+1}})});
 function charHV(c){const o=CHAR[c];if(!o)return"";const e=Object.entries(o.hv).sort((a,b)=>b[1]-a[1]);return e.length?e[0][0]:""}
-function famLine(c,exclude){const o=CHAR[c];if(!o)return"";const others=o.words.filter(x=>x.h!==exclude);if(!others.length)return"";
-  return `<div class="fam"><span class="han" style="font-size:1.05rem">${c}</span>${charHV(c)?` <span class="hvs">${charHV(c)}</span>`:""} còn có trong: ${others.slice(0,6).map(x=>`<span class="seg" data-lk="${esc(x.h)}" title="${esc(x.m)}">${x.h}</span>`).join(" · ")}</div>`}
+function hvIn(w,c){const hz=[...w.h].filter(x=>/\p{Script=Han}/u.test(x)),hv=(w.v||"").trim().split(/\s+/).filter(x=>x!=="…");const i=hz.indexOf(c);return hv.length===hz.length&&i>=0?hv[i].toLowerCase():charHV(c)}
+function famLine(c,exclude){const o=CHAR[c];if(!o)return"";const ctx=BYH[exclude];const hv=ctx?hvIn(ctx,c):charHV(c);
+  const others=o.words.filter(x=>x.h!==exclude&&(!ctx||hvIn(x,c)===hv||!hv));if(!others.length)return"";
+  return `<div class="fam"><span class="han" style="font-size:1.05rem">${c}</span>${hv?` <span class="hvs">${hv}</span>`:""} còn có trong: ${others.slice(0,6).map(x=>`<span class="seg" data-lk="${esc(x.h)}" title="${esc(x.m)}">${x.h}</span>`).join(" · ")}</div>`}
 function famHTML(w){const cs=[...new Set([...w.h].filter(c=>/\p{Script=Han}/u.test(c)))];
-  const parts=cs.length>1?`<div class="fam">${cs.map(c=>`<span class="han">${c}</span>${charHV(c)?` <span class="hvs">${charHV(c)}</span>`:""}`).join(" + ")}</div>`:"";
+  const parts=cs.length>1?`<div class="fam">${cs.map(c=>{const hv=hvIn(w,c);return `<span class="han">${c}</span>${hv?` <span class="hvs">${hv}</span>`:""}`}).join(" + ")}</div>`:"";
   return parts+cs.map(c=>famLine(c,w.h)).join("")}
 /* tách từ theo từ điển của khóa (khớp dài nhất) */
 function segGreedy(text){const out=[],ch=[...text];let i=0;
