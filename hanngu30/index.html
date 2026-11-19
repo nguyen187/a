@@ -228,6 +228,8 @@ td b{font-size:1.05rem}
 .lkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.2);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;width:min(440px,calc(100% - 32px))}
 #lk:not([hidden]) + .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .dlist{display:grid;gap:6px}
+.fam{font-size:.84rem;color:var(--muted);line-height:1.6}
+.fam .seg{color:var(--ink);font-family:var(--f-han);font-size:1rem;padding:0 2px}
 details.card summary{cursor:pointer;list-style-position:outside}
 details.card summary::marker{color:var(--jade)}
 .drow{display:grid;grid-template-columns:minmax(64px,auto) 1fr auto auto;gap:12px;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
@@ -1190,6 +1192,17 @@ DAYS.forEach((d,i)=>{
 const ALL=DAYS.flatMap(d=>d.words);
 const BYH=Object.fromEntries(ALL.map(w=>[w.h,w]));
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
+/* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
+const CHAR={};
+ALL.forEach(w=>{const cs=[...w.h].filter(c=>/\p{Script=Han}/u.test(c));const hv=(w.v||"").trim().split(/\s+/).filter(x=>x!=="…");
+  cs.forEach((c,i)=>{const o=CHAR[c]=CHAR[c]||{hv:{},words:[]};if(!o.words.includes(w))o.words.push(w);
+    if(hv.length===cs.length&&hv[i]){const k=hv[i].toLowerCase();o.hv[k]=(o.hv[k]||0)+1}})});
+function charHV(c){const o=CHAR[c];if(!o)return"";const e=Object.entries(o.hv).sort((a,b)=>b[1]-a[1]);return e.length?e[0][0]:""}
+function famLine(c,exclude){const o=CHAR[c];if(!o)return"";const others=o.words.filter(x=>x.h!==exclude);if(!others.length)return"";
+  return `<div class="fam"><span class="han" style="font-size:1.05rem">${c}</span>${charHV(c)?` <span class="hvs">${charHV(c)}</span>`:""} còn có trong: ${others.slice(0,6).map(x=>`<span class="seg" data-lk="${esc(x.h)}" title="${esc(x.m)}">${x.h}</span>`).join(" · ")}</div>`}
+function famHTML(w){const cs=[...new Set([...w.h].filter(c=>/\p{Script=Han}/u.test(c)))];
+  const parts=cs.length>1?`<div class="fam">${cs.map(c=>`<span class="han">${c}</span>${charHV(c)?` <span class="hvs">${charHV(c)}</span>`:""}`).join(" + ")}</div>`:"";
+  return parts+cs.map(c=>famLine(c,w.h)).join("")}
 /* tách từ theo từ điển của khóa (khớp dài nhất) */
 function seg(text){const out=[],ch=[...text];let i=0;
   while(i<ch.length){let hit=null;
@@ -1680,7 +1693,7 @@ function showCard(rb){
   const audioMode=revMode==="a2m"&&canSpeak();
   if(revMode==="a2m"&&!canSpeak()&&!showCard.warned){showCard.warned=true;toast("Thiết bị chưa có giọng đọc tiếng Trung, nên thẻ hiện chữ Hán thay cho âm thanh.")}
   const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết chữ Hán ra giấy rồi lật thẻ</div>`;
-  const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div class="muted" style="font-size:.8rem">Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}</div>`;
+  const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div style="display:grid;gap:2px;justify-items:center">${famHTML(w)}</div><div class="muted" style="font-size:.8rem">Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}</div>`;
   const c=S.srs[h];
   const nxt=k=>{const b=k===0?0:k===1?c.b:Math.min(6,c.b+(k===2?1:2));const days=k===0?0:k===1?1:IV[b];return days===0?"ngay bây giờ":days+" ngày"};
   rb.innerHTML=`<div class="flash"><div class="row"><span class="eyebrow num">Còn ${revQueue.length} thẻ</span></div>
@@ -1782,7 +1795,7 @@ function mountWriter(el,words){
   const pad=$("#pad"),ctl=$("#wctl"),msg=t=>{$("#wmsg").innerHTML=t};
   const drawList=()=>{$("#cl").innerHTML=chars.map(c=>`<button data-c="${c}" aria-pressed="${c===cur}" class="${S.write&&S.write[c]!=null?"done":""}" title="${S.write&&S.write[c]!=null?"Đã tự viết đúng":""}">${c}</button>`).join("")};
   const info=()=>{const w=words.find(x=>x.h.includes(cur));const n=STROKES&&STROKES[cur]?STROKES[cur].strokes.length:null;
-    $("#winfo").innerHTML=`<div class="row" style="align-items:baseline"><span class="han" style="font-size:2.4rem">${cur}</span>${n?`<span class="chip num">${n} nét</span>`:""}<span class="muted">trong từ</span><span class="han" style="font-size:1.3rem">${w.h}</span><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}`};
+    $("#winfo").innerHTML=`<div class="row" style="align-items:baseline"><span class="han" style="font-size:2.4rem">${cur}</span>${n?`<span class="chip num">${n} nét</span>`:""}<span class="muted">trong từ</span><span class="han" style="font-size:1.3rem">${w.h}</span><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}${famLine(cur,w.h)}`};
   const nextChar=()=>{const i=chars.indexOf(cur);cur=chars[(i+1)%chars.length];drawList();info();build()};
   function build(){
     pad.innerHTML="";const size=Math.round(pad.clientWidth)||280;const n=STROKES[cur].strokes.length;
@@ -1909,7 +1922,7 @@ function viewDict(){
 }
 document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.closest("[data-lk]");
   if(sp){const w=BYH[sp.dataset.lk];if(!w)return;
-    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div><a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a></div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
+    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${famHTML(w)}<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a></div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
     bar.hidden=false;speak(w.h);return}
   if(!e.target.closest("#lk")||e.target.closest("#lkx")||e.target.closest("#lk a"))bar.hidden=true;
 });
