@@ -1466,6 +1466,11 @@ function checkPy(v,p){
   if(u===marked)return 2;
   return [...u].map(c=>TM[c]?TM[c][0]:c).join("")===bare?1:0;
 }
+const TIMEW=new Set(["今天","明天","昨天","现在","每天","早上","晚上","下午","中午","去年","明年","今年","周末","刚才","上个星期"]);
+function orderAltOK(got,orig){if(got.length!==orig.length)return false;
+  const swap=(a,i)=>{const b=a.slice();[b[i],b[i+1]]=[b[i+1],b[i]];return b.join("")};
+  for(let i=0;i<orig.length-1;i++){if((TIMEW.has(orig[i])||TIMEW.has(orig[i+1]))&&/^(我|你|他|她|我们|你们|他们|老师|哥哥|爸爸|妈妈)$/.test(TIMEW.has(orig[i])?orig[i+1]:orig[i])&&swap(orig,i)===got.join(""))return true}
+  return false}
 function makeOrderQ(ex){const [zh,py,vi]=ex;if(!zh||zh.includes("—"))return null;const chunks=orderChunks(zh);
   if(chunks.length<3||chunks.length>9)return null;return {type:"order",zh,py,vi,chunks}}
 function makeClozeQ(ex,pool,prefer){const [zh,py,vi]=ex;if(!zh||zh.includes("—"))return null;
@@ -1536,9 +1541,9 @@ function runQuiz(el,qs,onDone){
     $("#slots").onclick=e=>{const b=e.target.closest("[data-s]");if(!b||q.answered)return;placed.splice(+b.dataset.s,1);draw()};
     $("#bank").onclick=e=>{const b=e.target.closest("[data-b]");if(!b||q.answered)return;placed.push(bank[+b.dataset.b]);draw()};
     $("#rst").onclick=()=>{if(q.answered)return;placed=[];draw()};
-    $("#chk").onclick=()=>{if(q.answered)return;const ok=placed.map(c=>c.t).join("")===q.chunks.join("");
+    $("#chk").onclick=()=>{if(q.answered)return;const got=placed.map(c=>c.t),exact=got.join("")===q.chunks.join(""),alt=!exact&&orderAltOK(got,q.chunks),ok=exact||alt;
       $("#slots").classList.add(ok?"ok":"no");$("#rst").disabled=true;$("#chk").disabled=true;
-      feedback(ok,`<span class="han" style="font-size:1.15rem">${esc(q.zh)}</span> · <span class="muted">${esc(q.py)}</span>${q.listen?" · "+esc(q.vi):""}`,q.zh)};
+      feedback(ok,`<span class="han" style="font-size:1.15rem">${esc(q.zh)}</span> · <span class="muted">${esc(q.py)}</span>${q.listen?" · "+esc(q.vi):""}${alt?`<div style="font-size:.84rem">Cách bạn xếp cũng đúng: từ chỉ thời gian có thể đứng trước hoặc sau chủ ngữ.</div>`:""}`,q.zh)};
     draw();if(q.listen)setTimeout(()=>speak(q.zh),150);
   }
   document.onkeydown=e=>{if(!el.isConnected)return;const q=qs[i];if(!q)return;
