@@ -1912,6 +1912,7 @@ function viewToday(){
   </section>
   ${goalHTML()}
   ${nextHTML()}
+  ${mixHTML()}
   <section class="stats">
     <div class="stat"><b>${learned()}</b><span>từ đã học / ${ALL.length}</span></div>
     <div class="stat"><b>${due}</b><span>thẻ cần ôn hôm nay</span></div>
@@ -2286,9 +2287,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-rad]");if(
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 
 document.addEventListener("click",e=>{if(!e.target.closest("#trapGo"))return;const box=$("#trapQuiz");if(!box)return;
-  const qs=shuffle(TRAPS.slice()).slice(0,10).map(([h,p,hv,wrong,right])=>{const oth=pick(TRAPS.filter(t=>t[0]!==h),2).map(t=>t[4]);
-    return {type:"trap",w:BYH[h],prompt:`<span class="eyebrow">Bẫy Hán Việt · đọc là “${esc(hv)}”</span><div class="h">${h}</div><div class="py">${pyHTML(p)}</div><div class="muted" style="font-size:.86rem">Trong tiếng Trung hiện đại, từ này nghĩa là gì?</div>`,
-      opts:shuffle([{html:esc(right),ok:true},{html:esc(wrong),ok:false},...oth.map(x=>({html:esc(x),ok:false}))])}});
+  const qs=trapQs(10);
   runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=8?"Bạn đã tránh được hầu hết các bẫy!":"Đọc lại danh sách bên trên: âm Hán Việt giúp đoán nghĩa, nhưng không phải lúc nào cũng đúng."}</p><button class="btn" id="trapGo">Làm lại</button></div>`});
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 
@@ -2302,9 +2301,7 @@ function sandhiHTML(){return `<section class="sect" id="sec-sandhi"><div><div cl
   <p class="muted" style="margin:6px 0 0;max-width:64ch">Pinyin trong sách thường viết thanh gốc, nhưng khi nói 不, 一 và hai thanh 3 liền nhau sẽ đổi thanh. Người Việt hay đọc theo mặt chữ nên nghe “cứng”. Nghe rồi chọn cách đọc thật của chữ được tô màu.</p></div>
   <div class="card"><div class="row"><button class="btn primary" id="shGo">Luyện 12 câu</button><span class="muted" style="font-size:.86rem">${SANDHI.length} cụm: 不 · 一 · 3+3</span></div><div id="shBox"></div></div></section>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#shGo"))return;const box=$("#shBox");if(!box)return;
-  const qs=shuffle(SANDHI.slice()).slice(0,12).map(([h,i,ok,...bad])=>{const hl=[...h].map((c,k)=>k===i?`<span style="color:var(--seal);background:var(--seal-soft);border-radius:8px;padding:0 4px">${c}</span>`:c).join("");
-    return {type:"sandhi",w:BYH[h],autoSay:canSpeak()?h:null,prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
-      opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}});
+  const qs=shQs(12);
   runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><ul class="muted" style="text-align:left;margin:8px 0;padding-left:20px;display:grid;gap:4px"><li>不 + thanh 4 → bú</li><li>一 + thanh 4 → yí; 一 + thanh 1, 2, 3 → yì; đếm số → yī</li><li>3 + 3 → 2 + 3</li></ul><button class="btn" id="shGo">Làm lại</button></div>`});
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 
@@ -2339,18 +2336,37 @@ function qaHTML(){return `<div class="card sect" id="qaBox"><div class="row"><di
   <div class="muted" style="font-size:.86rem">Giao tiếp thật cần phản xạ nhanh: nghe hiểu câu hỏi và biết đáp gì. ${QA.length} câu hỏi thường gặp nhất.</div></div>
   <div class="row"><button class="btn primary" id="qaGo">Luyện 8 câu</button></div></div><div id="qaWork"></div></div>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#qaGo"))return;const box=$("#qaWork");if(!box)return;const ls=canSpeak();
-  const qs=shuffle(QA.slice()).slice(0,8).map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
-    return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}`,
-      explain:`<span class="han">${esc(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${esc(a)}</span> <span class="muted">${esc(av)}</span>`,
-      opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}});
+  const qs=qaQs(8);
   runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=7?"Phản xạ rất tốt! Thử tự nói câu trả lời trước khi chọn.":"Bấm “Xem chữ” khi chưa nghe kịp, rồi luyện lại."}</p><button class="btn" id="qaGo">Làm lại</button></div>`});
 });
 
 document.addEventListener("click",e=>{if(!e.target.closest("#errGo"))return;const box=$("#errQuiz");if(!box)return;
-  const qs=shuffle(ERRS.slice()).slice(0,10).map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
-    explain:`<span class="han">${esc(ok)}</span><div style="font-size:.88rem">${esc(why)}</div>`,
-    opts:shuffle([{html:`<span class="han">${esc(ok)}</span>`,ok:true},{html:`<span class="han">${esc(bad)}</span>`,ok:false}])}));
+  const qs=errQs(10);
   runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=9?"Trật tự câu của bạn đã rất “Trung Quốc”!":"Nhớ quy tắc vàng: Ai + Khi nào + Ở đâu + Làm gì."}</p><button class="btn" id="errGo">Làm lại</button></div>`});
+  box.scrollIntoView({behavior:"smooth",block:"nearest"})});
+function trapQs(n){const ls=canSpeak();return shuffle(TRAPS.slice()).slice(0,n).map(([h,p,hv,wrong,right])=>{const oth=pick(TRAPS.filter(t=>t[0]!==h),2).map(t=>t[4]);
+    return {type:"trap",w:BYH[h],prompt:`<span class="eyebrow">Bẫy Hán Việt · đọc là “${esc(hv)}”</span><div class="h">${h}</div><div class="py">${pyHTML(p)}</div><div class="muted" style="font-size:.86rem">Trong tiếng Trung hiện đại, từ này nghĩa là gì?</div>`,
+      opts:shuffle([{html:esc(right),ok:true},{html:esc(wrong),ok:false},...oth.map(x=>({html:esc(x),ok:false}))])}})}
+function shQs(n){const ls=canSpeak();return shuffle(SANDHI.slice()).slice(0,n).map(([h,i,ok,...bad])=>{const hl=[...h].map((c,k)=>k===i?`<span style="color:var(--seal);background:var(--seal-soft);border-radius:8px;padding:0 4px">${c}</span>`:c).join("");
+    return {type:"sandhi",w:BYH[h],autoSay:canSpeak()?h:null,prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
+      opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}})}
+function qaQs(n){const ls=canSpeak();return shuffle(QA.slice()).slice(0,n).map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
+    return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}`,
+      explain:`<span class="han">${esc(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${esc(a)}</span> <span class="muted">${esc(av)}</span>`,
+      opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}})}
+function errQs(n){const ls=canSpeak();return shuffle(ERRS.slice()).slice(0,n).map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
+    explain:`<span class="han">${esc(ok)}</span><div style="font-size:.88rem">${esc(why)}</div>`,
+    opts:shuffle([{html:`<span class="han">${esc(ok)}</span>`,ok:true},{html:`<span class="han">${esc(bad)}</span>`,ok:false}])}))}
+
+function mixQs(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);let qs=[...errQs(2),...trapQs(2),...shQs(2),...qaQs(2)];
+  if(ws.length>=6){const t=["mean","hanzi"].concat(canSpeak()?["tf","listen"]:[]);pick(ws,2).forEach(w=>qs.push(makeQ(w,ALL,hvUseful(w)?t.concat("hv"):t)))}
+  return shuffle(qs)}
+function mixHTML(){const m=S.mix||{},done=m.day===today();return `<section class="card sect" id="mixBox"><div class="row"><div style="min-width:0;flex:1 1 220px"><div class="eyebrow">Thử thách trộn${done?" · đã làm hôm nay":""}</div><h3>10 câu, mỗi câu một kỹ năng</h3>
+  <div class="muted" style="font-size:.86rem">Trật tự câu, bẫy Hán Việt, biến điệu, phản xạ hỏi đáp và từ đã học. ${m.best!=null?`Điểm cao nhất: <b class="num">${m.best}/10</b>`:"Khoảng 3 phút."}</div></div>
+  <button class="btn ${done?"":"primary"}" id="mixGo">${done?"Làm thêm lượt":"Bắt đầu"}</button></div><div id="mixWork"></div></section>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#mixGo"))return;const box=$("#mixWork");if(!box)return;
+  runQuiz(box,mixQs(),(sc,tot)=>{S.mix=S.mix||{};const rec=S.mix.best==null||sc>S.mix.best;S.mix.day=today();S.mix.best=Math.max(S.mix.best||0,sc);touchStreak(4);save();updateChrome();
+    box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${rec?"Điểm cao nhất mới! ":""}${sc>=8?"Rất vững, mai làm tiếp nhé.":"Mục Từ điển và Phát âm có bài luyện riêng cho từng dạng."}</p><button class="btn" id="mixGo">Làm lượt khác</button></div>`});
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
