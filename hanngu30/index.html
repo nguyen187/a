@@ -2357,7 +2357,7 @@ function shQs(n,L){const ls=canSpeak();const L0=shuffle((L||SANDHI).slice()).sli
     return {type:"sandhi",w:BYH[h],autoSay:canSpeak()?h:null,prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
       opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}}).map((q,k)=>(q.key="sh:"+L0[k][0],q))}
 function qaQs(n,L){const ls=canSpeak();const L0=shuffle((L||qaPool()).slice()).slice(0,n);return L0.map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
-    return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}`,
+    return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}${dictNS&&!dictZhOff?`<div style="margin-top:8px"><button class="btn mic" data-qamic>${MIC} <span>Nói câu trả lời</span></button><div class="muted" data-qaheard style="font-size:.84rem;min-height:1.2em"></div></div>`:""}`,
       explain:`<span class="han">${segHTML(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${segHTML(a)}</span> <span class="muted">${esc(av)}</span>`,
       opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}}).map((q,k)=>(q.key="qa:"+L0[k][1],q))}
 function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||errPool()).slice()).slice(0,n);return L0.map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
@@ -2382,6 +2382,18 @@ document.addEventListener("click",e=>{if(e.target.closest("#mqGo")){const box=$(
   runQuiz(box,mixQs(),(sc,tot)=>{S.mix=S.mix||{};const rec=S.mix.best==null||sc>S.mix.best;S.mix.day=today();S.mix.best=Math.max(S.mix.best||0,sc);touchStreak(4);save();updateChrome();
     box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${rec?"Điểm cao nhất mới! ":""}${sc>=8?"Rất vững, mai làm tiếp nhé.":"Mục Từ điển và Phát âm có bài luyện riêng cho từng dạng."}</p><button class="btn" id="mixGo">Làm lượt khác</button></div>`});
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
+
+document.addEventListener("click",e=>{const b=e.target.closest("[data-qamic]");if(!b||!dictNS)return;const box=b.closest(".quiz")||document,hd=box.querySelector("[data-qaheard]");
+  if(dictNS.active()){dictNS.stop().catch(()=>{});return}
+  const setB=on=>{b.classList.toggle("on",on);b.querySelector("span").textContent=on?"Dừng":"Nói câu trả lời"};
+  spCtx={text:"",armed:true,onPartial:t=>{if(t&&hd)hd.textContent="Đang nghe: "+t},onState:(st,reason)=>{setB(st!=="idle");if(st!=="idle"||!spCtx||!spCtx.armed)return;spCtx.armed=false;
+    if(reason==="unavailable"){dictZhOff=true;b.remove();return}
+    const got=zhOnly(spCtx.text);if(!got){if(hd)hd.textContent="Chưa nghe rõ, thử nói to hơn.";return}
+    const opts=[...box.querySelectorAll(".opt:not([disabled])")];let best=null,bs=0;
+    opts.forEach(o=>{const t=zhOnly(o.textContent);if(!t)return;const sc=lcsMarks(t,got).score*Math.min(1,got.length/t.length+.3);if(sc>bs){bs=sc;best=o}});
+    if(hd)hd.textContent="Máy nghe được: "+spCtx.text.trim();
+    if(best&&bs>=.5)best.click();else if(hd)hd.textContent+=" — chưa khớp câu nào, thử lại hoặc chọn bằng tay."}};
+  dictNS.start({language:"zh"}).catch(err=>{spCtx.armed=false;setB(false);if(err&&err.code==="unavailable"){dictZhOff=true;b.remove()}})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
