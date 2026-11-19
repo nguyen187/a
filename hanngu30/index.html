@@ -2311,6 +2311,15 @@ function route(){
   updateChrome();refreshAudioHints();
 }
 window.addEventListener("hashchange",()=>{route();window.scrollTo({top:0})});
-route();
-initRemote();
+function snapshot(){return {dayTab,lastDay,revMode,revQueue:revQueue&&revQueue.length?revQueue.slice():null,dictQ,dictWk,dictOnly,ndType,rpIdx,phraseIdx,scroll:window.scrollY}}
+function start(data){data=data||{};
+  if(data.dayTab)dayTab=data.dayTab;if(data.lastDay!=null)lastDay=data.lastDay;if(data.revMode)revMode=data.revMode;
+  if(typeof data.dictQ==="string")dictQ=data.dictQ;if(data.dictWk)dictWk=data.dictWk;if(data.dictOnly!=null)dictOnly=data.dictOnly;
+  if(data.ndType)ndType=data.ndType;if(data.rpIdx!=null)rpIdx=data.rpIdx;if(data.phraseIdx!=null)phraseIdx=data.phraseIdx;
+  route();
+  if(data.revQueue&&location.hash==="#review"){revQueue=data.revQueue.filter(h=>S.srs[h]);if(revQueue.length)viewReview()}
+  if(data.scroll)requestAnimationFrame(()=>window.scrollTo(0,data.scroll));
+  initRemote()}
+try{window.claude?.hot?.snapshot?.(snapshot)}catch(e){}
+if(window.claude?.hot?.ready)window.claude.hot.ready(start);else start(window.claude?.hot?.data??{});
 </script>
