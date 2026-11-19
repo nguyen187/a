@@ -2023,7 +2023,7 @@ function viewTones(){
    ["j","ch, mặt lưỡi chạm ngạc","家 jiā"],["q","ch bật hơi mạnh","七 qī"],["x","x, môi dẹt, mặt lưỡi","谢 xiè"],["zh","tr uốn lưỡi, không bật hơi","中 zhōng"],["ch","tr uốn lưỡi + bật hơi","茶 chá"],["sh","s uốn lưỡi","是 shì"],["r","r uốn lưỡi, gần “gi” nhẹ","人 rén"],
    ["z","ch đầu lưỡi (ts)","在 zài"],["c","ts bật hơi mạnh","菜 cài"],["s","x đầu lưỡi","三 sān"],["y / w","như i / u đầu âm","有 yǒu · 我 wǒ"]];
   const F=[["a","a","八"],["o","ô (miệng tròn)","我"],["e","ưa / ơ (âm sau)","喝"],["i","i; sau zh ch sh r z c s đọc gần “ư”","是"],["u","u","五"],["ü","uy tròn môi (j q x y viết thành u)","女 · 去"],["ai","ai","买"],["ei","ây","没"],["ao","ao","好"],["ou","âu","口"],["an","an","三"],["en","ân","人"],["ang","ang","忙"],["eng","âng","冷"],["ong","ung","中"],["ie","iê","谢"],["ian","iên","天"],["uan","oan","玩"],["üan","uyên","远"],["in","in","今"],["ing","inh","听"],["iu","iêu","九"],["ui","uây","对"]];
-  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-tones">4 thanh</button><button data-jump="sec-ear">Nghe thanh</button><button data-jump="sec-pairs">Cặp thanh</button><button data-jump="sec-num">Con số</button><button data-jump="sec-ini">Phụ âm đầu</button><button data-jump="sec-fin">Vần</button></nav><section class="sect" id="sec-tones"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-tones">4 thanh</button><button data-jump="sec-ear">Nghe thanh</button><button data-jump="sec-pairs">Cặp thanh</button><button data-jump="sec-mp">Âm dễ nhầm</button><button data-jump="sec-num">Con số</button><button data-jump="sec-ini">Phụ âm đầu</button><button data-jump="sec-fin">Vần</button></nav><section class="sect" id="sec-tones"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Số 1–5 là độ cao giọng của bạn, 5 là cao nhất. Thanh 1 là 55, thanh 2 là 35, thanh 3 là 214, thanh 4 là 51. Bấm vào từng thẻ để nghe.</p></div>
     <div class="card" style="display:grid;gap:12px"><div class="rate"><label for="voiceSel"><b>Giọng đọc</b></label><select id="voiceSel" class="btn" style="max-width:100%;min-width:0;flex:1 1 220px"></select></div><div class="rate"><label for="rateR"><b>Tốc độ đọc</b></label><input type="range" id="rateR" min="0.6" max="1.2" step="0.1" value="${rate}"><span class="num" id="rateV">${rate.toFixed(1)}×</span><button class="btn" data-say="你好，认识你很高兴。我们一起学习汉语吧！">Nghe thử</button></div>
       <div class="muted" style="font-size:.84rem;max-width:68ch"><span id="voiceNow"></span>. Giọng tự nhiên nhất thường là giọng “Natural” của Microsoft Edge (Xiaoxiao, Yunxi) hoặc giọng Claude. Trên iPhone/Mac: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Trung, tải bản “Nâng cao”. Trên Android: cài Google Text-to-speech và tải giọng tiếng Trung.</div></div>
@@ -2036,6 +2036,7 @@ function viewTones(){
   </section>
   <section class="sect" id="sec-ear"><div><div class="eyebrow">Luyện tai</div><h2>Nghe và đoán thanh</h2></div><div id="tqBody"></div></section>
   ${tonePairsHTML()}
+  ${minPairHTML()}
   ${numDrillHTML()}
   <section class="sect" id="sec-ini"><div><div class="eyebrow">Thanh mẫu</div><h2>21 phụ âm đầu, so với tiếng Việt</h2></div>
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${I.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div>
@@ -2044,7 +2045,7 @@ function viewTones(){
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${F.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div></section>`;
   refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
-  toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));numDrill($("#ndBody"));
+  toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));numDrill($("#ndBody"));minPairQuiz($("#mpBody"));
 }
 /* cặp thanh trong từ hai âm tiết */
 const TNAME={1:"1",2:"2",3:"3",4:"4",5:"nhẹ"};
@@ -2099,6 +2100,36 @@ function ndCheck(type,v,ans){v=v.trim().replace(/\s+/g,"");
   if(type==="time"){const m=v.match(/^(\d{1,2})[:h.,]?(\d{0,2})$/i);if(!m)return false;const [h,mm]=ans.split(":").map(Number);return +m[1]===h&&(+(m[2]||0))===mm}
   const m=v.match(/^(\d{1,2})[\/\-.](\d{1,2})$/);if(!m)return false;const [d,mo]=ans.split("/").map(Number);return +m[1]===d&&+m[2]===mo}
 let ndType="num";
+const MP=[["zh / z","Uốn lưỡi / đầu lưỡi phẳng",[["知","zhī"],["资","zī"]],[["找","zhǎo"],["早","zǎo"]]],
+["ch / c","Uốn lưỡi bật hơi / đầu lưỡi bật hơi",[["吃","chī"],["次","cì"]],[["茶","chá"],["擦","cā"]]],
+["sh / s","s uốn lưỡi / x đầu lưỡi",[["是","shì"],["四","sì"]],[["书","shū"],["苏","sū"]]],
+["j / zh","Mặt lưỡi, môi dẹt / uốn lưỡi",[["鸡","jī"],["知","zhī"]],[["家","jiā"],["渣","zhā"]]],
+["q / ch","Mặt lưỡi bật hơi / uốn lưỡi bật hơi",[["七","qī"],["吃","chī"]],[["钱","qián"],["缠","chán"]]],
+["x / sh","Mặt lưỡi / uốn lưỡi",[["西","xī"],["诗","shī"]],[["小","xiǎo"],["少","shǎo"]]],
+["ü / u","Tròn môi như “uy” / tròn môi “u”",[["女","nǚ"],["努","nǔ"]],[["绿","lǜ"],["路","lù"]]],
+["an / ang","Kết thúc ở đầu lưỡi / cuống lưỡi (như “ang”)",[["半","bàn"],["棒","bàng"]],[["山","shān"],["商","shāng"]]],
+["en / eng","“ân” / “âng”",[["真","zhēn"],["蒸","zhēng"]],[["很","hěn"],["横","héng"]]],
+["in / ing","“in” / “inh”",[["今","jīn"],["京","jīng"]],[["心","xīn"],["星","xīng"]]],
+["n / l","Âm mũi / âm bên (miền Bắc hay lẫn)",[["你","nǐ"],["李","lǐ"]],[["男","nán"],["蓝","lán"]]],
+["r / l","Uốn lưỡi rung nhẹ / đầu lưỡi chạm lợi",[["热","rè"],["乐","lè"]],[["肉","ròu"],["漏","lòu"]]]];
+function minPairHTML(){return `<section class="sect" id="sec-mp"><div><div class="eyebrow">Âm dễ nhầm</div><h2>12 cặp âm người Việt hay lẫn</h2>
+  <p class="muted" style="margin:6px 0 0;max-width:64ch">Tiếng Việt không phân biệt các cặp này nên tai rất dễ “gộp” làm một. Nghe từng cặp nhiều lần, rồi làm bài nghe bên dưới.</p></div>
+  <div class="tbl card" style="padding:0"><table><thead><tr><th>Cặp</th><th>Cách phân biệt</th><th>Ví dụ</th></tr></thead><tbody>${MP.map(([k,tip,a,b])=>`<tr><td><b>${k}</b></td><td>${esc(tip)}</td><td><div class="row" style="gap:6px">${[a,b].map(pr=>pr.map(([c,p])=>`<button class="chip" data-say="${c}"><span class="han">${c}</span> <span class="t${toneOf(p)}">${p}</span></button>`).join("")).join('<span class="muted">·</span>')}</div></td></tr>`).join("")}</tbody></table></div>
+  <div id="mpBody"></div></section>`}
+function minPairQuiz(el){if(!el)return;
+  if(!canSpeak()){el.innerHTML=`<div class="card muted">Bài nghe cần giọng đọc tiếng Trung. Hãy chọn giọng ở đầu trang hoặc mở bằng Microsoft Edge.</div>`;return}
+  let round=0,score=0;const N=12;
+  const next=()=>{if(round>=N){el.innerHTML=`<div class="card result"><div class="score num">${score}/${N}</div><div>${score>=10?"Tai bạn phân biệt rất tốt!":"Nghe lại các cặp sai trong bảng phía trên rồi thử lại."}</div><button class="btn primary" id="mpA">Làm lại</button></div>`;$("#mpA").onclick=()=>minPairQuiz(el);touchStreak(2);save();updateChrome();return}
+    const row=MP[Math.floor(Math.random()*MP.length)],pair=row[2+Math.floor(Math.random()*2)],k=Math.floor(Math.random()*2),[c,p]=pair[k];let done=false;
+    el.innerHTML=`<div class="tq"><div class="row"><span class="eyebrow num">Lượt ${round+1}/${N} · Đúng ${score}</span><span class="spacer"></span><span class="chip">${row[0]}</span></div>
+      <div class="prompt"><span class="eyebrow">Bạn nghe thấy âm nào?</span><button class="btn primary" data-say="${c}">${SPK} Nghe lại</button></div>
+      <div class="opts" style="grid-template-columns:1fr 1fr">${pair.map(([cc,pp],i)=>`<button class="opt" data-mi="${i}" style="justify-content:center;font-size:1.3rem;font-weight:600"><span class="t${toneOf(pp)}">${pp}</span></button>`).join("")}</div><div id="mpfb"></div></div>`;
+    setTimeout(()=>speak(c),150);
+    el.querySelectorAll("[data-mi]").forEach(b=>b.onclick=()=>{if(done)return;done=true;const ok=+b.dataset.mi===k;if(ok)score++;
+      el.querySelectorAll("[data-mi]").forEach(x=>{x.disabled=true;if(+x.dataset.mi===k)x.classList.add("ok");else if(x===b)x.classList.add("no")});
+      $("#mpfb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Đúng":"Sai"}</b><span class="detail">${pair.map(([cc,pp])=>`<button class="chip" data-say="${cc}"><span class="han">${cc}</span> ${pp}</button>`).join(" ")} · ${esc(row[1])}</span><span class="spacer"></span><button class="btn primary" id="mpN">Tiếp</button></div>`;
+      $("#mpN").onclick=()=>{round++;next()}})};
+  next()}
 function numDrillHTML(){return `<section class="sect" id="sec-num"><div><div class="eyebrow">Con số</div><h2>Luyện nghe số, giá tiền, giờ và ngày</h2>
   <p class="muted" style="margin:6px 0 0;max-width:64ch">Đi chợ, hỏi giờ, đặt lịch đều cần nghe số thật nhanh. Chú ý: 两 thay 二 trước 百, 千 và lượng từ; số 0 ở giữa đọc 零; ngày tháng tiếng Trung đọc tháng trước, ngày sau.</p></div>
   <div class="subtabs" id="ndTabs">${ND_TYPES.map(([k,l])=>`<button data-nd="${k}" aria-pressed="${k===ndType}">${l}</button>`).join("")}</div><div id="ndBody"></div></section>`}
