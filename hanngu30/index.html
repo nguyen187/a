@@ -232,7 +232,7 @@ td b{font-size:1.05rem}
 .jump::-webkit-scrollbar{display:none}
 .jump button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:.84rem;font-weight:600;color:var(--jade)}
 .jump button:hover{border-color:var(--jade)}
-[id^="sec-"],#pairBox,#phBox{scroll-margin-top:120px}
+[id^="sec-"],#pairBox,#phBox,#mwBox{scroll-margin-top:120px}
 .note{display:grid;gap:4px}
 .note textarea{font:inherit;font-size:.95rem;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);resize:vertical;min-height:52px}
 .noteline{font-size:.82rem;color:var(--seal);line-height:1.4}
@@ -2156,6 +2156,20 @@ function wirePhrases(){const box=$("#phBox");if(!box)return;
     box.querySelectorAll("[data-ph]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.ph===phraseIdx));};
   $("#phTabs").onclick=e=>{const b=e.target.closest("[data-ph]");if(!b)return;phraseIdx=+b.dataset.ph;draw()};
   draw()}
+const MW={"个":"cái, người (chung)","本":"cuốn, quyển","杯":"cốc, ly","瓶":"chai","张":"tờ, tấm (vật phẳng)","件":"chiếc (áo), việc","只":"con (động vật nhỏ)","条":"chiếc, con (vật dài)","辆":"chiếc (xe)","双":"đôi","家":"(cửa hàng, công ty)","口":"(người trong nhà)"};
+const MWN=[["书","本"],["词典","本"],["咖啡","杯"],["茶","杯 瓶"],["水","杯 瓶"],["照片","张"],["票","张"],["地图","张"],["桌子","张"],["衣服","件"],["猫","只"],["狗","只 条"],["裤子","条"],["裙子","条"],["车","辆"],["自行车","辆"],["出租车","辆"],["鞋","双"],["人","个"],["苹果","个"],["学生","个"],["朋友","个"],["问题","个"],["饭馆","家"],["商店","家"],["公司","家"],["医院","家"]];
+function mwHTML(){const by={};MWN.forEach(([n,m])=>m.split(" ").forEach(x=>(by[x]=by[x]||[]).push(n)));
+  return `<details class="card" id="mwBox"><summary><b>Lượng từ</b> <span class="muted">· ${Object.keys(MW).length} lượng từ hay dùng và danh từ đi kèm</span></summary>
+    <div class="dlist" style="margin-top:12px">${Object.entries(MW).map(([m,vi])=>`<div class="drow" style="grid-template-columns:48px 1fr auto"><span class="han dh">${m}</span><div style="min-width:0"><div class="muted" style="font-size:.86rem">${esc(vi)}</div><div>${m==="口"?`<span class="han">我家有四口人</span>`:(by[m]||[]).map(n=>`<span class="seg han" data-lk="${n}">${n}</span>`).join(" · ")}</div></div><button class="say" data-say="一${m}" aria-label="Nghe">${SPK}</button></div>`).join("")}</div>
+    <p class="muted" style="font-size:.86rem;margin:10px 0 0">Mẹo: chưa chắc thì dùng 个, người nghe vẫn hiểu. Trước lượng từ, “hai” luôn là 两.</p>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="mwGo">Luyện 10 câu lượng từ</button></div><div id="mwQuiz" style="margin-top:12px"></div></details>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#mwGo"))return;const box=$("#mwQuiz");const all=Object.keys(MW).filter(m=>m!=="口");
+  const qs=pick(MWN,10).map(([n,m])=>{const ok=m.split(" "),num=["一","两","三","五","几"][Math.floor(Math.random()*5)],ans=ok[0];
+    const ds=pick(all.filter(x=>!ok.includes(x)),3);const w=BYH[n];const blank=`<span style="display:inline-block;min-width:1.2em;border-bottom:2px solid var(--jade)">&nbsp;</span>`;
+    return {type:"mw",prompt:`<span class="eyebrow">Chọn lượng từ đúng</span><div class="han" style="font-size:2rem">${num} ${blank} ${n}</div><div class="muted">${w?esc(w.m):""}</div>`,
+      opts:shuffle([{html:`<span class="hz">${ans}</span> <span class="muted" style="font-size:.82rem">${esc(MW[ans])}</span>`,ok:true},...ds.map(x=>({html:`<span class="hz">${x}</span> <span class="muted" style="font-size:.82rem">${esc(MW[x])}</span>`,ok:false}))]),
+      explain:`<span class="han" style="font-size:1.15rem">${num}${ok.join("/")}${n}</span>${ok.length>1?" · dùng được cả "+ok.join(" và "):""}`,say:num+ans+n}});
+  runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><div>${sc>=8?"Bạn dùng lượng từ rất chuẩn!":"Xem lại bảng lượng từ phía trên rồi thử lại nhé."}</div><button class="btn" id="mwGo">Làm lại</button></div>`})});
 function pairQuestions(){const out=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>{const ans=k?p.b:p.a,oth=k?p.a:p.b;
   const shown=esc(sent).replace("___",`<span style="display:inline-block;min-width:${[...ans[0]].length*1.1}em;border-bottom:2px solid var(--jade)">&nbsp;</span>`);
   out.push({type:"pair",w:{h:ans[0],p:ans[1],m:ans[2]+" — "+p.note},prompt:`<span class="eyebrow">Chọn từ đúng</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div>`,
@@ -2167,7 +2181,7 @@ function trapsHTML(){return `<section class="sect" id="trapSec">
   <details class="card" id="pairBox"><summary><b>Cặp từ dễ nhầm</b> <span class="muted">· ${PAIRS.length} cặp người Việt hay dùng sai</span></summary>
     <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="pairGo">Luyện 10 câu cặp từ dễ nhầm</button></div></details>
-  <div id="pairQuiz"></div>${phrasesHTML()}</section>`}
+  <div id="pairQuiz"></div>${mwHTML()}${phrasesHTML()}</section>`}
 function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=$("#pairQuiz");box.scrollIntoView({behavior:"smooth",block:"start"});
   runQuiz(box,pairQuestions(),(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Cặp từ dễ nhầm</div><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="pairAgain">Làm lại</button></div>`;$("#pairAgain").onclick=()=>$("#pairGo").click()})}}
 
@@ -2175,7 +2189,7 @@ function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=
 ALL.forEach(w=>w.k=[nrm(w.p),nrm(w.m),nrm(w.v||"")]);
 let dictQ="",dictWk="0",dictOnly=false;
 function viewDict(){
-  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="mwBox">Lượng từ</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Tìm bằng chữ Hán, pinyin không dấu (nihao), nghĩa tiếng Việt hoặc âm Hán Việt (nhĩ hảo).</p></div>
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
       <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
