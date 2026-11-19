@@ -2345,6 +2345,13 @@ document.addEventListener("click",e=>{if(!e.target.closest("#qaGo"))return;const
       opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}});
   runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=7?"Phản xạ rất tốt! Thử tự nói câu trả lời trước khi chọn.":"Bấm “Xem chữ” khi chưa nghe kịp, rồi luyện lại."}</p><button class="btn" id="qaGo">Làm lại</button></div>`});
 });
+
+document.addEventListener("click",e=>{if(!e.target.closest("#errGo"))return;const box=$("#errQuiz");if(!box)return;
+  const qs=shuffle(ERRS.slice()).slice(0,10).map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
+    explain:`<span class="han">${esc(ok)}</span><div style="font-size:.88rem">${esc(why)}</div>`,
+    opts:shuffle([{html:`<span class="han">${esc(ok)}</span>`,ok:true},{html:`<span class="han">${esc(bad)}</span>`,ok:false}])}));
+  runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=9?"Trật tự câu của bạn đã rất “Trung Quốc”!":"Nhớ quy tắc vàng: Ai + Khi nào + Ở đâu + Làm gì."}</p><button class="btn" id="errGo">Làm lại</button></div>`});
+  box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2729,6 +2736,26 @@ function viewWrite(){
 }
 
 /* ===================== BẪY HÁN VIỆT & CẶP TỪ DỄ NHẦM ===================== */
+const ERRS=[["我在家吃饭。","我吃饭在家。","Tôi ăn cơm ở nhà.","Nơi chốn (在 + chỗ) đứng TRƯỚC động từ, ngược với tiếng Việt."],
+["我明天去北京。","我去北京明天。","Ngày mai tôi đi Bắc Kinh.","Thời gian đứng trước động từ (sau hoặc trước chủ ngữ), không để cuối câu."],
+["她很漂亮。","她漂亮。","Cô ấy (rất) đẹp.","Câu miêu tả bằng tính từ cần 很 (hoặc phó từ khác); không dùng 是 trước tính từ."],
+["我很忙。","我是忙。","Tôi bận.","Tính từ làm vị ngữ không cần 是: nói 我很忙, không nói 我是忙."],
+["这是我的书。","这是书我的。","Đây là sách của tôi.","Định ngữ đứng TRƯỚC danh từ: 我的书 = sách của tôi."],
+["我有一个朋友。","我有一朋友。","Tôi có một người bạn.","Giữa số và danh từ phải có lượng từ: 一个朋友."],
+["我有两本书。","我有二本书。","Tôi có hai quyển sách.","Trước lượng từ dùng 两, không dùng 二."],
+["我比他高。","我高比他。","Tôi cao hơn anh ấy.","So sánh: A 比 B + tính từ. Tính từ đứng cuối."],
+["他跑得很快。","他跑很快。","Anh ấy chạy rất nhanh.","Bổ ngữ trạng thái cần 得: động từ + 得 + 很 + tính từ."],
+["我学了两年汉语。","我学汉语了两年。","Tôi học tiếng Trung hai năm rồi.","Thời lượng đứng sau động từ, trước tân ngữ: 学了两年汉语."],
+["我跟朋友一起去。","我去一起跟朋友。","Tôi đi cùng bạn.","跟 + người + 一起 đứng trước động từ."],
+["你喝茶还是喝咖啡？","你喝茶或者喝咖啡？","Bạn uống trà hay cà phê?","Câu hỏi lựa chọn dùng 还是; 或者 dùng trong câu kể."],
+["我不认识他。","我不知道他。","Tôi không quen anh ấy.","Quen biết người dùng 认识; 知道 là biết thông tin."],
+["我会说汉语。","我知道说汉语。","Tôi biết nói tiếng Trung.","Biết một kỹ năng đã học dùng 会."],
+["这件衣服有点儿贵。","这件衣服贵有点儿。","Cái áo này hơi đắt.","有点儿 đứng TRƯỚC tính từ (thường mang ý chê)."],
+["请你再说一遍。","请你说再一遍。","Mời bạn nói lại một lần nữa.","再 là phó từ, đứng trước động từ."],
+["我昨天没去学校。","我昨天不去学校了。","Hôm qua tôi không đi học.","Phủ định việc đã xảy ra dùng 没, không dùng 不."],
+["他是我的老师。","他是老师我的。","Anh ấy là thầy giáo của tôi.","我的 + danh từ: sở hữu đứng trước."],
+["我每天早上七点起床。","我起床七点每天早上。","Tôi dậy lúc 7 giờ sáng mỗi ngày.","Thời gian xếp từ lớn đến nhỏ và đứng trước động từ."],
+["你吃饭了吗？","你吃饭了没吗？","Bạn ăn cơm chưa?","Dùng 吗 HOẶC 没有 ở cuối, không dùng cả hai."]];
 const TRAPS=[["东西","dōngxi","đông tây","phương đông và phương tây","đồ vật, đồ đạc"],
 ["走","zǒu","tẩu","chạy trốn, tẩu thoát","đi bộ; rời đi"],
 ["爱人","àirén","ái nhân","người yêu","vợ hoặc chồng (cách gọi ở Đại lục)"],
@@ -2903,7 +2930,10 @@ function trapsHTML(){return `<section class="sect" id="trapSec">
   <details class="card" id="pairBox"><summary><b>Cặp từ dễ nhầm</b> <span class="muted">· ${PAIRS.length} cặp người Việt hay dùng sai</span></summary>
     <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="pairGo">Luyện 10 câu cặp từ dễ nhầm</button></div></details>
-  <div id="pairQuiz"></div>${lookHTML()}${mwHTML()}${rpHTML()}${phrasesHTML()}</section>`}
+  <div id="pairQuiz"></div>
+  <details class="card" id="errBox"><summary><b>Câu nào đúng?</b> <span class="muted">· ${ERRS.length} lỗi do bê trật tự tiếng Việt sang</span></summary>
+    <div class="muted" style="font-size:.88rem;margin-top:10px">Người Việt hay nói “ăn cơm ở nhà”, “đi Bắc Kinh ngày mai” nên dễ đặt sai vị trí trạng ngữ. Chọn câu đúng, đọc giải thích rồi đọc to câu đúng.</div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="errGo">Luyện 10 câu</button></div><div id="errQuiz"></div></details>${lookHTML()}${mwHTML()}${rpHTML()}${phrasesHTML()}</section>`}
 function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=$("#pairQuiz");box.scrollIntoView({behavior:"smooth",block:"start"});
   runQuiz(box,pairQuestions(),(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Cặp từ dễ nhầm</div><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="pairAgain">Làm lại</button></div>`;$("#pairAgain").onclick=()=>$("#pairGo").click()})}}
 
@@ -2911,7 +2941,7 @@ function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=
 ALL.forEach(w=>w.k=[nrm(w.p),nrm(w.m),nrm(w.v||"")]);
 let dictQ="",dictWk="0",dictOnly=false,dictDay="0";
 function viewDict(){
-  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="lookBox">Chữ giống nhau</button><button data-jump="mwBox">Lượng từ</button><button data-jump="rpBox">Nhập vai</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="errBox">Câu nào đúng</button><button data-jump="lookBox">Chữ giống nhau</button><button data-jump="mwBox">Lượng từ</button><button data-jump="rpBox">Nhập vai</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Tìm bằng chữ Hán, pinyin không dấu (nihao), nghĩa tiếng Việt hoặc âm Hán Việt (nhĩ hảo).</p></div>
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
       <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select><select id="dd" class="btn" aria-label="Lọc theo bài" style="flex:1 1 200px;min-width:0;max-width:100%;width:100%;text-overflow:ellipsis"><option value="0">Mọi bài</option>${DAYS.filter(d=>d.words.length).map(d=>`<option value="${d.n}" ${dictDay==d.n?"selected":""}>Ngày ${d.n}: ${esc(d.t)}</option>`).join("")}</select>
