@@ -200,7 +200,9 @@ td b{font-size:1.05rem}
 .charlist button{font-family:var(--f-han);font-size:1.3rem;width:44px;height:44px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
 .charlist button[aria-pressed="true"]{border-color:var(--seal);color:var(--seal);border-width:2px}
 .rad{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
-.rad div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);display:flex;gap:10px;align-items:center}
+.rad button{font:inherit;color:inherit;text-align:left;cursor:pointer;min-width:0}
+.rad button[aria-expanded="true"]{border-color:var(--jade);background:var(--jade-soft)}
+.rad div,.rad button{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);display:flex;gap:10px;align-items:center}
 .rad b{font-family:var(--f-han);font-size:1.6rem;font-weight:500}
 .rad span{font-size:.8rem;line-height:1.3}
 
@@ -1197,6 +1199,7 @@ const TONE_SETS=[
  ["ma","妈麻马骂"],["ba","八拔把爸"],["yi","一姨椅意"],["wu","屋无五雾"],["tang","汤糖躺烫"],
  ["shi","诗十使是"],["qi","七骑起气"],["fu","夫福府父"],["tong","通同统痛"],["da","搭达打大"],["hu","呼湖虎户"],["ji","鸡急几记"]
 ];
+const RADCH={"亻": "什他们件休但住体作你便信候做健化", "氵": "汉汽没法泳洗流海清游满漂澡", "口": "叫吃吗吧听呢咖哪唱啡喝号可右句名", "女": "她好如妈妹始姐婚", "木": "机李杯板果校样桌梯楼本末", "扌": "打扫找把护担挂换接提搬", "艹": "节英苹茶药菜", "讠": "订认议记讲识诉词试话该语说请读课谁谢", "心 忄": "心忘忙快怎怕思急怪息情惯想意感慢懂", "日": "早时明星春昨是晚晴最旧", "月": "有朋服望期胖脑", "钅": "钥钱铁银锻镜", "纟": "练终经结给绩", "饣": "饭饿馆", "辶": "边过运近还这进远连送遇道", "宀": "安完定宜客害家容宾字", "土": "在地场坐块城境墙", "火 灬": "灯炼烤热然照点", "足": "跑跟跳踢", "目": "看眼睛睡真相直"};
 const RADICALS=[["亻","người"],["氵","nước"],["口","miệng"],["女","nữ"],["木","cây"],["扌","tay"],["艹","cỏ"],["讠","lời nói"],["心 忄","tim, tâm"],["日","mặt trời"],["月","trăng, thịt"],["钅","kim loại"],["纟","tơ"],["饣","ăn"],["辶","đi"],["宀","mái nhà"],["土","đất"],["火 灬","lửa"],["足","chân"],["目","mắt"]];
 
 /* bài đọc cuối mỗi chặng */
@@ -2243,6 +2246,14 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-tr]");if(!b||!TR)return;const [zh,p,v]=TR.q[TR.i];
   if(b.dataset.tr==="1")TR.ok++;else{S.bm=Array.isArray(S.bm)?S.bm:[];if(!S.bm.some(x=>x[0]===zh))S.bm.push([zh,p,v,Date.now()])}
   S.stats.ans++;if(b.dataset.tr==="1")S.stats.ok++;TR.i++;trShow()});
+
+document.addEventListener("click",e=>{const b=e.target.closest("[data-rad]");if(!b)return;const r=b.dataset.rad,box=$("#radBox");if(!box)return;
+  const open=b.getAttribute("aria-expanded")==="true";document.querySelectorAll("[data-rad]").forEach(x=>x.setAttribute("aria-expanded","false"));
+  if(open){box.innerHTML="";return}b.setAttribute("aria-expanded","true");const m=(RADICALS.find(x=>x[0]===r)||[])[1]||"";
+  const rows=[...(RADCH[r]||"")].map(c=>{const ws=ALL.filter(w=>w.h.includes(c));const w=ws.find(x=>x.h===c)||ws.slice().sort((a,b)=>a.h.length-b.h.length||a.day-b.day)[0];return [c,w,ws.length]}).filter(x=>x[1]);
+  box.innerHTML=`<div class="card" style="margin-top:12px"><div class="row"><span class="han" style="font-size:1.8rem">${r}</span><div style="min-width:0;flex:1"><div class="eyebrow">Bộ ${esc(m)}</div><div class="muted" style="font-size:.84rem">${rows.length} chữ trong khóa · <span class="num">${rows.filter(x=>S.srs[x[1].h]).length}</span> chữ bạn đã học</div></div></div>
+  <div class="dlist" style="margin-top:10px">${rows.map(([c,w])=>`<div class="drow" style="grid-template-columns:44px 1fr auto;align-items:center"><span class="han" style="font-size:1.7rem;${S.srs[w.h]?"":"opacity:.55"}">${c}</span><div style="min-width:0"><span class="han">${esc(w.h)}</span> <span class="muted">${esc(w.p)}</span><div style="font-size:.86rem;overflow-wrap:anywhere">${esc(w.m)}${w.v?` <span class="muted">· ${esc(w.v)}</span>`:""}</div></div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe ${esc(w.h)}">${SPK}</button></div>`).join("")}</div></div>`;
+  box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2557,7 +2568,7 @@ function mountWriter(el,words,blind,dayN){
     <div style="display:grid;gap:12px;min-width:0"><div class="eyebrow">Chọn chữ</div><div class="charlist" id="cl"></div>
       <div id="winfo" class="card"></div>
       <p class="muted" style="margin:0;font-size:.88rem">Học theo 3 bước: <b>Xem nét</b> để thuộc thứ tự, <b>Viết theo</b> trên nét mờ, rồi <b>Tự viết</b> không nhìn. Nét màu đỏ trong chế độ Xem nét là bộ thủ của chữ. Quy tắc chung: trên trước dưới sau, trái trước phải sau, ngang trước sổ sau, ngoài trước trong sau, đóng khung sau cùng.</p></div></div>
-  <div class="sect"><h3>20 bộ thủ thường gặp</h3><div class="rad">${RADICALS.map(([r,m])=>`<div><b>${r}</b><span>${m}</span></div>`).join("")}</div></div>`;
+  <div class="sect" id="radSect"><h3>20 bộ thủ thường gặp</h3><p class="muted" style="margin:4px 0 10px;font-size:.88rem">Chạm vào một bộ để xem các chữ trong khóa có bộ đó. Bộ thủ gợi ý nghĩa: thấy 氵 là đoán liên quan tới nước, thấy 讠 là liên quan tới lời nói.</p><div class="rad">${RADICALS.map(([r,m])=>`<button data-rad="${r}" aria-expanded="false"><b>${r}</b><span>${m}<small class="num muted" style="display:block">${[...(RADCH[r]||"")].length} chữ</small></span></button>`).join("")}</div><div id="radBox" aria-live="polite"></div></div>`;
   const pad=$("#pad"),ctl=$("#wctl"),msg=t=>{$("#wmsg").innerHTML=t};
   const drawList=()=>{$("#cl").innerHTML=chars.map(c=>`<button data-c="${c}" aria-pressed="${c===cur}" class="${S.write&&S.write[c]!=null?"done":""}" title="${S.write&&S.write[c]!=null?"Đã tự viết đúng":""}">${blind&&!solved.has(c)?chars.indexOf(c)+1:c}</button>`).join("")};
   const info=()=>{const w=words.find(x=>x.h.includes(cur));const n=STROKES&&STROKES[cur]?STROKES[cur].strokes.length:null;
