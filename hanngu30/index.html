@@ -2339,7 +2339,7 @@ const QA=[[1,"你好吗？","Nǐ hǎo ma?","Bạn khỏe không?","我很好，�
 [10,"我们一起去吃饭，好吗？","Wǒmen yìqǐ qù chī fàn, hǎo ma?","Chúng ta cùng đi ăn nhé?","好啊，走吧！","Được thôi, đi nào!"]];
 let QAS=null;
 function qaHTML(){return `<div class="card sect" id="qaBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Phản xạ hỏi đáp</div><h3>Nghe câu hỏi, chọn câu trả lời hợp</h3>
-  <div class="muted" style="font-size:.86rem">Giao tiếp thật cần phản xạ nhanh: nghe hiểu câu hỏi và biết đáp gì. ${QA.length} câu hỏi thường gặp nhất.</div></div>
+  <div class="muted" style="font-size:.86rem">Giao tiếp thật cần phản xạ nhanh: nghe hiểu câu hỏi và biết đáp gì. ${qaPool().length} câu hỏi thường gặp${qaPool().length<QA.length?", thêm câu mới khi bạn học tiếp":""}.</div></div>
   <div class="row"><button class="btn primary" id="qaGo">Luyện 8 câu</button></div></div><div id="qaWork"></div></div>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#qaGo"))return;const box=$("#qaWork");if(!box)return;const ls=canSpeak();
   const qs=qaQs(8);
@@ -2356,15 +2356,17 @@ function trapQs(n,L){const ls=canSpeak();const L0=shuffle((L||TRAPS).slice()).sl
 function shQs(n,L){const ls=canSpeak();const L0=shuffle((L||SANDHI).slice()).slice(0,n);return L0.map(([h,i,ok,...bad])=>{const hl=[...h].map((c,k)=>k===i?`<span style="color:var(--seal);background:var(--seal-soft);border-radius:8px;padding:0 4px">${c}</span>`:c).join("");
     return {type:"sandhi",w:BYH[h],autoSay:canSpeak()?h:null,prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
       opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}}).map((q,k)=>(q.key="sh:"+L0[k][0],q))}
-function qaQs(n,L){const ls=canSpeak();const L0=shuffle((L||QA).slice()).slice(0,n);return L0.map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
+function qaQs(n,L){const ls=canSpeak();const L0=shuffle((L||qaPool()).slice()).slice(0,n);return L0.map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
     return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}`,
       explain:`<span class="han">${segHTML(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${segHTML(a)}</span> <span class="muted">${esc(av)}</span>`,
       opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}}).map((q,k)=>(q.key="qa:"+L0[k][1],q))}
-function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||ERRS).slice()).slice(0,n);return L0.map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
+function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||errPool()).slice()).slice(0,n);return L0.map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
     explain:`<span class="han">${segHTML(ok)}</span><div style="font-size:.88rem">${esc(why)}</div>`,
     opts:shuffle([{html:`<span class="han">${esc(ok)}</span>`,ok:true},{html:`<span class="han">${esc(bad)}</span>`,ok:false}])})).map((q,k)=>(q.key="err:"+L0[k][0],q))}
 
 
+function errPool(){return currentDay()>=20||Object.keys(S.done).length>=18?ERRS:ERRS.slice(0,20)}
+function qaPool(){const lv=Math.max(3,Math.ceil(currentDay()/3)+1);const L=QA.filter(x=>x[0]<=lv);return L.length>=8?L:QA}
 function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs]},out=[];
   Object.keys(m).forEach(k=>{const i=k.indexOf(":"),t=k.slice(0,i),id=k.slice(i+1),d=by[t];if(!d)return;const it=d[0].find(x=>x[d[1]]===id);if(it)out.push(...d[2](1,[it]))});return shuffle(out).slice(0,10)}
 function mixQs(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);let qs=[...errQs(2),...trapQs(2),...shQs(2),...qaQs(2)];
@@ -2971,7 +2973,7 @@ function trapsHTML(){return `<section class="sect" id="trapSec">
     <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="pairGo">Luyện 10 câu cặp từ dễ nhầm</button></div></details>
   <div id="pairQuiz"></div>
-  <details class="card" id="errBox"><summary><b>Câu nào đúng?</b> <span class="muted">· ${ERRS.length} lỗi do bê trật tự tiếng Việt sang</span></summary>
+  <details class="card" id="errBox"><summary><b>Câu nào đúng?</b> <span class="muted">· ${errPool().length}${errPool().length<ERRS.length?"/"+ERRS.length:""} lỗi do bê trật tự tiếng Việt sang${errPool().length<ERRS.length?" (phần nâng cao mở từ ngày 20)":""}</span></summary>
     <div class="muted" style="font-size:.88rem;margin-top:10px">Người Việt hay nói “ăn cơm ở nhà”, “đi Bắc Kinh ngày mai” nên dễ đặt sai vị trí trạng ngữ. Chọn câu đúng, đọc giải thích rồi đọc to câu đúng.</div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="errGo">Luyện 10 câu</button></div><div id="errQuiz"></div></details>${lookHTML()}${mwHTML()}${rpHTML()}${phrasesHTML()}</section>`}
 function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=$("#pairQuiz");box.scrollIntoView({behavior:"smooth",block:"start"});
