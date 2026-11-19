@@ -1492,7 +1492,29 @@ const EXTRA=`辣|là|cay|lạt
 只能|zhǐ néng|chỉ có thể|chỉ năng
 下边|xià bian|phía dưới|hạ biên
 电话|diàn huà|điện thoại, cuộc gọi|điện thoại
-打|dǎ|đánh; gọi (điện thoại); chơi (bóng)|đả`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
+打|dǎ|đánh; gọi (điện thoại); chơi (bóng)|đả
+您好|nín hǎo|xin chào (kính trọng)|nâm hảo
+吃饭了吗|chī fàn le ma|ăn cơm chưa? (câu chào)|ngật phạn liễu ma
+发|fā|phát (tài); gửi|phát
+死|sǐ|chết|tử
+长寿面|cháng shòu miàn|mì trường thọ|trường thọ miến
+我请客|wǒ qǐng kè|tôi mời (trả tiền)|ngã thỉnh khách
+请客|qǐng kè|mời khách, bao|thỉnh khách
+支付宝|Zhī fù bǎo|Alipay|chi phó bảo
+滴滴|Dī dī|Didi (ứng dụng gọi xe)|tích tích
+押金|yā jīn|tiền đặt cọc|áp kim
+送钟|sòng zhōng|tặng đồng hồ|tống chung
+送终|sòng zhōng|tiễn người lúc lâm chung|tống chung
+伞|sǎn|cái ô|tản
+散|sàn|tan, chia lìa|tán
+梨|lí|quả lê|lê
+午休|wǔ xiū|nghỉ trưa|ngọ hưu
+不到长城非好汉|bú dào Cháng chéng fēi hǎo hàn|chưa đến Trường Thành chưa phải hảo hán|bất đáo Trường Thành phi hảo hán
+北京烤鸭|Běi jīng kǎo yā|vịt quay Bắc Kinh|Bắc Kinh khảo áp
+面子|miàn zi|thể diện|diện tử
+我再想想|wǒ zài xiǎng xiang|để tôi nghĩ thêm|ngã tái tưởng tưởng
+跳广场舞|tiào guǎng chǎng wǔ|nhảy quảng trường|khiêu quảng trường vũ
+逛街|guàng jiē|dạo phố|cuống nhai`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
 EXTRA.forEach(w=>{if(!BYH[w.h])BYH[w.h]=w});
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
 /* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
@@ -1518,7 +1540,7 @@ function segGreedy(text){const out=[],ch=[...text];let i=0;
 const SEGC=new Map();
 function seg(text){if(SEGC.has(text))return SEGC.get(text);const ch=[...text],n=ch.length,best=new Array(n+1).fill(Infinity),prev=new Array(n+1);best[0]=0;
   for(let i=0;i<n;i++){if(best[i]===Infinity)continue;const han=/\p{Script=Han}/u.test(ch[i]);
-    if(han)for(let L=2;L<=Math.min(4,n-i);L++){const t=ch.slice(i,i+L).join("");if(BYH[t]&&best[i]+1<best[i+L]){best[i+L]=best[i]+1;prev[i+L]=[i,t,true]}}
+    if(han)for(let L=2;L<=Math.min(8,n-i);L++){const t=ch.slice(i,i+L).join("");if(BYH[t]&&best[i]+1<best[i+L]){best[i+L]=best[i]+1;prev[i+L]=[i,t,true]}}
     const one=ch[i],c=han?(BYH[one]?1:1.6):0.01;if(best[i]+c<best[i+1]){best[i+1]=best[i]+c;prev[i+1]=[i,one,han&&!!BYH[one]]}}
   const out=[];let j=n;while(j>0){const [i,t,isW]=prev[j];out.unshift(isW?{t,w:BYH[t]}:{t});j=i}
   SEGC.set(text,out);return out}
@@ -2033,6 +2055,10 @@ const CULTURE={
 10:["Trả giá và thanh toán","Ở chợ, chợ đêm có thể trả giá: 便宜一点儿吧. Trong siêu thị, trung tâm thương mại thì giá cố định. Hầu hết mọi nơi thanh toán bằng 微信 (WeChat Pay) hoặc 支付宝 (Alipay); nên cài sẵn trước khi sang."],
 15:["Đi lại","Taxi tính tiền theo đồng hồ, ít khi trả giá. Người Trung Quốc hay gọi xe bằng ứng dụng 滴滴 (Dīdī). Tàu điện ngầm ở các thành phố lớn rất tiện, bảng tên ga có cả chữ Hán, pinyin và tiếng Anh."],
 25:["Ở khách sạn","Người nước ngoài phải đưa 护照 (hộ chiếu) khi nhận phòng; khách sạn sẽ đăng ký tạm trú. Một số nơi giá rẻ không được nhận khách nước ngoài, nên đặt trước qua ứng dụng và kiểm tra kỹ. Thường phải 押金 (yājīn, đặt cọc)."],
+13:["Ngủ trưa","Nhiều người Trung Quốc có thói quen 午休 (wǔxiū, nghỉ trưa) khoảng 12:00 đến 14:00, giống người Việt. Trường học và một số cơ quan nghỉ trưa khá lâu, nên đừng hẹn gặp hay gọi điện vào giờ này."],
+21:["Trường Thành và vịt quay","Người Trung Quốc có câu 不到长城非好汉: chưa đến Trường Thành thì chưa phải hảo hán. Đến Bắc Kinh, món phải thử là 北京烤鸭 (vịt quay Bắc Kinh), ăn cuốn với bánh mỏng, hành và tương ngọt, hơi giống cách ăn cuốn của người Việt."],
+27:["Thể diện","面子 (miànzi, thể diện) rất quan trọng. Tránh chê thẳng hay làm người khác mất mặt trước đông người; khi từ chối thường nói vòng: 我再想想 (để tôi nghĩ thêm). Được khen, người ta hay đáp 哪里哪里 (đâu có đâu) để tỏ ra khiêm tốn."],
+36:["Nhảy quảng trường","Buổi tối ở công viên và quảng trường, rất nhiều cô bác cùng nhau 跳广场舞 (nhảy quảng trường) theo nhạc, khá giống các nhóm tập thể dục buổi sáng ở hồ Hoàn Kiếm. Người trẻ thì thích đi 逛街 (dạo phố) hoặc xem phim cuối tuần."],
 28:["Quà nên tránh","Không tặng đồng hồ: 送钟 (sòng zhōng) đồng âm với 送终 (tiễn người chết). Không tặng ô 伞 (sǎn, gần âm 散 - chia ly) hay chia đôi quả lê 梨 (lí, gần âm 离 - xa cách). Quà màu đỏ, số chẵn được coi là may mắn; nhận quà bằng hai tay."]};
 function cultureHTML(n){const c=CULTURE[n];return c?`<details class="card" style="border-color:var(--seal)"><summary><b>Góc văn hóa</b> <span class="muted">· ${esc(c[0])}</span></summary><p style="margin:10px 0 0;max-width:68ch">${segHTML(c[1])}</p></details>`:""}
 function readingHTML(d){if(!d.rds.length)return"";
