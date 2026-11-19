@@ -1866,7 +1866,14 @@ function viewToday(){
       <div class="row"><a class="btn ${due?"primary":""}" href="#review">${due?"Ôn ngay":"Mở bộ thẻ"}</a></div>
     </div>
   </section>
-  <section class="sect">
+  ${Object.keys(S.done).length?`<details class="card"><summary><b>Phương pháp 30 phút mỗi ngày</b> <span class="muted">· mở để xem lại</span></summary><div style="margin-top:12px">
+    <div class="method">
+      <div><i>5 phút</i><b>Ôn thẻ đến hạn</b>Gợi nhớ chủ động trước khi xem đáp án.</div>
+      <div><i>10 phút</i><b>Từ mới</b>Bấm nghe từng từ, đọc to theo, chú ý màu thanh điệu.</div>
+      <div><i>5 phút</i><b>Ngữ pháp</b>Đọc mẫu câu và nói lại 4 câu ví dụ.</div>
+      <div><i>5 phút</i><b>Kiểm tra</b>Đạt 70% để mở khóa từ vào bộ ôn tập.</div>
+      <div><i>5 phút</i><b>Viết chữ</b>Viết 3–5 chữ trên ô 田, nhìn mờ rồi tự viết.</div>
+    </div></div></details>`:`<section class="sect">
     <div><div class="eyebrow">Phương pháp</div><h2>30 phút mỗi ngày, theo thứ tự này</h2></div>
     <div class="method">
       <div><i>5 phút</i><b>Ôn thẻ đến hạn</b>Gợi nhớ chủ động trước khi xem đáp án.</div>
@@ -1875,7 +1882,7 @@ function viewToday(){
       <div><i>5 phút</i><b>Kiểm tra</b>Đạt 70% để mở khóa từ vào bộ ôn tập.</div>
       <div><i>5 phút</i><b>Viết chữ</b>Viết 3–5 chữ trên ô 田, nhìn mờ rồi tự viết.</div>
     </div>
-  </section>
+  </section>`}
   <section class="card sect"><div class="row"><div><div class="eyebrow">Dữ liệu học tập</div><h3>Tổng kết của bạn</h3></div></div>
     <div class="stats">
       <div class="stat"><b>${Object.keys(S.done).length}</b><span>ngày đã hoàn thành / ${DAYS.length}</span></div>
