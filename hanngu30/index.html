@@ -2172,6 +2172,7 @@ function viewReview(){
     ${weakHTML()}
     ${randReadHTML()}
     ${transHTML()}
+    ${qaHTML()}
     ${savedHTML()}
     ${passiveHTML()}
     ${matchHTML()}
@@ -2182,7 +2183,7 @@ function viewReview(){
     ${forecastHTML()}
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
-  $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
+  $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["qaBox","Hỏi đáp"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
   if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}},60)}
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
@@ -2281,10 +2282,48 @@ function sandhiHTML(){return `<section class="sect" id="sec-sandhi"><div><div cl
   <div class="card"><div class="row"><button class="btn primary" id="shGo">Luyện 12 câu</button><span class="muted" style="font-size:.86rem">${SANDHI.length} cụm: 不 · 一 · 3+3</span></div><div id="shBox"></div></div></section>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#shGo"))return;const box=$("#shBox");if(!box)return;
   const qs=shuffle(SANDHI.slice()).slice(0,12).map(([h,i,ok,...bad])=>{const hl=[...h].map((c,k)=>k===i?`<span style="color:var(--seal);background:var(--seal-soft);border-radius:8px;padding:0 4px">${c}</span>`:c).join("");
-    return {type:"sandhi",w:BYH[h],listen:canSpeak(),prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
+    return {type:"sandhi",w:BYH[h],autoSay:canSpeak()?h:null,prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
       opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}});
   runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><ul class="muted" style="text-align:left;margin:8px 0;padding-left:20px;display:grid;gap:4px"><li>不 + thanh 4 → bú</li><li>一 + thanh 4 → yí; 一 + thanh 1, 2, 3 → yì; đếm số → yī</li><li>3 + 3 → 2 + 3</li></ul><button class="btn" id="shGo">Làm lại</button></div>`});
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
+
+const QA=[[1,"你好吗？","Nǐ hǎo ma?","Bạn khỏe không?","我很好，谢谢。","Tôi khỏe, cảm ơn."],
+[1,"谢谢你！","Xièxie nǐ!","Cảm ơn bạn!","不客气。","Không có gì."],
+[1,"对不起！","Duìbuqǐ!","Xin lỗi!","没关系。","Không sao."],
+[2,"你叫什么名字？","Nǐ jiào shénme míngzi?","Bạn tên là gì?","我叫阿明。","Tôi tên là A Minh."],
+[2,"你是哪国人？","Nǐ shì nǎ guó rén?","Bạn là người nước nào?","我是越南人。","Tôi là người Việt Nam."],
+[2,"你是老师吗？","Nǐ shì lǎoshī ma?","Bạn là giáo viên à?","不是，我是学生。","Không, tôi là học sinh."],
+[3,"你今年多大？","Nǐ jīnnián duō dà?","Năm nay bạn bao nhiêu tuổi?","我二十岁。","Tôi hai mươi tuổi."],
+[3,"你家有几口人？","Nǐ jiā yǒu jǐ kǒu rén?","Nhà bạn có mấy người?","我家有四口人。","Nhà tôi có bốn người."],
+[4,"今天几月几号？","Jīntiān jǐ yuè jǐ hào?","Hôm nay ngày mấy tháng mấy?","今天五月八号。","Hôm nay mùng 8 tháng 5."],
+[4,"现在几点？","Xiànzài jǐ diǎn?","Bây giờ mấy giờ?","现在三点半。","Bây giờ ba giờ rưỡi."],
+[4,"今天星期几？","Jīntiān xīngqī jǐ?","Hôm nay thứ mấy?","今天星期三。","Hôm nay thứ tư."],
+[5,"这个多少钱？","Zhège duōshao qián?","Cái này bao nhiêu tiền?","二十五块。","Hai mươi lăm tệ."],
+[5,"你想喝什么？","Nǐ xiǎng hē shénme?","Bạn muốn uống gì?","我想喝茶。","Tôi muốn uống trà."],
+[5,"你要几个？","Nǐ yào jǐ gè?","Bạn muốn mấy cái?","我要两个。","Tôi muốn hai cái."],
+[6,"你在哪儿工作？","Nǐ zài nǎr gōngzuò?","Bạn làm việc ở đâu?","我在银行工作。","Tôi làm ở ngân hàng."],
+[6,"你住在哪儿？","Nǐ zhù zài nǎr?","Bạn sống ở đâu?","我住在河内。","Tôi sống ở Hà Nội."],
+[7,"洗手间在哪儿？","Xǐshǒujiān zài nǎr?","Nhà vệ sinh ở đâu?","在前边，往右走。","Ở phía trước, đi về bên phải."],
+[7,"你怎么去学校？","Nǐ zěnme qù xuéxiào?","Bạn đến trường bằng gì?","我坐公共汽车去。","Tôi đi xe buýt."],
+[8,"你会说汉语吗？","Nǐ huì shuō Hànyǔ ma?","Bạn biết nói tiếng Trung không?","会一点儿。","Biết một chút."],
+[8,"你喜欢做什么？","Nǐ xǐhuan zuò shénme?","Bạn thích làm gì?","我喜欢看书。","Tôi thích đọc sách."],
+[9,"今天天气怎么样？","Jīntiān tiānqì zěnmeyàng?","Hôm nay thời tiết thế nào?","今天很热。","Hôm nay rất nóng."],
+[9,"你昨天去哪儿了？","Nǐ zuótiān qù nǎr le?","Hôm qua bạn đi đâu?","我去商店了。","Tôi đi cửa hàng."],
+[10,"你吃饭了吗？","Nǐ chī fàn le ma?","Bạn ăn cơm chưa?","吃了，你呢？","Ăn rồi, còn bạn?"],
+[10,"你学了多长时间汉语？","Nǐ xué le duō cháng shíjiān Hànyǔ?","Bạn học tiếng Trung bao lâu rồi?","学了一个月。","Học được một tháng."],
+[10,"你哪儿不舒服？","Nǐ nǎr bù shūfu?","Bạn khó chịu ở đâu?","我头疼。","Tôi đau đầu."],
+[10,"我们一起去吃饭，好吗？","Wǒmen yìqǐ qù chī fàn, hǎo ma?","Chúng ta cùng đi ăn nhé?","好啊，走吧！","Được thôi, đi nào!"]];
+let QAS=null;
+function qaHTML(){return `<div class="card sect" id="qaBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Phản xạ hỏi đáp</div><h3>Nghe câu hỏi, chọn câu trả lời hợp</h3>
+  <div class="muted" style="font-size:.86rem">Giao tiếp thật cần phản xạ nhanh: nghe hiểu câu hỏi và biết đáp gì. ${QA.length} câu hỏi thường gặp nhất.</div></div>
+  <div class="row"><button class="btn primary" id="qaGo">Luyện 8 câu</button></div></div><div id="qaWork"></div></div>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#qaGo"))return;const box=$("#qaWork");if(!box)return;const ls=canSpeak();
+  const qs=shuffle(QA.slice()).slice(0,8).map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
+    return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}`,
+      explain:`<span class="han">${esc(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${esc(a)}</span> <span class="muted">${esc(av)}</span>`,
+      opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}});
+  runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=7?"Phản xạ rất tốt! Thử tự nói câu trả lời trước khi chọn.":"Bấm “Xem chữ” khi chưa nghe kịp, rồi luyện lại."}</p><button class="btn" id="qaGo">Làm lại</button></div>`});
+});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
