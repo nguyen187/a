@@ -1481,7 +1481,7 @@ function runQuiz(el,qs,onDone){
   }
   function pickOpt(k){const q=qs[i];if(q.answered)return;const ok=q.opts[k].ok;
     el.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;if(q.opts[j].ok)b.classList.add("ok");else if(j===k)b.classList.add("no")});
-    feedback(ok,wDetail(q.w),q.w.h)}
+    feedback(ok,q.w?wDetail(q.w):(q.explain||""),q.w?q.w.h:q.say)}
   function showType(q){
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt"><span class="eyebrow">Gõ pinyin của từ này</span><div class="h">${q.w.h}</div><div class="muted">${esc(q.w.m)}</div></div>
       <form class="typein" id="tf"><input id="typ" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="vd: ni3hao3 hoặc nǐhǎo" aria-label="Pinyin"><button class="btn primary">Kiểm tra</button></form>
@@ -1632,6 +1632,7 @@ function viewDay(n){
       body.innerHTML=`<div class="card gram">${d.gh}</div><h3>Hội thoại: Hẹn gặp ở Bắc Kinh</h3>
       <div class="row"><button class="btn" id="playDl">${SPK} Nghe cả đoạn</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="hidePy"> Ẩn pinyin</label></div>
       <div class="dialog" id="dlg">${DIALOG.split("\n").map(l=>{const [who,zh,p,v]=l.split("|");return `<div class="dl"><span class="who ${who==="B"?"b":""}">${who}</span><span class="zh">${segHTML(zh)}</span><span class="p">${p}</span><span class="v">${v}</span><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button></div>`}).join("")}</div>
+      ${rcHTML(29)}
       <div class="row"><button class="btn primary" data-go="quiz">Làm bài tổng ôn →</button></div>`;
       $("#hidePy").onchange=e=>$("#dlg").querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
       $("#playDl").onclick=async()=>{for(const l of DIALOG.split("\n")){const ok=await speakWait(l.split("|")[1]);if(!ok)break}};
@@ -1671,10 +1672,21 @@ function viewDay(n){
   }
   body.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{dayTab=b.dataset.go;viewDay(n);window.scrollTo({top:0})});
 }
+const RQ={
+7:[["Minh bao nhiêu tuổi?","20 tuổi","22 tuổi","12 tuổi"],["Nhà Minh có mấy người?","4 người","3 người","5 người"],["Cô giáo của Minh là người nước nào?","Trung Quốc","Việt Nam","Anh"]],
+14:[["Minh dậy lúc mấy giờ?","7 giờ sáng","8 giờ sáng","6 giờ sáng"],["Minh làm việc ở đâu?","Ngân hàng","Trường học","Cửa hàng"],["Minh biết viết bao nhiêu chữ Hán?","100 chữ","10 chữ","1.000 chữ"]],
+21:[["Họ đến Bắc Kinh bằng gì?","Máy bay","Tàu hỏa","Taxi"],["Thời tiết ở Bắc Kinh thế nào?","Lạnh, có tuyết rơi","Nóng, nắng to","Mưa to"],["Về nhà, Minh gặp chuyện gì?","Bị cảm, hơi khó chịu","Mất hộ chiếu","Bị lạc đường"]],
+28:[["Minh học tiếng Trung được bao lâu?","4 tuần","4 tháng","4 năm"],["Vì sao Minh nói lưu loát hơn trước?","Ngày nào cũng luyện tập","Có thầy dạy riêng","Đang sống ở Trung Quốc"],["Minh đã chuẩn bị xong cái gì?","Hộ chiếu","Vé máy bay","Hành lý"]],
+29:[["A đã học tiếng Trung bao lâu?","30 ngày","3 tháng","3 năm"],["A đã đến Trung Quốc chưa?","Chưa từng đến","Đã đến rồi","Đang ở đó"],["Hai người hẹn sẽ cùng làm gì?","Đi Trường Thành, ăn vịt quay","Đi Thượng Hải","Cùng học tiếng Anh"]],
+39:[["Minh đến Bắc Kinh du học khi nào?","Năm ngoái","Năm nay","Tuần trước"],["Lúc mới đến, Minh đọc không hiểu cái gì?","Thực đơn","Bản đồ","Sách giáo khoa"],["Quán ăn cạnh trường thế nào?","Rẻ và sạch","Đắt nhưng ngon","Xa và đông"]]};
+function rcHTML(n){return RQ[n]?`<div class="row"><button class="btn" data-rc="${n}">Câu hỏi đọc hiểu (${RQ[n].length})</button></div><div id="rcBox"></div>`:""}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-rc]");if(!b)return;const n=+b.dataset.rc,box=$("#rcBox");
+  const qs=RQ[n].map(([q,a,x,y])=>({type:"rc",prompt:`<span class="eyebrow">Đọc hiểu</span><div class="m">${esc(q)}</div>`,opts:shuffle([{html:esc(a),ok:true},{html:esc(x),ok:false},{html:esc(y),ok:false}]),explain:"Đáp án: "+esc(a)}));
+  runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Đọc hiểu</div><div class="score num">${sc}/${tot}</div><div>${sc===tot?"Hiểu trọn bài, tuyệt vời!":"Đọc lại bài, chạm vào từ chưa rõ để tra nghĩa rồi thử lại."}</div><button class="btn" data-rc="${n}">Làm lại</button></div>`})});
 function readingHTML(d){if(!d.rds.length)return"";
   return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc cuối chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
   <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div>
-  <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div></div>`}
+  <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
   $("#rdVi").onchange=e=>b.querySelectorAll(".v").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
