@@ -1700,7 +1700,7 @@ function refreshVoicePicker(){const sel=document.getElementById("voiceSel");if(!
   sel.innerHTML=opts.map(([v,l])=>`<option value="${esc(v)}" ${v===voicePref?"selected":""}>${esc(l)}</option>`).join("");
   const h=document.getElementById("voiceNow");if(h)h.textContent="Đang dùng: "+engineName();}
 try{loadVoices();speechSynthesis.onvoiceschanged=loadVoices}catch(e){}
-let aiNS=null,aiOff=false;if(window.claude&&window.claude.use){window.claude.use("sample").then(x=>{aiNS=x}).catch(()=>{})}
+let aiNS=null,aiOff=false;if(window.claude&&window.claude.use){window.claude.use("sample").then(x=>{aiNS=x;const q=document.getElementById("qaBox");if(x&&q&&!document.getElementById("chatBox"))q.insertAdjacentHTML("afterend",chatHTML())}).catch(()=>{})}
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-askai]");if(!b||!aiNS)return;const qz=b.closest(".quiz");if(!qz)return;const out=qz.querySelector(".aians");b.disabled=true;
   const tx=el=>el?el.innerText.replace(/\s+/g," ").trim():"";const opts=[...qz.querySelectorAll(".opt")].map(o=>(o.classList.contains("ok")?"[ĐÚNG] ":o.classList.contains("no")?"[NGƯỜI HỌC CHỌN, SAI] ":"")+tx(o.querySelector("span:last-child")));
   const typed=qz.querySelector("input.typein");const ctx=`Câu hỏi: ${tx(qz.querySelector(".prompt"))}\n${opts.length?"Các phương án:\n"+opts.join("\n"):""}${typed&&typed.value?"\nNgười học trả lời: "+typed.value:""}\nNhận xét của app: ${tx(qz.querySelector(".fb .detail"))}`;
@@ -2221,6 +2221,7 @@ function viewReview(){
     ${randReadHTML()}
     ${transHTML()}
     ${qaHTML()}
+    ${chatHTML()}
     ${savedHTML()}
     ${passiveHTML()}
     ${matchHTML()}
@@ -2231,8 +2232,9 @@ function viewReview(){
     ${forecastHTML()}
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
-  $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["qaBox","Hỏi đáp"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
+  $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["qaBox","Hỏi đáp"],["chatBox","Trò chuyện AI"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
   if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}},60)}
+  if(CHAT)setTimeout(chatDraw,0);
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
   if(!revQueue||!revQueue.length)revQueue=shuffle(due);
@@ -2464,6 +2466,35 @@ function skillHTML(){const T=S.ty||{},ks=Object.keys(SKILLS).filter(k=>T[k]&&T[k
   <div style="display:grid;gap:8px;margin-top:10px">${Object.keys(SKILLS).map(k=>{const has=ks.includes(k),p=has?pc(k):0,col=p>=85?"var(--good)":p>=65?"var(--warn)":"var(--bad)";
     return `<div style="display:grid;grid-template-columns:minmax(110px,40%) 1fr 44px;gap:10px;align-items:center"><span style="font-size:.9rem">${SKILLS[k][0]}</span><div class="qbar" style="height:8px;margin:0"><i style="width:${has?p:0}%;background:${col}"></i></div><span class="num muted" style="font-size:.84rem;text-align:right">${has?p+"%":"–"}</span></div>`}).join("")}</div>
   ${pc(weak)<85?`<a class="drow" href="${SKILLS[weak][1]}" data-go="${SKILLS[weak][3]}" style="margin-top:12px;grid-template-columns:1fr auto;text-decoration:none;color:var(--ink)"><div style="min-width:0"><b style="font-size:.95rem">Nên luyện thêm: ${SKILLS[weak][0]}</b><div class="muted" style="font-size:.82rem">${SKILLS[weak][2]}</div></div><span class="muted">→</span></a>`:`<p class="muted" style="margin:10px 0 0;font-size:.86rem">Các kỹ năng đều vững. Giữ nhịp mỗi ngày nhé!</p>`}</section>`}
+
+const CHT=[["intro","Làm quen","Bạn mới gặp một người bạn Trung Quốc ở quán cà phê; hỏi tên, quê, công việc, sở thích."],["food","Gọi món","Bạn là nhân viên nhà hàng, người học là khách đang gọi món và hỏi giá."],["shop","Mua sắm","Bạn là người bán quần áo ở chợ, người học là khách muốn mặc cả."],["way","Hỏi đường","Bạn là người qua đường, người học hỏi đường tới ga tàu, siêu thị, bệnh viện."],["free","Tự do","Trò chuyện tự nhiên về cuộc sống hằng ngày của người học."]];
+let CHAT=null;
+function chatLevel(){const cd=currentDay();return cd<=14?"HSK 1":cd<=28?"HSK 2":"HSK 3"}
+function chatHTML(){if(!aiNS||aiOff)return"";return `<div class="card sect" id="chatBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Trò chuyện với gia sư AI</div><h3>Nói chuyện bằng tiếng Trung, mức ${chatLevel()}</h3>
+  <div class="muted" style="font-size:.86rem">Chọn một tình huống. Gia sư trả lời bằng câu ngắn, có pinyin, nghĩa tiếng Việt và sửa câu của bạn. Bạn có thể gõ chữ Hán, pinyin, hoặc tiếng Việt khi bí.</div></div></div>
+  <div class="subtabs" id="chatT" style="margin-top:10px;flex-wrap:wrap">${CHT.map(([k,l])=>`<button data-cht="${k}" aria-pressed="${CHAT&&CHAT.t===k}">${l}</button>`).join("")}</div><div id="chatW"></div></div>`}
+function chatDraw(){const w=$("#chatW");if(!w||!CHAT)return;
+  w.innerHTML=`<div id="chatLog" style="display:grid;gap:10px;margin-top:12px">${CHAT.ui.map(m=>m.r==="u"?`<div style="justify-self:end;max-width:88%;background:var(--jade-soft);border-radius:12px;padding:8px 12px"><div class="han">${esc(m.t)}</div>${m.fix?`<div style="font-size:.84rem;margin-top:4px;color:var(--ink)">✎ ${esc(m.fix)}</div>`:""}</div>`
+    :`<div style="max-width:92%;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--surface)"><div class="row" style="gap:6px;align-items:flex-start"><span class="han" style="font-size:1.15rem;flex:1;min-width:0">${m.zh?segHTML(m.zh):esc(m.t||"")}</span>${m.zh?`<button class="say" data-say="${esc(m.zh)}" aria-label="Nghe">${SPK}</button>`:""}</div>${m.py?`<div class="muted" style="font-size:.86rem">${esc(m.py)}</div>`:""}${m.vi?`<details><summary class="muted" style="cursor:pointer;font-size:.82rem">Nghĩa</summary><div style="font-size:.9rem">${esc(m.vi)}</div></details>`:""}${m.hint?`<div style="font-size:.84rem;margin-top:6px"><span class="muted">Gợi ý trả lời:</span> <span class="han">${esc(m.hint)}</span></div>`:""}</div>`).join("")}${CHAT.busy?`<div class="muted" style="font-size:.86rem">Gia sư đang trả lời…</div>`:""}</div>
+  <div class="row" style="margin-top:12px;gap:8px"><input class="typein" id="chatIn" autocomplete="off" placeholder="Viết câu trả lời…" style="flex:1 1 180px;min-width:0" ${CHAT.busy?"disabled":""}>${dictNS&&!dictZhOff?`<button class="btn mic" id="chatMic" ${CHAT.busy?"disabled":""}>${MIC} <span>Nói</span></button>`:""}<button class="btn primary" id="chatSend" ${CHAT.busy?"disabled":""}>Gửi</button></div>`;
+  const inp=$("#chatIn");inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();chatSend()}};$("#chatSend").onclick=chatSend;
+  const m=$("#chatMic");if(m)m.onclick=()=>{if(dictNS.active()){dictNS.stop().catch(()=>{});return}spCtx={text:"",armed:true,onPartial:t=>{if(t)inp.value=t},onState:(st)=>{m.classList.toggle("on",st!=="idle");if(st==="idle"&&spCtx&&spCtx.armed){spCtx.armed=false;if(spCtx.text.trim()){inp.value=spCtx.text.trim();chatSend()}}}};dictNS.start({language:"zh"}).catch(()=>{spCtx.armed=false})};
+  const lg=$("#chatLog");if(lg&&lg.lastElementChild)lg.lastElementChild.scrollIntoView({block:"nearest"});if(!CHAT.busy)inp.focus({preventScroll:true})}
+async function chatTurn(){const c=CHAT;const tp=CHT.find(x=>x[0]===c.t);const words=Object.keys(S.srs).filter(h=>BYH[h]).slice(-60).join("、");
+  const sys=`Bạn là gia sư tiếng Trung thân thiện cho người Việt, đóng vai trong tình huống: ${tp[2]} Trình độ người học: ${chatLevel()}. Chỉ dùng từ và ngữ pháp ${chatLevel()}, câu ngắn (tối đa 2 câu, dưới 20 chữ Hán), ưu tiên các từ người học đã biết: ${words||"(mới bắt đầu)"}. Mỗi lượt kết thúc bằng một câu hỏi để người học trả lời tiếp. Nếu tin nhắn mới nhất của người học có lỗi tiếng Trung (hoặc họ viết tiếng Việt/pinyin), ghi câu đúng bằng chữ Hán kèm giải thích rất ngắn bằng tiếng Việt vào "fix"; nếu đúng thì "fix" là "". Trả về JSON đúng dạng {"zh":"câu của bạn bằng chữ Hán","py":"pinyin có dấu","vi":"nghĩa tiếng Việt","fix":"...","hint":"một câu mẫu người học có thể đáp (chữ Hán + pinyin trong ngoặc)"}.`;
+  const msgs=c.msgs.length?c.msgs.map((m,i)=>i===0?{role:m.role,content:sys+"\n\n"+m.content}:m):[{role:"user",content:sys+"\n\n(Bắt đầu hội thoại: bạn nói câu mở đầu.)"}];
+  c.busy=true;chatDraw();
+  try{const r=await aiNS.json(msgs,{cache:false});if(CHAT!==c)return;const lastU=[...c.ui].reverse().find(m=>m.r==="u");if(lastU&&r.fix)lastU.fix=String(r.fix);
+    c.ui.push({r:"a",zh:String(r.zh||""),py:String(r.py||""),vi:String(r.vi||""),hint:String(r.hint||"")});
+    if(!c.msgs.length)c.msgs.push({role:"user",content:"(Bắt đầu hội thoại: bạn nói câu mở đầu.)"});c.msgs.push({role:"assistant",content:JSON.stringify(r)});
+    touchStreak(1);save();updateChrome()}
+  catch(err){if(CHAT!==c)return;const k=err&&err.code;if(k==="not_granted"){aiOff=true;const b=$("#chatBox");if(b)b.remove();return}c.ui.push({r:"a",t:k==="rate_limited"?"Đang có nhiều yêu cầu, đợi một chút rồi gửi lại nhé.":"Chưa kết nối được gia sư, thử gửi lại."})}
+  c.busy=false;chatDraw()}
+function chatSend(){const inp=$("#chatIn");if(!CHAT||CHAT.busy||!inp)return;const t=inp.value.trim();if(!t)return;
+  if(!CHAT.msgs.length)CHAT.msgs.push({role:"user",content:"(Bắt đầu hội thoại: bạn nói câu mở đầu.)"},{role:"assistant",content:"{}"});
+  CHAT.ui.push({r:"u",t});CHAT.msgs.push({role:"user",content:"Người học: "+t});if(CHAT.msgs.length>24)CHAT.msgs.splice(1,2);chatTurn()}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-cht]");if(!b)return;CHAT={t:b.dataset.cht,msgs:[],ui:[],busy:false};
+  document.querySelectorAll("[data-cht]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));chatTurn()});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
