@@ -228,6 +228,14 @@ td b{font-size:1.05rem}
 .lkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.2);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;width:min(440px,calc(100% - 32px))}
 #lk:not([hidden]) + .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .dlist{display:grid;gap:6px}
+.cert{border:2px solid var(--seal);border-radius:14px;padding:6px;background:var(--surface)}
+.cert-in{border:1px solid var(--seal);border-radius:10px;padding:22px 20px;display:grid;gap:10px;text-align:center;justify-items:center;background:color-mix(in srgb,var(--seal) 5%,var(--surface))}
+.cert-name{font:700 1.7rem var(--f-han),var(--f-ui);text-align:center;border:0;border-bottom:1px dashed var(--line);background:transparent;color:var(--ink);width:min(100%,360px);padding:4px}
+.cert-in p{margin:0}
+.cert-stats{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+.cert-stats div{display:grid}.cert-stats b{font-size:1.4rem}.cert-stats span{font-size:.78rem;color:var(--muted)}
+.cert .row{width:100%}
+.cert-seal{width:58px;height:58px;border-radius:8px;background:var(--seal);color:var(--seal-ink);display:grid;place-items:center;font:700 2rem var(--f-han);transform:rotate(-6deg)}
 .bm{border:0;background:none;color:var(--muted);font-size:1.05rem;padding:0 6px;vertical-align:middle;line-height:1}
 .bm[aria-pressed="true"]{color:var(--warn)}
 .jump{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
@@ -1575,12 +1583,24 @@ const STEPS=["vocab","gram","speak","quiz","write"];
 function markStep(n,k){S.steps=S.steps||{};const o=S.steps[n]=S.steps[n]||{};if(!o[k]){o[k]=1;save()}}
 function stepDone(n,k){return !!(S.steps&&S.steps[n]&&S.steps[n][k])}
 function stepCount(n){return STEPS.filter(k=>stepDone(n,k)).length}
+function certHTML(){if(!S.done[30])return"";const ext=!!S.done[40],t=(S.doneAt&&S.doneAt[ext?40:30])||today();
+  const date=new Date(t*DAYMS).toLocaleDateString("vi-VN",{timeZone:"UTC",day:"numeric",month:"long",year:"numeric"});
+  const days=Object.keys(S.log||{}).length,acc=S.stats.ans?Math.round(S.stats.ok/S.stats.ans*100)+"%":"—";
+  return `<section class="cert" aria-label="Giấy chứng nhận"><div class="cert-in">
+    <div class="eyebrow">Giấy chứng nhận</div>
+    <input id="certName" class="cert-name" maxlength="40" placeholder="Nhập tên của bạn" value="${esc(S.name||"")}" aria-label="Tên của bạn">
+    <p>đã hoàn thành khóa <b>Hán Ngữ 30 ngày</b>${ext?" và <b>phần mở rộng HSK 3</b>":""}</p>
+    <div class="cert-stats"><div><b class="num">${learned()}</b><span>từ đã học</span></div><div><b class="num">${days}</b><span>ngày học</span></div><div><b class="num">${acc}</b><span>trả lời đúng</span></div></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-end"><span class="muted" style="font-size:.84rem">Ngày ${date}</span><span class="cert-seal">成</span></div>
+  </div></section>`}
+document.addEventListener("input",e=>{if(e.target.id==="certName"){S.name=e.target.value.trim();clearTimeout(noteT);noteT=setTimeout(save,600)}});
 function heat(){const t=today();let out="";for(let i=34;i>=0;i--){const d=t-i,c=S.log[d]||0,lv=!c?0:c>=20?4:c>=10?3:c>=4?2:1;
   out+=`<i class="h${lv}${i===0?" today":""}" title="${new Date(d*DAYMS).toLocaleDateString("vi-VN",{timeZone:"UTC"})}: ${c} hoạt động"></i>`}return out}
 function viewToday(){
   const cd=currentDay(),d=DAYS[cd-1],due=dueList().length,allDone=DAYS.every(x=>S.done[x.n]),ext=cd>30;
   const acc=S.stats.ans?Math.round(S.stats.ok/S.stats.ans*100)+"%":"—";
   app.innerHTML=`
+  ${certHTML()}
   <section class="hero">
     <div>
       <div class="eyebrow">Chặng ${d.week} · ${WEEKS[d.week-1].name}</div>
@@ -1642,7 +1662,7 @@ function viewPlan(){
   app.innerHTML=`<section class="sect"><div><div class="eyebrow">Lộ trình</div><h2>30 ngày, 5 chặng, thêm 10 ngày mở rộng</h2>
     <p class="muted" style="margin:6px 0 0;max-width:62ch">Bạn có thể mở bất kỳ ngày nào, nhưng học theo thứ tự sẽ dễ nhất vì bài sau dùng lại từ của bài trước.</p></div></section>
   ${WEEKS.map(wk=>{const ds=DAYS.filter(d=>d.week===wk.n);const dn=ds.filter(d=>S.done[d.n]).length;
-    return `<section class="week"><div class="week-head"><h3>Chặng ${wk.n} · ${wk.name}</h3><span class="muted">${wk.sub}</span><span class="spacer"></span><span class="chip num">${dn}/${ds.length}</span></div>
+    return `<section class="week"><div class="week-head"><h3>Chặng ${wk.n} · ${wk.name}</h3><span class="muted">${wk.sub}</span><span class="spacer"></span>${dn===ds.length?`<span class="chip seal-c">成 Hoàn thành</span>`:`<span class="chip num">${dn}/${ds.length}</span>`}</div>
     <div class="days">${ds.map(d=>`<a class="dcard ${S.done[d.n]?"done":d.n===cd?"cur":""}" href="#day-${d.n}"><span class="n">${d.n}</span><b>${esc(d.t)}</b>
       <small>${d.words.length?d.words.length+" từ"+(stepCount(d.n)?" · "+stepCount(d.n)+"/5 bước":""):d.final?"Kiểm tra":"Tổng ôn"}${S.best[d.n]!=null?" · cao nhất "+S.best[d.n]+"%":""}</small></a>`).join("")}</div></section>`}).join("")}`;
 }
@@ -1699,7 +1719,7 @@ function viewDay(n){
       runQuiz(body,buildQuiz(src,pool,cnt,exPool(d)),(sc,tot,wrong)=>{
         const pct=Math.round(sc/tot*100);S.best[n]=Math.max(S.best[n]||0,pct);
         const passed=pct>=pass;
-        if(passed&&!S.done[n]){S.done[n]=true;addToSRS(d.words)}if(passed)markStep(n,"quiz");
+        if(passed&&!S.done[n]){S.done[n]=true;addToSRS(d.words);S.doneAt=S.doneAt||{};S.doneAt[n]=today()}if(passed)markStep(n,"quiz");
         wrong.forEach(w=>{if(S.srs[w.h])S.srs[w.h]={b:0,d:today()}});
         touchStreak();save();updateChrome();
         body.innerHTML=`<div class="card result"><div class="eyebrow">Kết quả</div><div class="score" style="color:${passed?"var(--good)":"var(--bad)"}">${pct}%</div>
