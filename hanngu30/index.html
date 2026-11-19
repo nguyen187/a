@@ -1781,13 +1781,15 @@ function viewReview(){
     ${grammarHTML()}
     <div class="card"><div class="eyebrow" style="margin-bottom:10px">Độ nhớ của ${learned()} từ</div>
       <div class="boxes">${boxes.map((c,i)=>`<div><small class="num">${c}</small><i style="height:${Math.round(c/mx*84)}px"></i><small>${BOXL[i]}</small></div>`).join("")}</div></div>
+    ${forecastHTML()}
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
   if(!revQueue||!revQueue.length)revQueue=shuffle(due);
   if(!revQueue.length){
-    rb.innerHTML=`<div class="card result"><b>Không còn thẻ đến hạn.</b><div class="muted">Muốn luyện thêm? Làm 15 câu trắc nghiệm ngẫu nhiên từ những từ bạn đã học.</div><button class="btn primary" id="free">Luyện thêm 15 câu</button></div>`;
+    rb.innerHTML=`<div class="card result"><b>Không còn thẻ đến hạn.</b><div class="muted">Muốn luyện thêm? Làm 15 câu trắc nghiệm ngẫu nhiên từ những từ bạn đã học.</div><button class="btn primary" id="free">Luyện thêm 15 câu</button>${upcoming().length?`<button class="btn" id="early">Ôn trước ${Math.min(10,upcoming().length)} thẻ sắp đến hạn</button>`:""}</div>`;
+    const eb=$("#early");if(eb)eb.onclick=()=>{revQueue=upcoming().slice(0,10);showCard(rb)};
     $("#free").onclick=()=>{const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);runQuiz(rb,buildQuiz(ws,ws.length>=4?ws:ALL,15),(sc,tot)=>{touchStreak();save();updateChrome();rb.innerHTML=`<div class="card result"><div class="score">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="fr2">Luyện tiếp</button></div>`;$("#fr2").onclick=viewReview})};
     return;
   }
@@ -1834,6 +1836,11 @@ document.addEventListener("click",e=>{if(!e.target.closest("#gramGo"))return;con
   runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();
     box.innerHTML=`<div class="result"><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="gramAgain">Luyện tiếp</button></div>`;
     $("#gramAgain").onclick=()=>$("#gramGo").click()})});
+function upcoming(){const t=today();return Object.entries(S.srs).filter(([h,c])=>BYH[h]&&c.d>t).sort((a,b)=>a[1].d-b[1].d).map(([h])=>h)}
+function forecastHTML(){if(!learned())return"";const t=today();const days=[0,1,2,3,4,5,6].map(i=>Object.entries(S.srs).filter(([h,c])=>BYH[h]&&(i===0?c.d<=t:c.d===t+i)).length);
+  const mx=Math.max(1,...days),wd=["CN","T2","T3","T4","T5","T6","T7"];
+  return `<div class="card"><div class="row" style="margin-bottom:10px"><span class="eyebrow">Dự báo 7 ngày tới</span><span class="spacer"></span><span class="muted num" style="font-size:.8rem">${days.reduce((a,b)=>a+b,0)} thẻ</span></div>
+    <div class="boxes">${days.map((c,i)=>{const dt=new Date((t+i)*DAYMS);return `<div><small class="num">${c}</small><i style="height:${Math.round(c/mx*84)}px;${i===0?"background:var(--seal)":""}"></i><small>${i===0?"Hôm nay":i===1?"Mai":wd[dt.getUTCDay()]}</small></div>`}).join("")}</div></div>`}
 function weakList(){return Object.entries(S.miss||{}).filter(([h,c])=>BYH[h]&&c>0).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([h,c])=>({w:BYH[h],c}))}
 function weakHTML(){const ws=weakList();if(!ws.length)return"";
   return `<div class="card sect" id="weak"><div class="row"><div><div class="eyebrow">Từ hay sai</div><h3>${ws.length} từ bạn trả lời sai nhiều nhất</h3></div><span class="spacer"></span><button class="btn primary" id="weakGo">Luyện riêng các từ này</button></div>
