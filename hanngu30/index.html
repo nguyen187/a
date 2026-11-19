@@ -2039,7 +2039,7 @@ function viewDay(n){
       body.innerHTML=`<div class="row"><button class="btn" id="playAll">${SPK} Nghe lần lượt cả bài</button><span class="muted" style="font-size:.86rem">Bấm vào thẻ để nghe từng từ. Âm Hán Việt giúp bạn đoán nghĩa nhanh hơn.</span></div>
       <div class="row" style="font-size:.9rem"><span class="eyebrow">Tự kiểm tra</span><label class="row" style="gap:6px"><input type="checkbox" id="hidePyW" ${coverPref("py")?"checked":""}> Che pinyin</label><label class="row" style="gap:6px"><input type="checkbox" id="hideMW" ${coverPref("m")?"checked":""}> Che nghĩa</label></div>
       <div class="words ${coverPref("py")?"hide-py":""} ${coverPref("m")?"hide-m":""}" id="wordGrid">${d.words.map(w=>`<button class="word" data-say="${esc(w.h)}"><span class="spk">${SPK}</span><span class="h">${w.h}</span><span class="py">${pyHTML(w.p)}</span><span class="m">${esc(w.m)}</span>${noteHTML(w.h)}${w.v?`<span class="hv">${esc(w.v)}</span>`:""}</button>`).join("")}</div>
-      ${readingHTML(d)}${cultureHTML(d.n)}<div class="row"><button class="btn primary" data-go="gram">Tiếp: Ngữ pháp →</button></div>`;
+      ${readingHTML(d)}${cultureHTML(d.n)}${mkHTML(d)}<div class="row"><button class="btn primary" data-go="gram">Tiếp: Ngữ pháp →</button></div>`;
       $("#playAll").onclick=async()=>{for(const w of d.words){const ok=await speakWait(w.h);if(!ok)break}};wireReading(d);
       const wg=$("#wordGrid");const setC=(k,cls,el)=>{wg.classList.toggle(cls,el.checked);wg.querySelectorAll(".word.shown").forEach(x=>x.classList.remove("shown"));try{localStorage.setItem("hanngu30.cover."+k,el.checked?"1":"")}catch(x){}};
       $("#hidePyW").onchange=e=>setC("py","hide-py",e.target);$("#hideMW").onchange=e=>setC("m","hide-m",e.target);
@@ -2527,6 +2527,22 @@ async function aiReading(){const box=$("#rrBox"),btn=$("#rrAI");if(!box||!aiNS)r
   catch(err){const c=err&&err.code;if(c==="not_granted"){aiOff=true;btn.remove();box.innerHTML="";return}box.innerHTML=`<p class="muted">${c==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa tạo được bài đọc, thử lại nhé."}</p>`}
   if(btn.isConnected){btn.disabled=false;btn.textContent="Viết bài khác"}}
 document.addEventListener("click",e=>{if(e.target.closest("#rrAI"))aiReading()});
+
+function mkHTML(d,ex){if(!aiNS||aiOff||!d.words.length)return"";let ws=d.words.filter(w=>!w.p.includes("…"));if(ws.length>1&&ex)ws=ws.filter(w=>w.h!==ex);if(!ws.length)return"";const w=ws[Math.floor(Math.random()*ws.length)];
+  return `<div class="card sect" id="mkBox" data-day="${d.n}"><div class="eyebrow">Đặt câu với từ mới</div><div class="row" style="align-items:baseline;gap:10px"><span class="han" style="font-size:1.6rem" id="mkW">${esc(w.h)}</span><span class="muted">${esc(w.p)} · ${esc(w.m)}</span><button class="btn ghost" id="mkNext" style="margin-left:auto">Từ khác</button></div>
+  <div class="muted" style="font-size:.86rem">Tự đặt một câu ngắn có từ này (gõ chữ Hán hoặc pinyin). Gia sư AI sẽ sửa và gợi ý câu tự nhiên hơn. Dùng từ trong câu của chính mình là cách nhớ lâu nhất.</div>
+  <div class="row" style="margin-top:10px;gap:8px"><input class="typein" id="mkIn" autocomplete="off" placeholder="Câu của bạn…" style="flex:1 1 200px;min-width:0"><button class="btn primary" id="mkGo">Chấm câu</button></div>
+  <div id="mkOut" aria-live="polite" style="white-space:pre-wrap;font-size:.92rem;line-height:1.55;margin-top:8px"></div></div>`}
+async function mkRun(){const box=$("#mkBox"),inp=$("#mkIn"),out=$("#mkOut");if(!box||!aiNS)return;const t=inp.value.trim();if(!t)return;const w=BYH[$("#mkW").textContent]||{h:$("#mkW").textContent,p:"",m:""};
+  const go=$("#mkGo");go.disabled=true;out.textContent="Gia sư đang đọc câu của bạn…";
+  const prompt=`Người học tiếng Trung (người Việt, ${chatLevel()}) đặt câu với từ ${w.h} (${w.p}, nghĩa: ${w.m}). Câu của họ: "${t}". Nhận xét bằng tiếng Việt, tối đa 80 từ: dòng đầu ghi "ĐÚNG", "GẦN ĐÚNG" hoặc "SAI"; nếu có lỗi chỉ ra ngắn gọn và viết câu đã sửa; sau đó gợi ý thêm 1 câu ví dụ khác dùng từ này. Mọi chữ Hán kèm pinyin. Không dùng markdown.`;
+  try{const r=await aiNS(prompt,{modelTier:"quick",onText:({text})=>{out.textContent=text}});out.textContent=r.text;touchStreak(2);save();updateChrome();
+    if(/^\s*ĐÚNG/.test(r.text)&&BYH[w.h]&&S.miss&&S.miss[w.h])S.miss[w.h]--}
+  catch(err){const c=err&&err.code;if(c==="not_granted"){aiOff=true;box.remove();return}out.textContent=c==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa chấm được, thử lại."}
+  go.disabled=false}
+document.addEventListener("click",e=>{if(e.target.closest("#mkGo")){mkRun();return}
+  if(e.target.closest("#mkNext")){const box=$("#mkBox");const d=DAYS[+box.dataset.day-1];if(d){box.outerHTML=mkHTML(d,$("#mkW").textContent);const i=$("#mkIn");if(i)i.focus({preventScroll:true})}}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="mkIn"){e.preventDefault();mkRun()}});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
