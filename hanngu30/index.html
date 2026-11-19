@@ -1204,6 +1204,12 @@ const READ={
 我的老师是中国人，她很好。|Wǒ de lǎoshī shì Zhōngguó rén, tā hěn hǎo.|Cô giáo của tôi là người Trung Quốc, cô ấy rất tốt.
 今天是星期六，我在家。|Jīntiān shì xīngqīliù, wǒ zài jiā.|Hôm nay là thứ Bảy, tôi ở nhà.
 认识你很高兴！|Rènshi nǐ hěn gāoxìng!|Rất vui được làm quen với bạn!`],
+9:["Đi ăn với bạn",`我饿了，我想吃饭。|Wǒ è le, wǒ xiǎng chī fàn.|Tôi đói rồi, tôi muốn ăn cơm.
+朋友说：“你要米饭还是面条？”|Péngyou shuō: “Nǐ yào mǐfàn háishi miàntiáo?”|Bạn nói: “Cậu muốn cơm hay mì?”
+我说：“我要米饭，也要一个菜。”|Wǒ shuō: “Wǒ yào mǐfàn, yě yào yí gè cài.”|Tôi nói: “Tôi lấy cơm, thêm một món nữa.”
+朋友想喝咖啡，我想喝茶。|Péngyou xiǎng hē kāfēi, wǒ xiǎng hē chá.|Bạn muốn uống cà phê, tôi muốn uống trà.
+这个菜很好吃！|Zhège cài hěn hǎochī!|Món này ngon quá!
+我们都很高兴。|Wǒmen dōu hěn gāoxìng.|Chúng tôi đều rất vui.`],
 10:["Mua quần áo",`我想买衣服，我去商店。|Wǒ xiǎng mǎi yīfu, wǒ qù shāngdiàn.|Tôi muốn mua quần áo nên đi cửa hàng.
 我说：“这个多少钱？”|Wǒ shuō: “Zhège duōshao qián?”|Tôi nói: “Cái này bao nhiêu tiền?”
 卖衣服的人说：“一百五十块。”|Mài yīfu de rén shuō: “Yìbǎi wǔshí kuài.”|Người bán quần áo nói: “Một trăm năm mươi tệ.”
@@ -1228,6 +1234,12 @@ const READ={
 坐公共汽车很便宜。|Zuò gōnggòng qìchē hěn piányi.|Đi xe buýt rất rẻ.
 我妹妹的学校很近，她每天走去。|Wǒ mèimei de xuéxiào hěn jìn, tā měitiān zǒu qù.|Trường của em gái tôi rất gần, ngày nào em ấy cũng đi bộ.
 你呢？你怎么去上班？|Nǐ ne? Nǐ zěnme qù shàngbān?|Còn bạn? Bạn đi làm bằng gì?`],
+16:["Thời tiết Hà Nội",`河内的夏天很热，三十八度！|Hénèi de xiàtiān hěn rè, sānshíbā dù!|Mùa hè Hà Nội rất nóng, 38 độ!
+今天下雨了，明天天气怎么样？|Jīntiān xià yǔ le, míngtiān tiānqì zěnmeyàng?|Hôm nay mưa rồi, ngày mai thời tiết thế nào?
+河内的冬天很冷，不下雪。|Hénèi de dōngtiān hěn lěng, bú xià xuě.|Mùa đông Hà Nội rất lạnh nhưng không có tuyết.
+北京的冬天下雪。|Běijīng de dōngtiān xià xuě.|Mùa đông Bắc Kinh có tuyết rơi.
+我喜欢秋天，不冷也不热。|Wǒ xǐhuan qiūtiān, bù lěng yě bú rè.|Tôi thích mùa thu, không lạnh cũng không nóng.
+你们那儿冬天冷吗？|Nǐmen nàr dōngtiān lěng ma?|Chỗ các bạn mùa đông có lạnh không?`],
 17:["Sở thích của tôi",`我喜欢运动，也喜欢音乐。|Wǒ xǐhuan yùndòng, yě xǐhuan yīnyuè.|Tôi thích thể thao, cũng thích âm nhạc.
 每天下午我都去踢足球。|Měitiān xiàwǔ wǒ dōu qù tī zúqiú.|Chiều nào tôi cũng đi đá bóng.
 星期六我和朋友一起去看电影。|Xīngqīliù wǒ hé péngyou yìqǐ qù kàn diànyǐng.|Thứ Bảy tôi cùng bạn đi xem phim.
@@ -1904,10 +1916,12 @@ function viewDay(n){
 const RQ={
 5:[["Nhà người viết có mấy người?","5 người","4 người","6 người"],["Bố mẹ người viết làm nghề gì?","Đều là giáo viên","Đều là học sinh","Đều là bác sĩ"],["Người viết KHÔNG có ai?","Chị gái và em trai","Anh trai","Em gái"]],
 7:[["Minh bao nhiêu tuổi?","20 tuổi","22 tuổi","12 tuổi"],["Nhà Minh có mấy người?","4 người","3 người","5 người"],["Cô giáo của Minh là người nước nào?","Trung Quốc","Việt Nam","Anh"]],
+9:[["Người viết muốn ăn gì?","Cơm và một món","Mì","Táo"],["Người bạn muốn uống gì?","Cà phê","Trà","Nước"],["Người viết nhận xét món ăn thế nào?","Rất ngon","Quá cay","Quá đắt"]],
 10:[["Người viết muốn mua gì?","Quần áo","Sách","Trà"],["Lúc đầu người bán đòi bao nhiêu?","150 tệ","120 tệ","100 tệ"],["Giá cuối cùng là bao nhiêu?","120 tệ","150 tệ","50 tệ"]],
 12:[["Bên cạnh trường có gì?","Một ngân hàng","Một bệnh viện","Một cửa hàng"],["Bên trái ngân hàng là gì?","Bệnh viện","Trường học","Nhà hàng"],["Sách của người viết ở đâu?","Dưới gầm bàn","Trên bàn","Ở nhà"]],
 14:[["Minh dậy lúc mấy giờ?","7 giờ sáng","8 giờ sáng","6 giờ sáng"],["Minh làm việc ở đâu?","Ngân hàng","Trường học","Cửa hàng"],["Minh biết viết bao nhiêu chữ Hán?","100 chữ","10 chữ","1.000 chữ"]],
 15:[["Người viết đi làm bằng gì?","Tàu điện ngầm","Xe buýt","Xe đạp"],["Người viết thấy đi taxi thế nào?","Đắt quá","Rất chậm","Rất rẻ"],["Em gái đi học bằng cách nào?","Đi bộ","Đi taxi","Đi tàu hỏa"]],
+16:[["Mùa hè Hà Nội nóng bao nhiêu độ?","38 độ","28 độ","18 độ"],["Mùa đông Hà Nội có tuyết không?","Không có","Có, rất nhiều","Chỉ có vào tháng Một"],["Người viết thích mùa nào?","Mùa thu","Mùa hè","Mùa đông"]],
 17:[["Chiều nào người viết cũng làm gì?","Đá bóng","Bơi","Xem phim"],["Thứ Bảy người viết làm gì?","Đi xem phim với bạn","Đi làm","Học tiếng Trung"],["Người viết muốn đi đâu chơi?","Trung Quốc","Nhật Bản","Thái Lan"]],
 18:[["Người viết bị đau ở đâu?","Đầu và mắt","Tay","Chân"],["Bác sĩ khuyên gì?","Uống nhiều nước","Đi chạy bộ","Ăn thật nhiều"],["Ngày mai người viết làm gì?","Ở nhà nghỉ","Đi học","Đi làm"]],
 19:[["Bố đang làm gì?","Lên mạng","Gọi điện thoại","Đọc sách"],["Ai đang tìm điện thoại?","Anh trai","Mẹ","Em gái"],["Người viết đang làm gì?","Học tiếng Trung","Ngủ","Xem phim"]],
