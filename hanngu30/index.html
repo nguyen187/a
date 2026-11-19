@@ -228,6 +228,8 @@ td b{font-size:1.05rem}
 .lkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.2);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;width:min(440px,calc(100% - 32px))}
 #lk:not([hidden]) + .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .dlist{display:grid;gap:6px}
+details.card summary{cursor:pointer;list-style-position:outside}
+details.card summary::marker{color:var(--jade)}
 .drow{display:grid;grid-template-columns:minmax(64px,auto) 1fr auto auto;gap:12px;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .dh{font-size:1.7rem;white-space:nowrap}
 .dmeta{display:grid;justify-items:end;gap:2px;font-size:.78rem}
@@ -1843,16 +1845,59 @@ function viewWrite(){
   sel.onchange=go;go();
 }
 
+/* ===================== BẪY HÁN VIỆT & CẶP TỪ DỄ NHẦM ===================== */
+const TRAPS=[["东西","dōngxi","đông tây","phương đông và phương tây","đồ vật, đồ đạc"],
+["走","zǒu","tẩu","chạy trốn, tẩu thoát","đi bộ; rời đi"],
+["爱人","àirén","ái nhân","người yêu","vợ hoặc chồng (cách gọi ở Đại lục)"],
+["小心","xiǎoxīn","tiểu tâm","nhỏ nhen, hẹp hòi","cẩn thận!"],
+["告诉","gàosu","cáo tố","tố cáo","nói cho biết, bảo"],
+["汽车","qìchē","khí xa","xe hơi nước","ô tô"],
+["新闻","xīnwén","tân văn","văn mới","tin tức, thời sự"],
+["工作","gōngzuò","công tác","đi công tác","công việc; làm việc (đi công tác là 出差)"],
+["便宜","piányi","tiện nghi","tiện nghi, thoải mái","rẻ"],
+["舒服","shūfu","thư phục","phục tùng","dễ chịu, khỏe khoắn"],
+["生气","shēngqì","sinh khí","sức sống, sinh khí","tức giận"],
+["大家","dàjiā","đại gia","người giàu có","mọi người"],
+["先生","xiānsheng","tiên sinh","thầy giáo (cách gọi xưa)","ông, ngài; chồng"],
+["点心","diǎnxin","điểm tâm","bữa sáng","bánh ngọt, đồ ăn nhẹ"],
+["老婆","lǎopo","lão bà","bà già","vợ (khẩu ngữ, thân mật)"]];
+const PAIRS=[
+ {a:["知道","zhīdào","biết (thông tin, sự việc)"],b:["认识","rènshi","quen biết (người, chữ)"],note:"知道 + thông tin; 认识 + người hoặc chữ.",q:[["我不___他叫什么名字。",0],["我___你的老师，她人很好。",1]]},
+ {a:["会","huì","biết (kỹ năng học được)"],b:["能","néng","có thể (điều kiện, khả năng)"],note:"会: đã học nên biết làm; 能: hoàn cảnh cho phép.",q:[["我___说一点儿汉语。",0],["我今天有事，不___去。",1]]},
+ {a:["二","èr","hai (đếm số, thứ tự)"],b:["两","liǎng","hai (trước lượng từ)"],note:"Trước lượng từ dùng 两; đọc số, ngày tháng dùng 二.",q:[["今天是___月十号。",0],["我有___个哥哥。",1]]},
+ {a:["有点儿","yǒudiǎnr","hơi (trước tính từ, ý phàn nàn)"],b:["一点儿","yìdiǎnr","một chút (sau tính từ, so sánh)"],note:"有点儿 + Adj; Adj + 一点儿.",q:[["这件衣服___贵。",0],["便宜___吧！",1]]},
+ {a:["还是","háishi","hay là (câu hỏi lựa chọn)"],b:["或者","huòzhě","hoặc (câu trần thuật)"],note:"Hỏi thì 还是; kể thì 或者.",q:[["你喝茶___咖啡？",0],["星期六___星期天，我都有时间。",1]]},
+ {a:["再","zài","lại (việc chưa xảy ra)"],b:["又","yòu","lại (việc đã xảy ra)"],note:"再 cho tương lai; 又 cho việc đã lặp lại rồi.",q:[["今天太晚了，明天___来吧。",0],["他昨天来了，今天___来了。",1]]},
+ {a:["不","bù","không (hiện tại, tương lai, thói quen)"],b:["没","méi","chưa / không (quá khứ, phủ định 有)"],note:"不 phủ định ý muốn, thói quen; 没 phủ định việc đã xảy ra và 有.",q:[["我明天___去学校。",0],["我昨天___去学校。",1]]},
+ {a:["的","de","của (trước danh từ)"],b:["得","de","(sau động từ, chỉ mức độ)"],note:"Danh từ đi sau thì 的; mức độ của hành động thì 得.",q:[["这是我___书。",0],["他跑___很快。",1]]},
+ {a:["在","zài","ở (vật + 在 + nơi)"],b:["有","yǒu","có (nơi + 有 + vật)"],note:"Biết vật, hỏi chỗ: 在; biết chỗ, nói có gì: 有.",q:[["我的书___桌子上。",0],["桌子上___一本书。",1]]},
+ {a:["过","guo","đã từng (kinh nghiệm)"],b:["了","le","đã (hoàn thành)"],note:"过 nói về trải nghiệm; 了 nói một việc cụ thể đã xong.",q:[["我从来没去___北京。",0],["我昨天买___一本书。",1]]}];
+function pairQuestions(){const out=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>{const ans=k?p.b:p.a,oth=k?p.a:p.b;
+  const shown=esc(sent).replace("___",`<span style="display:inline-block;min-width:${[...ans[0]].length*1.1}em;border-bottom:2px solid var(--jade)">&nbsp;</span>`);
+  out.push({type:"pair",w:{h:ans[0],p:ans[1],m:ans[2]+" — "+p.note},prompt:`<span class="eyebrow">Chọn từ đúng</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div>`,
+    opts:shuffle([{html:`<span class="hz">${ans[0]}</span> <span class="muted" style="font-size:.85rem">${esc(ans[2])}</span>`,ok:true},{html:`<span class="hz">${oth[0]}</span> <span class="muted" style="font-size:.85rem">${esc(oth[2])}</span>`,ok:false}])})}));
+  return shuffle(out).slice(0,10)}
+function trapsHTML(){return `<section class="sect" id="trapSec">
+  <details class="card"><summary><b>Bẫy Hán Việt</b> <span class="muted">· ${TRAPS.length} từ có âm Hán Việt dễ khiến bạn hiểu sai</span></summary>
+    <div class="dlist" style="margin-top:12px">${TRAPS.map(([h,p,hv,wrong,right])=>`<div class="drow" style="grid-template-columns:minmax(64px,auto) 1fr auto"><span class="han dh">${h}</span><div style="min-width:0"><div class="py">${p}</div><div class="hvs" style="font-size:.74rem">Hán Việt: ${hv}</div><div class="muted" style="font-size:.86rem">Không phải: <s>${esc(wrong)}</s></div><div style="font-size:.92rem">Mà là: <b>${esc(right)}</b></div></div><button class="say" data-say="${h}" aria-label="Nghe">${SPK}</button></div>`).join("")}</div></details>
+  <details class="card" id="pairBox"><summary><b>Cặp từ dễ nhầm</b> <span class="muted">· ${PAIRS.length} cặp người Việt hay dùng sai</span></summary>
+    <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="pairGo">Luyện 10 câu cặp từ dễ nhầm</button></div></details>
+  <div id="pairQuiz"></div></section>`}
+function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=$("#pairQuiz");box.scrollIntoView({behavior:"smooth",block:"start"});
+  runQuiz(box,pairQuestions(),(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Cặp từ dễ nhầm</div><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="pairAgain">Làm lại</button></div>`;$("#pairAgain").onclick=()=>$("#pairGo").click()})}}
+
 /* ===================== TỪ ĐIỂN ===================== */
 ALL.forEach(w=>w.k=[nrm(w.p),nrm(w.m),nrm(w.v||"")]);
 let dictQ="",dictWk="0",dictOnly=false;
 function viewDict(){
-  app.innerHTML=`<section class="sect"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
+  app.innerHTML=`${trapsHTML()}<section class="sect"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Tìm bằng chữ Hán, pinyin không dấu (nihao), nghĩa tiếng Việt hoặc âm Hán Việt (nhĩ hảo).</p></div>
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
       <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
       <label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="donly" ${dictOnly?"checked":""}> Chỉ từ đã học</label></div>
     <div class="eyebrow num" id="dcount"></div><div class="dlist" id="dlist"></div></section>`;
+  wirePairs();
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
     const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
     $("#dcount").textContent=res.length+" từ";
