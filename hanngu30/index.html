@@ -1793,6 +1793,7 @@ function viewTones(){
       <li><b>一</b> trước thanh 4 thành yí (一个 yí gè), trước thanh 1/2/3 thành yì (一起 yìqǐ).</li></ul></div>
   </section>
   <section class="sect"><div><div class="eyebrow">Luyện tai</div><h2>Nghe và đoán thanh</h2></div><div id="tqBody"></div></section>
+  ${tonePairsHTML()}
   <section class="sect"><div><div class="eyebrow">Thanh mẫu</div><h2>21 phụ âm đầu, so với tiếng Việt</h2></div>
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${I.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div>
     <p class="muted" style="margin:0;max-width:64ch">Cặp dễ nhầm nhất với người Việt: <b>zh/ch/sh</b> (uốn lưỡi) với <b>z/c/s</b> (đầu lưỡi phẳng), và <b>j/q/x</b>. Cách luyện: đặt tay trước miệng, âm bật hơi (p, t, k, q, ch, c) phải thấy luồng hơi mạnh.</p></section>
@@ -1800,7 +1801,39 @@ function viewTones(){
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${F.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div></section>`;
   refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
-  toneQuiz($("#tqBody"));
+  toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));
+}
+/* cặp thanh trong từ hai âm tiết */
+const TNAME={1:"1",2:"2",3:"3",4:"4",5:"nhẹ"};
+const TWO=ALL.filter(w=>!w.p.includes("…")&&w.p.split(" ").length===2&&[...w.h].length===2);
+const tPat=w=>w.p.split(" ").map(toneOf);
+function tonePairsHTML(){
+  const cell=(a,b)=>{const w=TWO.find(x=>{const t=tPat(x);return t[0]===a&&t[1]===b});
+    return w?`<button class="chip" data-say="${w.h}" title="${esc(w.m)}" style="display:grid;gap:0;justify-items:start;padding:6px 10px"><span class="han" style="font-size:1.15rem">${w.h}</span><span class="py" style="font-size:.78rem">${pyHTML(w.p)}</span></button>`:`<span class="muted">—</span>`};
+  return `<section class="sect"><div><div class="eyebrow">Cặp thanh</div><h2>Thanh điệu trong từ hai âm tiết</h2>
+    <p class="muted" style="margin:6px 0 0;max-width:64ch">Phần lớn từ tiếng Trung có hai âm tiết, và cái khó nằm ở cách hai thanh nối nhau. Hàng là thanh của âm đầu, cột là thanh của âm sau. Nhớ: 3 + 3 đọc thành 2 + 3, và thanh 3 đứng trước thanh khác chỉ đọc nửa thấp.</p></div>
+    <div class="tbl card" style="padding:0"><table><thead><tr><th></th>${[1,2,3,4,5].map(b=>`<th class="t${b}">+ ${TNAME[b]}</th>`).join("")}</tr></thead>
+    <tbody>${[1,2,3,4].map(a=>`<tr><th class="t${a}">${a}</th>${[1,2,3,4,5].map(b=>`<td>${cell(a,b)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <div id="tpBody"></div></section>`}
+function tonePairQuiz(el){
+  const audio=canSpeak();let round=0,score=0;const N=10;
+  const next=()=>{
+    if(round>=N){el.innerHTML=`<div class="card result"><div class="eyebrow">Cặp thanh</div><div class="score num">${score}/${N}</div><div>${score>=8?"Rất tốt! Bạn nắm chắc thanh điệu trong từ.":"Nghe lại bảng cặp thanh phía trên, chú ý các ô 3 + x và + nhẹ."}</div><button class="btn primary" id="tpA">Làm lại</button></div>`;$("#tpA").onclick=()=>tonePairQuiz(el);return}
+    const w=TWO[Math.floor(Math.random()*TWO.length)],pat=tPat(w),base=w.p.split(" ").map(baseOf);
+    const key=p=>p.join("-");const opts=[pat];let g=0;
+    while(opts.length<4&&g++<60){const k=Math.floor(Math.random()*2);const alt=[...pat];alt[k]=[1,2,3,4,5].filter(t=>t!==pat[k])[Math.floor(Math.random()*4)];if(Math.random()<.3){alt[1-k]=1+Math.floor(Math.random()*4)}
+      if(!opts.some(o=>key(o)===key(alt)))opts.push(alt)}
+    const sh=shuffle(opts);let done=false;
+    el.innerHTML=`<div class="tq"><div class="row"><span class="eyebrow num">Lượt ${round+1}/${N} · Đúng ${score}</span><span class="spacer"></span><span class="chip">${audio?"Nghe và chọn":"Nhớ thanh của từ"}</span></div>
+      <div class="prompt">${audio?`<span class="eyebrow">Từ <span style="text-transform:none;font-size:1rem;color:var(--ink)">${base.join(" ")}</span> mang cặp thanh nào?</span><button class="btn primary" data-say="${w.h}">${SPK} Nghe</button>`:`<span class="eyebrow">Từ này mang cặp thanh nào?</span><div class="h">${w.h}</div><div class="muted">${esc(w.m)}</div>`}</div>
+      <div class="opts" style="grid-template-columns:1fr 1fr">${sh.map((o,i)=>`<button class="opt" data-i="${i}" style="justify-content:center;font-size:1.25rem;font-weight:600">${o.map((t,j)=>`<span class="t${t}">${mark(base[j],t)}</span>`).join("")}<span class="muted" style="font-size:.78rem;font-weight:500;margin-left:8px">${o.map(t=>TNAME[t]).join(" + ")}</span></button>`).join("")}</div><div id="tpfb"></div></div>`;
+    if(audio)setTimeout(()=>speak(w.h),150);
+    el.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{if(done)return;done=true;const ok=key(sh[+b.dataset.i])===key(pat);if(ok)score++;
+      el.querySelectorAll("[data-i]").forEach(x=>{x.disabled=true;if(key(sh[+x.dataset.i])===key(pat))x.classList.add("ok");else if(x===b)x.classList.add("no")});
+      $("#tpfb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Đúng":"Sai"}</b><span class="detail"><span class="han" style="font-size:1.2rem">${w.h}</span> · <span class="py">${pyHTML(w.p)}</span> · ${esc(w.m)}</span><span class="spacer"></span><button class="say" data-say="${w.h}" aria-label="Nghe">${SPK}</button><button class="btn primary" id="tpN">Tiếp</button></div>`;
+      if(!ok)speak(w.h);$("#tpN").onclick=()=>{round++;next()}});
+  };
+  next();
 }
 function toneQuiz(el){
   if(!canSpeak()){el.innerHTML=`<div class="card result"><b>Cần giọng đọc tiếng Trung</b><div class="muted">Trình duyệt này chưa có giọng 中文. Mở trang bằng Chrome hoặc Edge trên máy tính, hoặc cài giọng đọc tiếng Trung trong cài đặt của điện thoại rồi tải lại trang.</div><button class="btn" id="tqRetry">Thử lại</button></div>`;
