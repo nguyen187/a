@@ -1785,7 +1785,7 @@ function runQuiz(el,qs,onDone,resume){
   }
   function pickOpt(k){const q=qs[i];if(q.answered)return;const ok=q.opts[k].ok;
     el.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;if(q.opts[j].ok)b.classList.add("ok");else if(j===k)b.classList.add("no")});
-    feedback(ok,q.w?wDetail(q.w):(q.explain||""),q.w?q.w.h:q.say)}
+    feedback(ok,q.type==="sandhi"?q.explain:q.w?wDetail(q.w):(q.explain||""),q.w?q.w.h:q.say)}
   function showType(q){
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt"><span class="eyebrow">Gõ pinyin của từ này</span><div class="h">${q.w.h}</div><div class="muted">${esc(q.w.m)}</div></div>
       <form class="typein" id="tf"><input id="typ" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="vd: ni3hao3 hoặc nǐhǎo" aria-label="Pinyin"><button class="btn primary">Kiểm tra</button></form>
@@ -2269,6 +2269,22 @@ document.addEventListener("click",e=>{if(!e.target.closest("#trapGo"))return;con
       opts:shuffle([{html:esc(right),ok:true},{html:esc(wrong),ok:false},...oth.map(x=>({html:esc(x),ok:false}))])}});
   runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=8?"Bạn đã tránh được hầu hết các bẫy!":"Đọc lại danh sách bên trên: âm Hán Việt giúp đoán nghĩa, nhưng không phải lúc nào cũng đúng."}</p><button class="btn" id="trapGo">Làm lại</button></div>`});
   box.scrollIntoView({behavior:"smooth",block:"nearest"})});
+
+const SANDHI=[["不是",0,"bú","bù"],["不对",0,"bú","bù"],["不客气",0,"bú","bù"],["不要",0,"bú","bù"],["不去",0,"bú","bù"],["不会",0,"bú","bù"],["不好",0,"bù","bú"],["不忙",0,"bù","bú"],["不来",0,"bù","bú"],["不喝",0,"bù","bú"],["不吃",0,"bù","bú"],["不想",0,"bù","bú"],
+["一个",0,"yí","yī","yì"],["一样",0,"yí","yī","yì"],["一下",0,"yí","yī","yì"],["一共",0,"yí","yī","yì"],["一起",0,"yì","yī","yí"],["一天",0,"yì","yī","yí"],["一年",0,"yì","yī","yí"],["一点儿",0,"yì","yī","yí"],["第一",1,"yī","yí","yì"],["十一",1,"yī","yí","yì"],
+["你好",0,"ní","nǐ"],["很好",0,"hén","hěn"],["可以",0,"ké","kě"],["水果",0,"shuí","shuǐ"],["老板",0,"láo","lǎo"],["我也",0,"wó","wǒ"],["洗澡",0,"xí","xǐ"],["手表",0,"shóu","shǒu"],["我很好",1,"hén","hěn"]];
+function sandhiWhy(h,i){const c=[...h][i];if(c==="不")return "不 đứng trước thanh 4 thì đọc bú; trước thanh 1, 2, 3 giữ bù.";
+  if(c==="一")return [...h].length>1&&i>0?"一 đứng cuối hoặc dùng để đếm số thứ tự thì giữ thanh 1: yī.":"一 trước thanh 4 đọc yí; trước thanh 1, 2, 3 đọc yì.";
+  return "Hai thanh 3 đi liền nhau: chữ đầu đọc thành thanh 2 (dấu viết vẫn giữ thanh 3)."}
+function sandhiHTML(){return `<section class="sect" id="sec-sandhi"><div><div class="eyebrow">Biến điệu</div><h2>Đọc thật là thanh mấy?</h2>
+  <p class="muted" style="margin:6px 0 0;max-width:64ch">Pinyin trong sách thường viết thanh gốc, nhưng khi nói 不, 一 và hai thanh 3 liền nhau sẽ đổi thanh. Người Việt hay đọc theo mặt chữ nên nghe “cứng”. Nghe rồi chọn cách đọc thật của chữ được tô màu.</p></div>
+  <div class="card"><div class="row"><button class="btn primary" id="shGo">Luyện 12 câu</button><span class="muted" style="font-size:.86rem">${SANDHI.length} cụm: 不 · 一 · 3+3</span></div><div id="shBox"></div></div></section>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#shGo"))return;const box=$("#shBox");if(!box)return;
+  const qs=shuffle(SANDHI.slice()).slice(0,12).map(([h,i,ok,...bad])=>{const hl=[...h].map((c,k)=>k===i?`<span style="color:var(--seal);background:var(--seal-soft);border-radius:8px;padding:0 4px">${c}</span>`:c).join("");
+    return {type:"sandhi",w:BYH[h],listen:canSpeak(),prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
+      opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}});
+  runQuiz(box,qs,(sc,tot)=>{touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><ul class="muted" style="text-align:left;margin:8px 0;padding-left:20px;display:grid;gap:4px"><li>不 + thanh 4 → bú</li><li>一 + thanh 4 → yí; 一 + thanh 1, 2, 3 → yì; đếm số → yī</li><li>3 + 3 → 2 + 3</li></ul><button class="btn" id="shGo">Làm lại</button></div>`});
+  box.scrollIntoView({behavior:"smooth",block:"nearest"})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2416,7 +2432,7 @@ function viewTones(){
    ["j","ch, mặt lưỡi chạm ngạc","家 jiā"],["q","ch bật hơi mạnh","七 qī"],["x","x, môi dẹt, mặt lưỡi","谢 xiè"],["zh","tr uốn lưỡi, không bật hơi","中 zhōng"],["ch","tr uốn lưỡi + bật hơi","茶 chá"],["sh","s uốn lưỡi","是 shì"],["r","r uốn lưỡi, gần “gi” nhẹ","人 rén"],
    ["z","ch đầu lưỡi (ts)","在 zài"],["c","ts bật hơi mạnh","菜 cài"],["s","x đầu lưỡi","三 sān"],["y / w","như i / u đầu âm","有 yǒu · 我 wǒ"]];
   const F=[["a","a","八"],["o","ô (miệng tròn)","我"],["e","ưa / ơ (âm sau)","喝"],["i","i; sau zh ch sh r z c s đọc gần “ư”","是"],["u","u","五"],["ü","uy tròn môi (j q x y viết thành u)","女 · 去"],["ai","ai","买"],["ei","ây","没"],["ao","ao","好"],["ou","âu","口"],["an","an","三"],["en","ân","人"],["ang","ang","忙"],["eng","âng","冷"],["ong","ung","中"],["ie","iê","谢"],["ian","iên","天"],["uan","oan","玩"],["üan","uyên","远"],["in","in","今"],["ing","inh","听"],["iu","iêu","九"],["ui","uây","对"]];
-  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-tones">4 thanh</button><button data-jump="sec-ear">Nghe thanh</button><button data-jump="sec-pairs">Cặp thanh</button><button data-jump="sec-mp">Âm dễ nhầm</button><button data-jump="sec-num">Con số</button><button data-jump="sec-ini">Phụ âm đầu</button><button data-jump="sec-fin">Vần</button></nav><section class="sect" id="sec-tones"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-tones">4 thanh</button><button data-jump="sec-ear">Nghe thanh</button><button data-jump="sec-pairs">Cặp thanh</button><button data-jump="sec-sandhi">Biến điệu</button><button data-jump="sec-mp">Âm dễ nhầm</button><button data-jump="sec-num">Con số</button><button data-jump="sec-ini">Phụ âm đầu</button><button data-jump="sec-fin">Vần</button></nav><section class="sect" id="sec-tones"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Số 1–5 là độ cao giọng của bạn, 5 là cao nhất. Thanh 1 là 55, thanh 2 là 35, thanh 3 là 214, thanh 4 là 51. Bấm vào từng thẻ để nghe.</p></div>
     <div class="card" style="display:grid;gap:12px"><div class="rate"><label for="voiceSel"><b>Giọng đọc</b></label><select id="voiceSel" class="btn" style="max-width:100%;min-width:0;flex:1 1 220px"></select></div><div class="rate"><label for="rateR"><b>Tốc độ đọc</b></label><input type="range" id="rateR" min="0.6" max="1.2" step="0.1" value="${rate}"><span class="num" id="rateV">${rate.toFixed(1)}×</span><button class="btn" data-say="你好，认识你很高兴。我们一起学习汉语吧！">Nghe thử</button></div>
       <div class="muted" style="font-size:.84rem;max-width:68ch"><span id="voiceNow"></span>. Giọng tự nhiên nhất thường là giọng “Natural” của Microsoft Edge (Xiaoxiao, Yunxi) hoặc giọng Claude. Trên iPhone/Mac: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Trung, tải bản “Nâng cao”. Trên Android: cài Google Text-to-speech và tải giọng tiếng Trung.</div></div>
@@ -2429,6 +2445,7 @@ function viewTones(){
   </section>
   <section class="sect" id="sec-ear"><div><div class="eyebrow">Luyện tai</div><h2>Nghe và đoán thanh</h2></div><div id="tqBody"></div></section>
   ${tonePairsHTML()}
+  ${sandhiHTML()}
   ${minPairHTML()}
   ${numDrillHTML()}
   <section class="sect" id="sec-ini"><div><div class="eyebrow">Thanh mẫu</div><h2>21 phụ âm đầu, so với tiếng Việt</h2></div>
