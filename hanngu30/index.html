@@ -1215,6 +1215,12 @@ const READ={
 因为我每天都练习，所以我比以前说得更流利。|Yīnwèi wǒ měitiān dōu liànxí, suǒyǐ wǒ bǐ yǐqián shuō de gèng liúlì.|Vì ngày nào tôi cũng luyện tập nên tôi nói lưu loát hơn trước.
 如果明年有机会，我就去中国旅游。|Rúguǒ míngnián yǒu jīhuì, wǒ jiù qù Zhōngguó lǚyóu.|Nếu năm sau có cơ hội, tôi sẽ đi du lịch Trung Quốc.
 我已经把护照准备好了！|Wǒ yǐjīng bǎ hùzhào zhǔnbèi hǎo le!|Tôi đã chuẩn bị xong hộ chiếu rồi!`],
+33:["Lớp học tiếng Trung",`我们的汉语老师说话很快。|Wǒmen de Hànyǔ lǎoshī shuōhuà hěn kuài.|Thầy dạy tiếng Trung của chúng tôi nói rất nhanh.
+刚开始的时候，我听不懂，也看不清楚黑板上的字。|Gāng kāishǐ de shíhou, wǒ tīng bu dǒng, yě kàn bu qīngchu hēibǎn shang de zì.|Lúc mới bắt đầu, tôi nghe không hiểu, cũng nhìn không rõ chữ trên bảng.
+我很着急，就去问老师有什么办法。|Wǒ hěn zháojí, jiù qù wèn lǎoshī yǒu shénme bànfǎ.|Tôi rất sốt ruột, liền đi hỏi thầy có cách nào không.
+老师说：“别着急，多听多练习，你一定能听懂。”|Lǎoshī shuō: “Bié zháojí, duō tīng duō liànxí, nǐ yídìng néng tīng dǒng.”|Thầy nói: “Đừng sốt ruột, nghe nhiều luyện nhiều, em nhất định sẽ nghe hiểu.”
+现在我坐在前边，黑板上的字都看得清楚了。|Xiànzài wǒ zuò zài qiánbian, hēibǎn shang de zì dōu kàn de qīngchu le.|Bây giờ tôi ngồi ở phía trước, chữ trên bảng đều nhìn rõ rồi.
+老师说的话，我现在也能听懂了。|Lǎoshī shuō de huà, wǒ xiànzài yě néng tīng dǒng le.|Lời thầy nói, bây giờ tôi cũng nghe hiểu được rồi.`],
 35:["Thói quen tập thể dục",`去年我越来越胖，所以我决定每天锻炼身体。|Qùnián wǒ yuè lái yuè pàng, suǒyǐ wǒ juédìng měitiān duànliàn shēntǐ.|Năm ngoái tôi ngày càng béo, nên tôi quyết định ngày nào cũng tập thể dục.
 每天早上起床以后，我马上去跑步。|Měitiān zǎoshang qǐchuáng yǐhòu, wǒ mǎshàng qù pǎobù.|Mỗi sáng ngủ dậy xong, tôi đi chạy bộ ngay.
 开始的时候很累，但是现在我已经习惯了。|Kāishǐ de shíhou hěn lèi, dànshì xiànzài wǒ yǐjīng xíguàn le.|Lúc đầu rất mệt, nhưng bây giờ tôi đã quen rồi.
@@ -1292,7 +1298,10 @@ const EXTRA=`辣|là|cay|lạt
 分钟|fēn zhōng|phút (khoảng thời gian)|phân chung
 跑步|pǎo bù|chạy bộ|bào bộ
 公斤|gōng jīn|ki-lô-gam (cân)|công cân
-坚持|jiān chí|kiên trì|kiên trì`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
+坚持|jiān chí|kiên trì|kiên trì
+说话|shuō huà|nói, nói chuyện|thuyết thoại
+话|huà|lời nói|thoại
+前边|qián bian|phía trước|tiền biên`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
 EXTRA.forEach(w=>{if(!BYH[w.h])BYH[w.h]=w});
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
 /* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
@@ -1767,6 +1776,7 @@ const RQ={
 21:[["Họ đến Bắc Kinh bằng gì?","Máy bay","Tàu hỏa","Taxi"],["Thời tiết ở Bắc Kinh thế nào?","Lạnh, có tuyết rơi","Nóng, nắng to","Mưa to"],["Về nhà, Minh gặp chuyện gì?","Bị cảm, hơi khó chịu","Mất hộ chiếu","Bị lạc đường"]],
 28:[["Minh học tiếng Trung được bao lâu?","4 tuần","4 tháng","4 năm"],["Vì sao Minh nói lưu loát hơn trước?","Ngày nào cũng luyện tập","Có thầy dạy riêng","Đang sống ở Trung Quốc"],["Minh đã chuẩn bị xong cái gì?","Hộ chiếu","Vé máy bay","Hành lý"]],
 29:[["A đã học tiếng Trung bao lâu?","30 ngày","3 tháng","3 năm"],["A đã đến Trung Quốc chưa?","Chưa từng đến","Đã đến rồi","Đang ở đó"],["Hai người hẹn sẽ cùng làm gì?","Đi Trường Thành, ăn vịt quay","Đi Thượng Hải","Cùng học tiếng Anh"]],
+33:[["Lúc mới bắt đầu, người viết gặp khó khăn gì?","Nghe không hiểu, nhìn không rõ bảng","Không có sách để học","Không có bạn cùng lớp"],["Thầy giáo khuyên gì?","Nghe nhiều, luyện nhiều","Đổi sang lớp khác","Học thêm tiếng Anh"],["Bây giờ người viết ngồi ở đâu?","Phía trước","Phía sau","Cạnh cửa sổ"]],
 35:[["Vì sao người viết quyết định tập thể dục?","Vì ngày càng béo","Vì bác sĩ bắt buộc","Vì muốn thi chạy"],["Người viết đi chạy bộ lúc nào?","Ngay sau khi ngủ dậy","Buổi tối","Cuối tuần"],["Sau một thời gian tập, kết quả thế nào?","Khỏe hơn, gầy đi 5 cân","Bị ốm phải nghỉ","Tăng thêm 5 cân"]],
 39:[["Minh đến Bắc Kinh du học khi nào?","Năm ngoái","Năm nay","Tuần trước"],["Lúc mới đến, Minh đọc không hiểu cái gì?","Thực đơn","Bản đồ","Sách giáo khoa"],["Quán ăn cạnh trường thế nào?","Rẻ và sạch","Đắt nhưng ngon","Xa và đông"]]};
 function rcHTML(n){return RQ[n]?`<div class="row"><button class="btn" data-rc="${n}">Câu hỏi đọc hiểu (${RQ[n].length})</button></div><div id="rcBox"></div>`:""}
