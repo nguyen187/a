@@ -1432,7 +1432,18 @@ DAYS.forEach((d,i)=>{
 const ALL=DAYS.flatMap(d=>d.words);
 const BYH=Object.fromEntries(ALL.map(w=>[w.h,w]));
 /* từ bổ sung: chỉ để tra nghĩa trong mẫu câu, hội thoại, bài đọc (không vào thẻ ôn) */
-const EXTRA=`见面|jiàn miàn|gặp mặt|kiến diện
+const EXTRA=`常常|cháng cháng|thường xuyên|thường thường
+打球|dǎ qiú|chơi bóng|đả cầu
+为什么|wèi shén me|tại sao|vị thập ma
+高铁|gāo tiě|tàu cao tốc|cao thiết
+差|chà|kém, thiếu|sai
+中文|Zhōng wén|tiếng Trung, chữ Trung|trung văn
+报纸|bào zhǐ|báo giấy|báo chỉ
+试衣间|shì yī jiān|phòng thử đồ|thí y gian
+那边|nà biān|bên kia, đằng kia|na biên
+打算|dǎ suàn|dự định|đả toán
+又|yòu|lại, vừa… vừa…|hựu
+见面|jiàn miàn|gặp mặt|kiến diện
 钱包|qián bāo|ví tiền|tiền bao
 偷|tōu|trộm, ăn cắp|thâu
 国|guó|nước, quốc gia|quốc
@@ -2337,7 +2348,21 @@ const QA=[[1,"你好吗？","Nǐ hǎo ma?","Bạn khỏe không?","我很好，�
 [10,"你吃饭了吗？","Nǐ chī fàn le ma?","Bạn ăn cơm chưa?","吃了，你呢？","Ăn rồi, còn bạn?"],
 [10,"你学了多长时间汉语？","Nǐ xué le duō cháng shíjiān Hànyǔ?","Bạn học tiếng Trung bao lâu rồi?","学了一个月。","Học được một tháng."],
 [10,"你哪儿不舒服？","Nǐ nǎr bù shūfu?","Bạn khó chịu ở đâu?","我头疼。","Tôi đau đầu."],
-[10,"我们一起去吃饭，好吗？","Wǒmen yìqǐ qù chī fàn, hǎo ma?","Chúng ta cùng đi ăn nhé?","好啊，走吧！","Được thôi, đi nào!"]];
+[10,"我们一起去吃饭，好吗？","Wǒmen yìqǐ qù chī fàn, hǎo ma?","Chúng ta cùng đi ăn nhé?","好啊，走吧！","Được thôi, đi nào!"],
+[8,"你周末常常做什么？","Nǐ zhōumò chángcháng zuò shénme?","Cuối tuần bạn thường làm gì?","我常常去打球。","Tôi thường đi chơi bóng."],
+[9,"你去过中国吗？","Nǐ qù guo Zhōngguó ma?","Bạn đã từng đến Trung Quốc chưa?","去过一次。","Đi một lần rồi."],
+[9,"明天会下雨吗？","Míngtiān huì xià yǔ ma?","Ngày mai có mưa không?","听说明天有雨，你带伞吧。","Nghe nói mai có mưa, bạn mang ô nhé."],
+[10,"你为什么学汉语？","Nǐ wèishénme xué Hànyǔ?","Sao bạn học tiếng Trung?","因为我想去中国工作。","Vì tôi muốn sang Trung Quốc làm việc."],
+[10,"你坐过高铁吗？","Nǐ zuò guo gāotiě ma?","Bạn đi tàu cao tốc bao giờ chưa?","还没坐过。","Chưa đi bao giờ."],
+[11,"你的汉语说得真好！","Nǐ de Hànyǔ shuō de zhēn hǎo!","Tiếng Trung của bạn giỏi thật!","哪里哪里，还差得远呢。","Đâu có, còn kém lắm."],
+[11,"你看得懂中文报纸吗？","Nǐ kàn de dǒng Zhōngwén bàozhǐ ma?","Bạn đọc hiểu báo tiếng Trung không?","还看不懂。","Vẫn chưa đọc hiểu được."],
+[11,"这件衣服我可以试试吗？","Zhè jiàn yīfu wǒ kěyǐ shìshi ma?","Tôi mặc thử cái áo này được không?","可以，试衣间在那边。","Được, phòng thử đồ ở đằng kia."],
+[12,"你把作业写完了吗？","Nǐ bǎ zuòyè xiě wán le ma?","Bạn làm xong bài tập chưa?","还没写完呢。","Vẫn chưa làm xong."],
+[12,"你怎么了？","Nǐ zěnme le?","Bạn sao thế?","我的手机被偷了。","Điện thoại của tôi bị trộm rồi."],
+[12,"你对什么感兴趣？","Nǐ duì shénme gǎn xìngqù?","Bạn hứng thú với cái gì?","我对中国历史很感兴趣。","Tôi rất hứng thú với lịch sử Trung Quốc."],
+[13,"你打算什么时候回国？","Nǐ dǎsuàn shénme shíhou huí guó?","Bạn định khi nào về nước?","打算下个月回去。","Định tháng sau về."],
+[13,"要是明天下雨，我们还去吗？","Yàoshi míngtiān xià yǔ, wǒmen hái qù ma?","Nếu mai mưa, chúng ta còn đi không?","下雨的话就不去了。","Mưa thì không đi nữa."],
+[13,"你觉得这个城市怎么样？","Nǐ juéde zhège chéngshì zěnmeyàng?","Bạn thấy thành phố này thế nào?","又干净又漂亮。","Vừa sạch vừa đẹp."]];
 let QAS=null;
 function qaHTML(){return `<div class="card sect" id="qaBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Phản xạ hỏi đáp</div><h3>Nghe câu hỏi, chọn câu trả lời hợp</h3>
   <div class="muted" style="font-size:.86rem">Giao tiếp thật cần phản xạ nhanh: nghe hiểu câu hỏi và biết đáp gì. ${qaPool().length} câu hỏi thường gặp${qaPool().length<QA.length?", thêm câu mới khi bạn học tiếp":""}.</div></div>
