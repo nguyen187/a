@@ -1602,6 +1602,16 @@ function certHTML(){if(!S.done[30])return"";const ext=!!S.done[40],t=(S.doneAt&&
   </div></section>`}
 document.addEventListener("input",e=>{if(e.target.id==="certName"){S.name=e.target.value.trim();clearTimeout(noteT);noteT=setTimeout(save,600)}});
 const GOALS=[[10,"Nhẹ"],[20,"Vừa"],[40,"Chăm"]];
+const STEPL={vocab:"Học từ vựng",gram:"Đọc ngữ pháp",speak:"Luyện nói",quiz:"Làm bài kiểm tra",write:"Viết chữ"};
+function nextHTML(){const items=[],due=dueList().length,cd=currentDay(),d=DAYS[cd-1];
+  if(due)items.push([`#review`,"",`Ôn ${due} thẻ đến hạn`,"Ôn trước khi học mới giúp nhớ lâu hơn"]);
+  if(d&&d.words.length){const k=STEPS.find(x=>!stepDone(cd,x));if(k)items.push([`#day-${cd}`,k,`${STEPL[k]} · Ngày ${cd}`,esc(d.t)])}
+  else if(d&&!S.done[cd])items.push([`#day-${cd}`,"quiz",d.final?`Làm bài kiểm tra Ngày ${cd}`:`Tổng ôn Ngày ${cd}`,esc(d.t)]);
+  const wk=weakList().length;if(wk>=3)items.push(["#review","",`Luyện ${wk} từ hay sai`,"Những từ bạn trả lời sai nhiều nhất"]);
+  if(items.length<3&&(S.log[today()]||0)<(S.goal||20)&&learned()>=6)items.push(["#review","","Chơi ghép cặp 6 từ","Cách nhẹ nhàng để đủ điểm hôm nay"]);
+  if(!items.length)return"";
+  return `<section class="card sect"><div class="eyebrow">Việc nên làm tiếp</div><div class="dlist">${items.slice(0,3).map(([h,tab,t,sub],i)=>`<a class="drow" href="${h}" ${tab?`data-tabgo="${tab}" data-day="${cd}"`:""} style="grid-template-columns:32px 1fr auto;text-decoration:none;color:var(--ink)"><span class="chip num" style="justify-content:center">${i+1}</span><div style="min-width:0"><b style="font-size:.95rem">${t}</b><div class="muted" style="font-size:.82rem">${sub}</div></div><span class="muted">→</span></a>`).join("")}</div></section>`}
+document.addEventListener("click",e=>{const a=e.target.closest("[data-tabgo]");if(!a)return;dayTab=a.dataset.tabgo;lastDay=+a.dataset.day},true);
 function goalHTML(){const g=S.goal||20,pts=S.log[today()]||0,pct=Math.min(100,Math.round(pts/g*100)),done=pts>=g;
   return `<section class="card goal" id="goalBox"><div class="row"><div style="min-width:0;flex:1 1 200px"><div class="eyebrow">Mục tiêu hôm nay</div>
     <h3 class="num">${done?"Đã đạt mục tiêu! ":""}${pts}/${g} điểm</h3></div>
@@ -1625,6 +1635,7 @@ function viewToday(){
     <div class="strip" aria-label="Tiến độ">${(ext?DAYS:DAYS.slice(0,30)).map(x=>`<a href="#day-${x.n}" class="${S.done[x.n]?"done":x.n===cd&&!allDone?"cur":""}" title="Ngày ${x.n}: ${esc(x.t)}">${x.n}</a>`).join("")}</div>
   </section>
   ${goalHTML()}
+  ${nextHTML()}
   <section class="stats">
     <div class="stat"><b>${learned()}</b><span>từ đã học / ${ALL.length}</span></div>
     <div class="stat"><b>${due}</b><span>thẻ cần ôn hôm nay</span></div>
