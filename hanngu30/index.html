@@ -1191,6 +1191,55 @@ DAYS.forEach((d,i)=>{
 });
 const ALL=DAYS.flatMap(d=>d.words);
 const BYH=Object.fromEntries(ALL.map(w=>[w.h,w]));
+/* từ bổ sung: chỉ để tra nghĩa trong mẫu câu, hội thoại, bài đọc (không vào thẻ ôn) */
+const EXTRA=`辣|là|cay|lạt
+点菜|diǎn cài|gọi món|điểm thái
+买单|mǎi dān|tính tiền|mãi đơn
+菜单|cài dān|thực đơn|thái đơn
+付款|fù kuǎn|trả tiền|phó khoản
+微信|Wēi xìn|WeChat|vi tín
+试|shì|thử|thí
+只是|zhǐ shì|chỉ là|chỉ thị
+看看|kàn kan|xem thử, xem qua|khán khán
+地铁站|dì tiě zhàn|ga tàu điện ngầm|địa thiết trạm
+路口|lù kǒu|ngã tư, giao lộ|lộ khẩu
+往|wǎng|về phía|vãng
+拐|guǎi|rẽ|quải
+师傅|shī fu|bác (tài xế, thợ)|sư phó
+停|tíng|dừng|đình
+退房|tuì fáng|trả phòng|thoái phòng
+无线网|wú xiàn wǎng|Wi-Fi|vô tuyến võng
+密码|mì mǎ|mật khẩu|mật mã
+热水|rè shuǐ|nước nóng|nhiệt thủy
+救命|jiù mìng|cứu với|cứu mệnh
+迷路|mí lù|lạc đường|mê lộ
+救护车|jiù hù chē|xe cứu thương|cứu hộ xa
+最近|zuì jìn|gần nhất; dạo này|tối cận
+遍|biàn|lượt (từ đầu đến cuối)|biến
+去年|qù nián|năm ngoái|khứ niên
+今年|jīn nián|năm nay|kim niên
+刚|gāng|vừa mới|cương
+和|hé|và|hòa
+才|cái|mới (muộn hơn mong đợi)|tài
+哪里|nǎ li|đâu có (khiêm tốn)|na lý
+对|duì|đối với; đúng|đối
+河内|Hé nèi|Hà Nội|Hà Nội
+上个星期|shàng ge xīng qī|tuần trước|thượng cá tinh kỳ
+首|shǒu|bài (lượng từ cho bài hát)|thủ
+太|tài|quá|thái
+再|zài|lại, nữa (việc sắp làm)|tái
+用|yòng|dùng|dụng
+学|xué|học|học
+没|méi|không, chưa (quá khứ)|một
+啊|a|à, nhé (cảm thán)|a
+左边|zuǒ bian|bên trái|tả biên
+右边|yòu bian|bên phải|hữu biên
+唱|chàng|hát|xướng
+您|nín|ngài, ông, bà (kính trọng)|nâm
+雨|yǔ|mưa|vũ
+起|qǐ|dậy|khởi
+阿明|Ā Míng|Minh (tên người)|a minh`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
+EXTRA.forEach(w=>{if(!BYH[w.h])BYH[w.h]=w});
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
 /* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
 const CHAR={};
@@ -1366,7 +1415,7 @@ function checkPy(v,p){
 function makeOrderQ(ex){const [zh,py,vi]=ex;if(!zh||zh.includes("—"))return null;const chunks=orderChunks(zh);
   if(chunks.length<3||chunks.length>9)return null;return {type:"order",zh,py,vi,chunks}}
 function makeClozeQ(ex,pool,prefer){const [zh,py,vi]=ex;if(!zh||zh.includes("—"))return null;
-  const sg=seg(zh);const cands=sg.map((x,i)=>({x,i})).filter(o=>o.x.w&&[...o.x.t].length<=3);if(!cands.length)return null;
+  const sg=seg(zh);const cands=sg.map((x,i)=>({x,i})).filter(o=>o.x.w&&!o.x.w.extra&&[...o.x.t].length<=3);if(!cands.length)return null;
   const pref=cands.filter(o=>prefer.has(o.x.t));const ch=(pref.length?pref:cands)[Math.floor(Math.random()*(pref.length?pref:cands).length)];
   const w=ch.x.w,L=[...w.h].length;const others=pool.filter(o=>o.h!==w.h&&!o.h.includes("…"));
   let ds=shuffle(others.filter(o=>[...o.h].length===L)).slice(0,3);if(ds.length<3)ds=ds.concat(shuffle(others).filter(o=>!ds.includes(o)).slice(0,3-ds.length));
@@ -1970,7 +2019,7 @@ function viewDict(){
 }
 document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.closest("[data-lk]");
   if(sp){const w=BYH[sp.dataset.lk];if(!w)return;
-    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${famHTML(w)}<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a></div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
+    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${famHTML(w)}${w.extra?`<span class="muted" style="font-size:.8rem">Từ bổ sung, ngoài 40 ngày học</span>`:`<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a>`}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
     bar.hidden=false;speak(w.h);return}
   if(!e.target.closest("#lk")||e.target.closest("#lkx")||e.target.closest("#lk a"))bar.hidden=true;
 });
