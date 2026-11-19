@@ -1700,6 +1700,14 @@ function refreshVoicePicker(){const sel=document.getElementById("voiceSel");if(!
   sel.innerHTML=opts.map(([v,l])=>`<option value="${esc(v)}" ${v===voicePref?"selected":""}>${esc(l)}</option>`).join("");
   const h=document.getElementById("voiceNow");if(h)h.textContent="Đang dùng: "+engineName();}
 try{loadVoices();speechSynthesis.onvoiceschanged=loadVoices}catch(e){}
+let aiNS=null,aiOff=false;if(window.claude&&window.claude.use){window.claude.use("sample").then(x=>{aiNS=x}).catch(()=>{})}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-askai]");if(!b||!aiNS)return;const qz=b.closest(".quiz");if(!qz)return;const out=qz.querySelector(".aians");b.disabled=true;
+  const tx=el=>el?el.innerText.replace(/\s+/g," ").trim():"";const opts=[...qz.querySelectorAll(".opt")].map(o=>(o.classList.contains("ok")?"[ĐÚNG] ":o.classList.contains("no")?"[NGƯỜI HỌC CHỌN, SAI] ":"")+tx(o.querySelector("span:last-child")));
+  const typed=qz.querySelector("input.typein");const ctx=`Câu hỏi: ${tx(qz.querySelector(".prompt"))}\n${opts.length?"Các phương án:\n"+opts.join("\n"):""}${typed&&typed.value?"\nNgười học trả lời: "+typed.value:""}\nNhận xét của app: ${tx(qz.querySelector(".fb .detail"))}`;
+  const prompt=`Bạn là gia sư tiếng Trung cho người Việt mới học (HSK 1-3). Giải thích ngắn gọn bằng tiếng Việt (tối đa 90 từ, 2-4 câu) vì sao đáp án đúng là đúng; nếu người học chọn sai thì chỉ ra chỗ nhầm và một mẹo nhớ, có thể so sánh với tiếng Việt hoặc âm Hán Việt. Viết chữ Hán kèm pinyin có dấu. Không dùng markdown, không chào hỏi.\n\n${ctx}`;
+  out.textContent="Đang hỏi gia sư…";
+  try{const r=await aiNS(prompt,{modelTier:"quick",onText:({text})=>{out.textContent=text}});out.textContent=r.text}
+  catch(err){const c=err&&err.code;if(c==="not_granted"){aiOff=true;out.textContent="Gia sư AI đang tắt cho trang này.";b.remove()}else if(c==="rate_limited"){out.textContent="Đang có nhiều câu hỏi, thử lại sau ít phút.";b.disabled=false}else{out.textContent=(err&&err.text)||"Chưa hỏi được, thử lại sau.";b.disabled=false}}});
 if(window.claude&&window.claude.use){window.claude.use("tts").then(t=>{ttsNS=t;refreshAudioHints();refreshVoicePicker()}).catch(()=>{})}
 function refreshAudioHints(){document.querySelectorAll("[data-needs-audio]").forEach(el=>el.hidden=!canSpeak())}
 const SPK=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>`;
@@ -1793,7 +1801,7 @@ function runQuiz(el,qs,onDone,resume){
   function next(){i++;show()}
   function feedback(ok,detail,say,label){
     const q=qs[i];q.answered=true;q.ok=ok;S.stats.ans++;tySkill(q,ok);if(q.key){S.mq=S.mq||{};if(ok){if(S.mq[q.key]&&--S.mq[q.key]<=0)delete S.mq[q.key]}else S.mq[q.key]=(S.mq[q.key]||0)+2}setTimeout(()=>{if(QZ&&QZ.qs===qs){QZ.score=score;QZ.wrong=wrong.map(w=>w.h)}},0);if(ok){score++;S.stats.ok++;if(q.w&&S.miss&&S.miss[q.w.h])S.miss[q.w.h]--}else if(q.w){wrong.push(q.w);S.miss=S.miss||{};S.miss[q.w.h]=(S.miss[q.w.h]||0)+1}
-    $("#fbslot").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${label||(ok?"Chính xác":"Chưa đúng")}</b><span class="detail">${detail}</span><span class="spacer"></span>${say?`<button class="say" data-say="${esc(say)}" aria-label="Nghe">${SPK}</button>`:""}<button class="btn primary" id="nextQ">${i+1<qs.length?"Câu tiếp":"Xem kết quả"}</button></div>`;
+    $("#fbslot").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${label||(ok?"Chính xác":"Chưa đúng")}</b><span class="detail">${detail}</span><span class="spacer"></span>${say?`<button class="say" data-say="${esc(say)}" aria-label="Nghe">${SPK}</button>`:""}${aiNS&&!aiOff?`<button class="btn ghost" data-askai>Vì sao?</button>`:""}<button class="btn primary" id="nextQ">${i+1<qs.length?"Câu tiếp":"Xem kết quả"}</button></div><div class="aians muted" aria-live="polite" style="font-size:.9rem;line-height:1.55;margin-top:8px;white-space:pre-wrap"></div>`;
     if(!ok&&say)speak(say);
     const nb=$("#nextQ");nb.focus();nb.onclick=next;
   }
