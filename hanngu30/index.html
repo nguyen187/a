@@ -1192,6 +1192,26 @@ const RADICALS=[["亻","người"],["氵","nước"],["口","miệng"],["女","n
 
 /* bài đọc cuối mỗi chặng */
 const READ={
+1:["Lời chào",`你好！|Nǐ hǎo!|Xin chào!
+对不起！|Duìbuqǐ!|Xin lỗi!
+没关系。|Méi guānxi.|Không sao.
+谢谢！|Xièxie!|Cảm ơn!
+不客气。再见！|Bú kèqi. Zàijiàn!|Không có gì. Tạm biệt!`],
+2:["Giới thiệu",`你好！我叫阿明。|Nǐ hǎo! Wǒ jiào Ā Míng.|Xin chào! Tôi tên là Minh.
+我是越南人，我是学生。|Wǒ shì Yuènán rén, wǒ shì xuésheng.|Tôi là người Việt Nam, tôi là học sinh.
+她是老师，她是中国人。|Tā shì lǎoshī, tā shì Zhōngguó rén.|Cô ấy là giáo viên, cô ấy là người Trung Quốc.
+他们是学生，他们是越南人。|Tāmen shì xuésheng, tāmen shì Yuènán rén.|Họ là học sinh, họ là người Việt Nam.
+你叫什么名字？|Nǐ jiào shénme míngzi?|Bạn tên là gì?`],
+3:["Hỏi thăm",`你好吗？|Nǐ hǎo ma?|Bạn khỏe không?
+我很好。你呢？|Wǒ hěn hǎo. Nǐ ne?|Tôi khỏe. Còn bạn?
+我很忙，也很累。|Wǒ hěn máng, yě hěn lèi.|Tôi rất bận, cũng rất mệt.
+他是阿明，他也是学生。|Tā shì Ā Míng, tā yě shì xuésheng.|Đây là Minh, cậu ấy cũng là học sinh.
+认识你很高兴！|Rènshi nǐ hěn gāoxìng!|Rất vui được quen bạn!
+我们都很高兴！|Wǒmen dōu hěn gāoxìng!|Chúng ta đều rất vui!`],
+4:["Con số",`我二十岁，我朋友二十五岁。|Wǒ èrshí suì, wǒ péngyou èrshíwǔ suì.|Tôi 20 tuổi, bạn tôi 25 tuổi.
+老师有两个中国朋友。|Lǎoshī yǒu liǎng gè Zhōngguó péngyou.|Thầy có hai người bạn Trung Quốc.
+你们有多少个学生？|Nǐmen yǒu duōshao gè xuésheng?|Các bạn có bao nhiêu học sinh?
+我们有一百零五个学生。|Wǒmen yǒu yìbǎi líng wǔ gè xuésheng.|Chúng tôi có 105 học sinh.`],
 5:["Gia đình tôi",`我家有五口人。|Wǒ jiā yǒu wǔ kǒu rén.|Nhà tôi có năm người.
 爸爸是老师，妈妈也是老师。|Bàba shì lǎoshī, māma yě shì lǎoshī.|Bố là giáo viên, mẹ cũng là giáo viên.
 我哥哥二十五岁，他很忙。|Wǒ gēge èrshíwǔ suì, tā hěn máng.|Anh trai tôi 25 tuổi, anh ấy rất bận.
@@ -1938,6 +1958,10 @@ function viewDay(n){
   body.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{dayTab=b.dataset.go;viewDay(n);window.scrollTo({top:0})});
 }
 const RQ={
+1:[["Người khác nói 对不起, bạn đáp thế nào?","没关系","不客气","再见"],["Người khác nói 谢谢, bạn đáp thế nào?","不客气","没关系","你好"],["再见 nghĩa là gì?","Tạm biệt","Xin chào","Cảm ơn"]],
+2:[["Minh là người nước nào?","Việt Nam","Trung Quốc","Nhật Bản"],["Cô giáo là người nước nào?","Trung Quốc","Việt Nam","Hàn Quốc"],["Minh là ai?","Học sinh","Giáo viên","Bác sĩ"]],
+3:[["Người thứ nhất cảm thấy thế nào?","Bận và mệt","Rất vui","Đói"],["Minh là ai?","Một học sinh","Một giáo viên","Một bác sĩ"],["认识你很高兴 nghĩa là gì?","Rất vui được quen bạn","Hẹn gặp lại","Bạn có khỏe không"]],
+4:[["Bạn của người viết bao nhiêu tuổi?","25 tuổi","20 tuổi","15 tuổi"],["Thầy có mấy người bạn Trung Quốc?","2 người","3 người","1 người"],["Trường có bao nhiêu học sinh?","105","150","115"]],
 5:[["Nhà người viết có mấy người?","5 người","4 người","6 người"],["Bố mẹ người viết làm nghề gì?","Đều là giáo viên","Đều là học sinh","Đều là bác sĩ"],["Người viết KHÔNG có ai?","Chị gái và em trai","Anh trai","Em gái"]],
 6:[["Sinh nhật người viết là ngày nào?","Ngày 20 tháng 11","Ngày 19 tháng 11","Ngày 8 tháng 5"],["Năm nay người viết bao nhiêu tuổi?","20 tuổi","19 tuổi","25 tuổi"],["Sinh nhật mẹ là ngày nào?","Ngày 8 tháng 5","Ngày 5 tháng 8","Ngày 19 tháng 11"]],
 7:[["Minh bao nhiêu tuổi?","20 tuổi","22 tuổi","12 tuổi"],["Nhà Minh có mấy người?","4 người","3 người","5 người"],["Cô giáo của Minh là người nước nào?","Trung Quốc","Việt Nam","Anh"]],
