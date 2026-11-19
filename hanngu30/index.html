@@ -2007,10 +2007,11 @@ function loadStrokes(){if(STROKES)return Promise.resolve(STROKES);
   if(!strokesP)strokesP=fetch("strokes.json").then(r=>{if(!r.ok)throw new Error("no data");return r.json()}).then(d=>STROKES=d).catch(()=>{strokesP=null;return null});
   return strokesP}
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-function mountWriter(el,words){
-  const chars=[...new Set(words.flatMap(w=>[...w.h].filter(c=>/\p{Script=Han}/u.test(c))))];
+function mountWriter(el,words,blind){
+  let chars=[...new Set(words.flatMap(w=>[...w.h].filter(c=>/\p{Script=Han}/u.test(c))))];
+  if(blind)chars=shuffle(chars).slice(0,10);const solved=new Set();
   if(!chars.length){el.innerHTML=`<div class="card">Chưa có chữ để luyện.</div>`;return}
-  let cur=chars[0],mode="watch",hw=null,stepI=0;
+  let cur=chars[0],mode=blind?"recall":"watch",hw=null,stepI=0;
   el.innerHTML=`<div class="writer"><div style="display:grid;gap:10px;justify-items:start;min-width:0">
       <div class="subtabs" id="wmode"><button data-m="watch" aria-pressed="true">Xem nét</button><button data-m="trace" aria-pressed="false">Viết theo</button><button data-m="recall" aria-pressed="false">Tự viết</button></div>
       <div class="pad" id="pad"><div class="loading">Đang tải nét chữ…</div></div>
@@ -2021,8 +2022,9 @@ function mountWriter(el,words){
       <p class="muted" style="margin:0;font-size:.88rem">Học theo 3 bước: <b>Xem nét</b> để thuộc thứ tự, <b>Viết theo</b> trên nét mờ, rồi <b>Tự viết</b> không nhìn. Nét màu đỏ trong chế độ Xem nét là bộ thủ của chữ. Quy tắc chung: trên trước dưới sau, trái trước phải sau, ngang trước sổ sau, ngoài trước trong sau, đóng khung sau cùng.</p></div></div>
   <div class="sect"><h3>20 bộ thủ thường gặp</h3><div class="rad">${RADICALS.map(([r,m])=>`<div><b>${r}</b><span>${m}</span></div>`).join("")}</div></div>`;
   const pad=$("#pad"),ctl=$("#wctl"),msg=t=>{$("#wmsg").innerHTML=t};
-  const drawList=()=>{$("#cl").innerHTML=chars.map(c=>`<button data-c="${c}" aria-pressed="${c===cur}" class="${S.write&&S.write[c]!=null?"done":""}" title="${S.write&&S.write[c]!=null?"Đã tự viết đúng":""}">${c}</button>`).join("")};
+  const drawList=()=>{$("#cl").innerHTML=chars.map(c=>`<button data-c="${c}" aria-pressed="${c===cur}" class="${S.write&&S.write[c]!=null?"done":""}" title="${S.write&&S.write[c]!=null?"Đã tự viết đúng":""}">${blind&&!solved.has(c)?chars.indexOf(c)+1:c}</button>`).join("")};
   const info=()=>{const w=words.find(x=>x.h.includes(cur));const n=STROKES&&STROKES[cur]?STROKES[cur].strokes.length:null;
+    if(blind&&mode!=="watch"&&!solved.has(cur)){$("#winfo").innerHTML=`<div class="eyebrow">Viết chữ còn thiếu</div><div class="row" style="align-items:baseline"><span class="han" style="font-size:2.2rem">${esc(w.h.split(cur).join("＿"))}</span>${n?`<span class="chip num">${n} nét</span>`:""}<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div><div class="muted" style="font-size:.84rem">Không nhớ? Bấm “Xem mẫu” để xem thứ tự nét.</div>`;return}
     $("#winfo").innerHTML=`<div class="row" style="align-items:baseline"><span class="han" style="font-size:2.4rem">${cur}</span>${n?`<span class="chip num">${n} nét</span>`:""}<span class="muted">trong từ</span><span class="han" style="font-size:1.3rem">${w.h}</span><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}${famLine(cur,w.h)}`};
   const nextChar=()=>{const i=chars.indexOf(cur);cur=chars[(i+1)%chars.length];drawList();info();build()};
   function build(){
@@ -2047,7 +2049,7 @@ function mountWriter(el,words){
         onMistake:d=>msg(`Nét ${d.strokeNum+1}: chưa đúng${d.mistakesOnStroke>1?" ("+d.mistakesOnStroke+" lần)":""}. Kiểm tra hướng và thứ tự nét.`),
         onCorrectStroke:d=>msg(`Nét ${d.strokeNum+1}/${n} đúng.`),
         onComplete:d=>{const m=d.totalMistakes;
-          if(mode==="recall"){S.write=S.write||{};S.write[cur]=Math.min(S.write[cur]??99,m);touchStreak();save();updateChrome();drawList()}
+          if(mode==="recall"){S.write=S.write||{};S.write[cur]=Math.min(S.write[cur]??99,m);touchStreak();save();updateChrome()}solved.add(cur);drawList();info();
           msg(`<b style="color:${m===0?"var(--good)":"var(--warn)"}">${m===0?"Hoàn hảo, không sai nét nào!":"Xong, sai "+m+" lần."}</b> ${mode==="trace"?"Thử chế độ Tự viết nhé.":""}`);
           ctl.innerHTML=`<button class="btn" id="wRedo">Viết lại</button>${mode==="trace"?`<button class="btn primary" id="wRecall">Tự viết</button>`:""}<button class="btn ${mode==="recall"?"primary":""}" id="wNext">Chữ tiếp →</button>`;
           $("#wRedo").onclick=build;$("#wNext").onclick=nextChar;const r=$("#wRecall");if(r)r.onclick=()=>{mode="recall";syncMode();build()}}});
@@ -2071,17 +2073,17 @@ function mountWriter(el,words){
     build=()=>{$("#ghost").textContent=cur;ctx.clearRect(0,0,cv.width,cv.height)};
   }
   $("#cl").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;cur=b.dataset.c;drawList();info();build()};
-  el.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;syncMode();build()});
-  drawList();info();
+  el.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;syncMode();info();build()});
+  syncMode();drawList();info();
   loadStrokes().then(d=>{if(!el.isConnected)return;if(d&&window.HanziWriter&&d[cur]){info();build()}else fallback()});
 }
 function viewWrite(){
   const cd=currentDay();const learnedDays=DAYS.filter(d=>d.words.length&&(S.done[d.n]||d.n===cd));
   app.innerHTML=`<section class="sect"><div><div class="eyebrow">Luyện viết</div><h2>Ô chữ 田</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Mỗi ô chia bốn phần để bạn căn giữa và cân đối nét. Viết bằng ngón tay, bút cảm ứng hoặc chuột.</p></div>
-    <div class="row"><label for="wday" class="eyebrow">Chữ của</label><select id="wday" class="btn">${(learnedDays.length?learnedDays:[DAYS[0]]).map(d=>`<option value="${d.n}" ${d.n===cd?"selected":""}>Ngày ${d.n}: ${esc(d.t)}</option>`).join("")}</select></div>
+    <div class="row"><label for="wday" class="eyebrow">Chữ của</label><select id="wday" class="btn" style="max-width:100%"><option value="rand">Ôn ngẫu nhiên: viết chữ từ trí nhớ</option>${(learnedDays.length?learnedDays:[DAYS[0]]).map(d=>`<option value="${d.n}" ${d.n===cd?"selected":""}>Ngày ${d.n}: ${esc(d.t)}</option>`).join("")}</select></div>
     <div id="wbody" class="sect"></div></section>`;
-  const sel=$("#wday");const go=()=>mountWriter($("#wbody"),DAYS[+sel.value-1].words);
+  const sel=$("#wday");const go=()=>{if(sel.value==="rand"){const ds=DAYS.filter(d=>d.words.length&&(S.done[d.n]||d.n<=Math.max(2,cd)));mountWriter($("#wbody"),ds.flatMap(d=>d.words),true)}else mountWriter($("#wbody"),DAYS[+sel.value-1].words)};
   if(!learnedDays.find(d=>d.n==sel.value))sel.value=(learnedDays[learnedDays.length-1]||DAYS[0]).n;
   sel.onchange=go;go();
 }
