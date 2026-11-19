@@ -1647,7 +1647,7 @@ function viewReview(){
   app.innerHTML=`<section class="sect"><div><div class="eyebrow">Ôn tập ngắt quãng</div><h2>${due.length?`${due.length} thẻ đến hạn hôm nay`:"Bạn đã ôn xong hôm nay"}</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Nhìn mặt trước, tự nhớ nghĩa và cách đọc rồi mới lật thẻ. Chấm điểm thật lòng: thẻ “Quên” quay lại ngay trong phiên, thẻ “Nhớ” giãn dần tới 60 ngày.</p></div>
     <div class="row"><span class="eyebrow">Mặt trước</span>
-      <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button></div></div>
+      <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
     <div id="revBody"></div>
     ${weakHTML()}
     <div class="card"><div class="eyebrow" style="margin-bottom:10px">Độ nhớ của ${learned()} từ</div>
@@ -1675,7 +1675,9 @@ document.addEventListener("click",e=>{if(!e.target.closest("#weakGo"))return;con
     box.innerHTML=`<div class="result"><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="weakBack">Xem lại danh sách</button></div>`;$("#weakBack").onclick=viewReview})});
 function showCard(rb){
   const h=revQueue[0],w=BYH[h];let flipped=false;
-  const front=revMode==="h2m"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết chữ Hán ra giấy rồi lật thẻ</div>`;
+  const audioMode=revMode==="a2m"&&canSpeak();
+  if(revMode==="a2m"&&!canSpeak()&&!showCard.warned){showCard.warned=true;toast("Thiết bị chưa có giọng đọc tiếng Trung, nên thẻ hiện chữ Hán thay cho âm thanh.")}
+  const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết chữ Hán ra giấy rồi lật thẻ</div>`;
   const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div class="muted" style="font-size:.8rem">Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}</div>`;
   const c=S.srs[h];
   const nxt=k=>{const b=k===0?0:k===1?c.b:Math.min(6,c.b+(k===2?1:2));const days=k===0?0:k===1?1:IV[b];return days===0?"ngay bây giờ":days+" ngày"};
@@ -1693,7 +1695,7 @@ function showCard(rb){
     touchStreak();save();updateChrome();
     if(revQueue.length)showCard(rb);else viewReview();
   };
-  $("#fc").onclick=flip;$("#flip").onclick=flip;
+  $("#fc").onclick=e=>{if(e.target.closest("[data-say]"))return;flip()};$("#flip").onclick=flip;if(audioMode)setTimeout(()=>speak(w.h),150);
   document.onkeydown=e=>{if(!$("#fc"))return;if(!flipped&&(e.key===" "||e.key==="Enter")){e.preventDefault();flip()}else if(flipped&&/^[1-4]$/.test(e.key))grade(+e.key-1)};
 }
 
