@@ -1749,6 +1749,7 @@ function viewReview(){
       <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
     <div id="revBody"></div>
     ${weakHTML()}
+    ${grammarHTML()}
     <div class="card"><div class="eyebrow" style="margin-bottom:10px">Độ nhớ của ${learned()} từ</div>
       <div class="boxes">${boxes.map((c,i)=>`<div><small class="num">${c}</small><i style="height:${Math.round(c/mx*84)}px"></i><small>${BOXL[i]}</small></div>`).join("")}</div></div>
   </section>`;
@@ -1766,6 +1767,22 @@ function viewReview(){
 function noteOf(h){return (S.notes&&S.notes[h])||""}
 let noteT;function setNote(h,v){S.notes=S.notes||{};v=v.trim();if(v)S.notes[h]=v;else delete S.notes[h];clearTimeout(noteT);noteT=setTimeout(save,600)}
 function noteHTML(h){const n=noteOf(h);return n?`<div class="noteline">✎ ${esc(n)}</div>`:""}
+function gramDays(){const cd=currentDay();return DAYS.filter(d=>d.words.length&&(S.done[d.n]||d.n<=Math.max(3,cd)))}
+function grammarHTML(){const ds=gramDays();
+  return `<div class="card sect" id="gramBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Ôn ngữ pháp</div><h3>${ds.length} điểm ngữ pháp đã gặp</h3>
+    <div class="muted" style="font-size:.86rem">Sắp xếp câu và điền chỗ trống, lấy từ các câu ví dụ và bài đọc của những ngày bạn đã học.</div></div><button class="btn primary" id="gramGo">Luyện 10 câu ngữ pháp</button></div>
+    <details><summary><b>Sổ tay ngữ pháp</b> <span class="muted">· mở để xem công thức từng ngày</span></summary>
+      <div class="dlist" style="margin-top:10px">${DAYS.filter(d=>d.words.length).map(d=>{const m=d.gh.match(/<div class="pat">([\s\S]*?)<\/div>/);const done=ds.includes(d);
+        return `<a class="drow" href="#day-${d.n}" style="grid-template-columns:40px 1fr;text-decoration:none;color:var(--ink);${done?"":"opacity:.55"}"><span class="chip num" style="justify-content:center">${d.n}</span><div style="min-width:0"><b style="font-size:.92rem">${esc(d.g)}</b>${m?`<div class="han" style="font-size:.95rem;overflow-wrap:anywhere">${m[1]}</div>`:""}</div></a>`}).join("")}</div></details>
+    <div id="gramQuiz"></div></div>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#gramGo"))return;const box=$("#gramQuiz");
+  const ds=gramDays(),exs=shuffle(ds.flatMap(d=>d.exs.concat(d.rds))),pool=ds.flatMap(d=>d.words),prefer=new Set(pool.map(w=>w.h));
+  const qs=[];exs.forEach((ex,k)=>{if(qs.length>=10)return;const q=k%2?makeClozeQ(ex,pool.length>=4?pool:ALL,prefer):makeOrderQ(ex);if(q)qs.push(q)});
+  if(!qs.length){toast("Chưa có câu nào để luyện. Học thêm vài ngày nhé.");return}
+  box.scrollIntoView({behavior:"smooth",block:"start"});
+  runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();
+    box.innerHTML=`<div class="result"><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="gramAgain">Luyện tiếp</button></div>`;
+    $("#gramAgain").onclick=()=>$("#gramGo").click()})});
 function weakList(){return Object.entries(S.miss||{}).filter(([h,c])=>BYH[h]&&c>0).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([h,c])=>({w:BYH[h],c}))}
 function weakHTML(){const ws=weakList();if(!ws.length)return"";
   return `<div class="card sect" id="weak"><div class="row"><div><div class="eyebrow">Từ hay sai</div><h3>${ws.length} từ bạn trả lời sai nhiều nhất</h3></div><span class="spacer"></span><button class="btn primary" id="weakGo">Luyện riêng các từ này</button></div>
