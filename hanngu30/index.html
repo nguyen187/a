@@ -1432,7 +1432,10 @@ DAYS.forEach((d,i)=>{
 const ALL=DAYS.flatMap(d=>d.words);
 const BYH=Object.fromEntries(ALL.map(w=>[w.h,w]));
 /* từ bổ sung: chỉ để tra nghĩa trong mẫu câu, hội thoại, bài đọc (không vào thẻ ôn) */
-const EXTRA=`国|guó|nước, quốc gia|quốc
+const EXTRA=`见面|jiàn miàn|gặp mặt|kiến diện
+钱包|qián bāo|ví tiền|tiền bao
+偷|tōu|trộm, ăn cắp|thâu
+国|guó|nước, quốc gia|quốc
 哪国|nǎ guó|nước nào|na quốc
 多长时间|duō cháng shíjiān|bao lâu|đa trường thời gian
 辣|là|cay|lạt
@@ -2780,7 +2783,19 @@ const ERRS=[["我在家吃饭。","我吃饭在家。","Tôi ăn cơm ở nhà."
 ["我昨天没去学校。","我昨天不去学校了。","Hôm qua tôi không đi học.","Phủ định việc đã xảy ra dùng 没, không dùng 不."],
 ["他是我的老师。","他是老师我的。","Anh ấy là thầy giáo của tôi.","我的 + danh từ: sở hữu đứng trước."],
 ["我每天早上七点起床。","我起床七点每天早上。","Tôi dậy lúc 7 giờ sáng mỗi ngày.","Thời gian xếp từ lớn đến nhỏ và đứng trước động từ."],
-["你吃饭了吗？","你吃饭了没吗？","Bạn ăn cơm chưa?","Dùng 吗 HOẶC 没有 ở cuối, không dùng cả hai."]];
+["你吃饭了吗？","你吃饭了没吗？","Bạn ăn cơm chưa?","Dùng 吗 HOẶC 没有 ở cuối, không dùng cả hai."],
+["他比我高一点儿。","他比我很高。","Anh ấy cao hơn tôi một chút.","Câu có 比 không dùng 很; muốn nói mức độ thì thêm 一点儿 / 多了 sau tính từ."],
+["我每天都学习汉语。","我都每天学习汉语。","Ngày nào tôi cũng học tiếng Trung.","都 đứng sau chủ ngữ và thời gian, ngay trước động từ."],
+["我对中国文化很感兴趣。","我很感兴趣中国文化。","Tôi rất hứng thú với văn hóa Trung Quốc.","感兴趣 không mang tân ngữ: 对 + điều gì + 感兴趣."],
+["我想跟你见面。","我想见面你。","Tôi muốn gặp bạn.","见面 là động từ ly hợp, không mang tân ngữ: 跟 + người + 见面."],
+["我去过北京。","我过去北京。","Tôi đã từng đi Bắc Kinh.","过 (từng) đứng ngay SAU động từ."],
+["我听懂了。","我懂听了。","Tôi nghe hiểu rồi.","Bổ ngữ kết quả đứng sau động từ: 听 + 懂."],
+["我看不懂这本书。","我不看懂这本书。","Tôi đọc không hiểu cuốn sách này.","Không làm được kết quả: động từ + 不 + kết quả (看不懂)."],
+["我把作业写完了。","我把作业写。","Tôi làm xong bài tập rồi.","Câu 把 cần thành phần đi sau động từ (完, 了, 好…), không để động từ trơn."],
+["我的钱包被偷了。","我的钱包被偷。","Ví của tôi bị trộm rồi.","Câu 被 cũng cần kết quả hoặc 了 sau động từ."],
+["我们一边吃饭一边聊天。","我们吃饭一边聊天一边。","Chúng tôi vừa ăn vừa trò chuyện.","一边 đứng TRƯỚC mỗi động từ: 一边 A 一边 B."],
+["门开着。","门着开。","Cửa đang mở.","着 đứng ngay sau động từ để chỉ trạng thái kéo dài."],
+["他汉语说得很好。","他说汉语很好得。","Anh ấy nói tiếng Trung rất giỏi.","得 đứng ngay sau động từ. Có tân ngữ thì đưa tân ngữ lên trước (他汉语说得很好) hoặc lặp động từ (他说汉语说得很好)."]];
 const TRAPS=[["东西","dōngxi","đông tây","phương đông và phương tây","đồ vật, đồ đạc"],
 ["走","zǒu","tẩu","chạy trốn, tẩu thoát","đi bộ; rời đi"],
 ["爱人","àirén","ái nhân","người yêu","vợ hoặc chồng (cách gọi ở Đại lục)"],
