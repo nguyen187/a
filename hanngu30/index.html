@@ -2394,6 +2394,31 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-qamic]");i
     if(hd)hd.textContent="Máy nghe được: "+spCtx.text.trim();
     if(best&&bs>=.5)best.click();else if(hd)hd.textContent+=" — chưa khớp câu nào, thử lại hoặc chọn bằng tay."}};
   dictNS.start({language:"zh"}).catch(err=>{spCtx.armed=false;setB(false);if(err&&err.code==="unavailable"){dictZhOff=true;b.remove()}})});
+
+let IME=null;
+function imeKey(p){return pyBare((p||"").replace(/[üǖǘǚǜ]/g,"v"))}
+function imeCands(t){t=(t||"").toLowerCase().replace(/ü/g,"v").replace(/[^a-z]/g,"");if(!t)return[];
+  const ini=w=>w.p.split(/\s+/).map(x=>imeKey(x)[0]||"").join("");const seen=new Set();
+  return ALL.filter(w=>{const b=imeKey(w.p);return b.startsWith(t)||ini(w)===t}).filter(w=>!seen.has(w.h)&&seen.add(w.h))
+    .sort((a,b)=>(imeKey(a.p)===t?0:1)-(imeKey(b.p)===t?0:1)||a.h.length-b.h.length||a.day-b.day).slice(0,8)}
+function imeShow(){const box=$("#imeWork");if(!box||!IME)return;
+  if(IME.i>=IME.q.length){touchStreak(3);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${IME.ok}/${IME.q.length}</div><p class="muted">${IME.ok>=7?"Bạn đã sẵn sàng nhắn tin bằng tiếng Trung!":"Chữ cùng âm rất nhiều, hãy chú ý mặt chữ khi chọn."}</p><button class="btn" id="imeGo">Gõ 8 từ khác</button></div>`;IME=null;return}
+  const w=IME.q[IME.i];
+  box.innerHTML=`<div class="quiz" style="margin-top:12px"><div class="row"><span class="eyebrow num">Từ ${IME.i+1}/${IME.q.length}</span><span class="spacer"></span><span class="eyebrow num">Đúng ${IME.ok}</span></div>
+    <div class="row" style="margin:10px 0"><span class="prompt" style="font-size:1.15rem;flex:1;min-width:0">${esc(w.m)}</span><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div>
+    <input class="typein" id="imeIn" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="latin" placeholder="Gõ pinyin không dấu" style="width:100%;box-sizing:border-box">
+    <div id="imeC" class="row" style="margin-top:10px;gap:6px;min-height:46px"></div><div id="imeFb" aria-live="polite"></div>
+    <div class="row" style="margin-top:8px"><button class="btn ghost" id="imeSkip">Không biết, xem đáp án</button></div></div>`;
+  const inp=$("#imeIn"),cb=$("#imeC");let done=false;
+  const pickW=c=>{if(done)return;done=true;const ok=c&&c.h===w.h;if(ok)IME.ok++;S.stats.ans++;if(ok)S.stats.ok++;else{S.miss=S.miss||{};if(BYH[w.h])S.miss[w.h]=(S.miss[w.h]||0)+1}
+    $("#imeFb").innerHTML=`<div class="fb ${ok?"ok":"no"}" style="margin-top:10px"><b>${ok?"Chính xác":"Chưa đúng"}</b><span class="detail"><span class="han" style="font-size:1.2rem">${w.h}</span> · <span class="py">${pyHTML(w.p)}</span> · gõ: <b>${esc(imeKey(w.p))}</b>${c&&!ok?` <span class="muted">(bạn chọn ${esc(c.h)} = ${esc(c.m)})</span>`:""}</span><span class="spacer"></span><button class="btn primary" id="imeNext">Tiếp</button></div>`;
+    inp.disabled=true;const nb=$("#imeNext");nb.focus();nb.onclick=()=>{IME.i++;imeShow()};say(w.h)};
+  const draw=()=>{const L=imeCands(inp.value);cb.innerHTML=L.length?L.map((c,k)=>`<button class="btn" data-ic="${k}" style="padding:6px 10px"><small class="num muted">${k+1}</small> <span class="han" style="font-size:1.25rem">${c.h}</span></button>`).join(""):`<span class="muted" style="font-size:.84rem">${inp.value?"Không có chữ nào khớp":"Gợi ý sẽ hiện ở đây"}</span>`;
+    cb.querySelectorAll("[data-ic]").forEach(b=>b.onclick=()=>pickW(L[+b.dataset.ic]))};
+  inp.oninput=draw;inp.onkeydown=e=>{if(/^[1-8]$/.test(e.key)){e.preventDefault();const b=cb.querySelector(`[data-ic="${+e.key-1}"]`);if(b)b.click()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();const b=cb.querySelector('[data-ic="0"]');if(b)b.click()}};
+  $("#imeSkip").onclick=()=>pickW(null);draw();inp.focus({preventScroll:true})}
+document.addEventListener("click",e=>{if(!e.target.closest("#imeGo"))return;const ds=gramDays();let pool=ds.flatMap(d=>d.words).filter(w=>!w.p.includes("…"));if(pool.length<8)pool=DAYS.slice(0,3).flatMap(d=>d.words);
+  IME={q:pick(pool,8),i:0,ok:0};imeShow()});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2771,7 +2796,10 @@ function viewWrite(){
   app.innerHTML=`<section class="sect"><div><div class="eyebrow">Luyện viết</div><h2>Ô chữ 田</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Mỗi ô chia bốn phần để bạn căn giữa và cân đối nét. Viết bằng ngón tay, bút cảm ứng hoặc chuột.</p></div>
     <div class="row"><label for="wday" class="eyebrow">Chữ của</label><select id="wday" class="btn" style="max-width:100%"><option value="rand">Ôn ngẫu nhiên: viết chữ từ trí nhớ</option>${(learnedDays.length?learnedDays:[DAYS[0]]).map(d=>`<option value="${d.n}" ${d.n===cd?"selected":""}>Ngày ${d.n}: ${esc(d.t)}</option>`).join("")}</select></div>
-    <div id="wbody" class="sect"></div></section>`;
+    <div id="wbody" class="sect"></div></section>
+  <section class="sect" id="imeBox"><div><div class="eyebrow">Gõ chữ Hán</div><h2>Tập dùng bộ gõ pinyin</h2>
+    <p class="muted" style="margin:6px 0 0;max-width:64ch">Trên điện thoại và máy tính, người Trung Quốc gõ pinyin không dấu rồi chọn chữ trong danh sách gợi ý. Nhiều chữ cùng âm nên bạn phải nhận ra đúng mặt chữ, vừa luyện pinyin vừa luyện nhận chữ.</p></div>
+    <div class="card"><div class="row"><button class="btn primary" id="imeGo">Gõ 8 từ</button><span class="muted" style="font-size:.84rem">Mẹo: gõ chữ cái đầu mỗi âm cũng được, ví dụ <b>xx</b> cho 谢谢.</span></div><div id="imeWork"></div></div></section>`;
   const sel=$("#wday");const go=()=>{if(sel.value==="rand"){const ds=DAYS.filter(d=>d.words.length&&(S.done[d.n]||d.n<=Math.max(2,cd)));mountWriter($("#wbody"),ds.flatMap(d=>d.words),true)}else mountWriter($("#wbody"),DAYS[+sel.value-1].words)};
   if(!learnedDays.find(d=>d.n==sel.value))sel.value=(learnedDays[learnedDays.length-1]||DAYS[0]).n;
   sel.onchange=go;go();
@@ -3023,7 +3051,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày`;const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
-  document.onkeydown=null;QZ=null;TR=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
+  document.onkeydown=null;QZ=null;TR=null;IME=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
   const h=(location.hash||"#today").slice(1);
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
