@@ -1694,7 +1694,7 @@ function makeClozeQ(ex,pool,prefer){const [zh,py,vi]=ex;if(!zh||zh.includes("—
   const shown=sg.map((x,i)=>i===ch.i?`<span style="display:inline-block;min-width:${L*1.1}em;border-bottom:2px solid var(--jade);color:transparent">${"口".repeat(L)}</span>`:esc(x.t)).join("");
   return {type:"cloze",w,prompt:`<span class="eyebrow">Điền vào chỗ trống</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div><div class="muted">${esc(vi)}</div>`,
     opts:shuffle([{html:`<span class="hz">${w.h}</span>`,ok:true},...ds.map(o=>({html:`<span class="hz">${o.h}</span>`,ok:false}))])}}
-function exPool(d){return d.words.length?d.exs:d.ext?DAYS.slice(30,39).flatMap(x=>x.exs.concat(x.rds)):DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
+function exPool(d){return d.words.length?d.exs.concat(d.rds):d.ext?DAYS.slice(30,39).flatMap(x=>x.exs.concat(x.rds)):DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
 function buildQuiz(words,pool,count,exs){
   exs=exs||[];
   const nEx=exs.length?(count>=30?6:count>=20?5:4):0;const prefer=new Set(words.map(w=>w.h));
@@ -2084,6 +2084,7 @@ function viewReview(){
       <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
     <div id="revBody"></div>
     ${weakHTML()}
+    ${randReadHTML()}
     ${savedHTML()}
     ${passiveHTML()}
     ${matchHTML()}
@@ -2114,6 +2115,13 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-bm]");if(!
   if(bmHas(zh)){S.bm=S.bm.filter(x=>x[0]!==zh);toast("Đã bỏ lưu câu.")}else{S.bm.push([zh,b.dataset.bp,b.dataset.bv,Date.now()]);toast("Đã lưu câu vào Ôn tập.")}
   save();document.querySelectorAll(`[data-bm="${CSS.escape(zh)}"]`).forEach(x=>{const on=bmHas(zh);x.setAttribute("aria-pressed",on);x.textContent=on?"★":"☆"});
   if(e.target.closest("#savedBox")){const box=$("#savedBox");if(box)box.outerHTML=savedHTML()}},true);
+function randReadHTML(){const ds=gramDays().filter(d=>d.rds.length);if(!ds.length)return"";
+  return `<div class="card sect" id="rrCard"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Đọc ngẫu nhiên</div><h3>Ôn một bài đọc đã học</h3>
+  <div class="muted" style="font-size:.86rem">Pinyin được ẩn sẵn để bạn luyện đọc chữ Hán. Chạm vào từ chưa nhớ để tra, rồi làm câu hỏi đọc hiểu.</div></div><button class="btn primary" id="rrGo">Bốc một bài</button></div><div id="rrBox"></div></div>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#rrGo"))return;const ds=gramDays().filter(d=>d.rds.length);if(!ds.length)return;
+  const box=$("#rrBox"),prev=box.dataset.day;let d=ds[Math.floor(Math.random()*ds.length)];if(ds.length>1)while(String(d.n)===prev)d=ds[Math.floor(Math.random()*ds.length)];
+  box.dataset.day=d.n;box.innerHTML=readingHTML(d).replace('Bài đọc · Chặng','Ngày '+d.n+' · Chặng');wireReading(d);const c=$("#rdPy");if(c){c.checked=true;c.dispatchEvent(new Event("change"))}
+  $("#rrGo").textContent="Bốc bài khác"});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
