@@ -1885,6 +1885,54 @@ const PAIRS=[
  {a:["的","de","của (trước danh từ)"],b:["得","de","(sau động từ, chỉ mức độ)"],note:"Danh từ đi sau thì 的; mức độ của hành động thì 得.",q:[["这是我___书。",0],["他跑___很快。",1]]},
  {a:["在","zài","ở (vật + 在 + nơi)"],b:["有","yǒu","có (nơi + 有 + vật)"],note:"Biết vật, hỏi chỗ: 在; biết chỗ, nói có gì: 有.",q:[["我的书___桌子上。",0],["桌子上___一本书。",1]]},
  {a:["过","guo","đã từng (kinh nghiệm)"],b:["了","le","đã (hoàn thành)"],note:"过 nói về trải nghiệm; 了 nói một việc cụ thể đã xong.",q:[["我从来没去___北京。",0],["我昨天买___一本书。",1]]}];
+const PHRASES=[
+{t:"Chào hỏi",l:`你好，我叫阿明。|Nǐ hǎo, wǒ jiào Ā Míng.|Xin chào, tôi tên là Minh.
+我是越南人。|Wǒ shì Yuènán rén.|Tôi là người Việt Nam.
+很高兴认识你。|Hěn gāoxìng rènshi nǐ.|Rất vui được biết bạn.
+我的汉语不太好。|Wǒ de Hànyǔ bú tài hǎo.|Tiếng Trung của tôi chưa tốt lắm.
+请说慢一点儿。|Qǐng shuō màn yìdiǎnr.|Làm ơn nói chậm một chút.
+请再说一遍。|Qǐng zài shuō yí biàn.|Làm ơn nói lại lần nữa.`},
+{t:"Gọi món",l:`服务员，点菜！|Fúwùyuán, diǎn cài!|Phục vụ ơi, cho gọi món!
+有菜单吗？|Yǒu càidān ma?|Có thực đơn không?
+我要这个。|Wǒ yào zhège.|Tôi lấy món này.
+不要辣的。|Bú yào là de.|Đừng làm cay.
+买单！|Mǎi dān!|Tính tiền!
+可以用微信付款吗？|Kěyǐ yòng Wēixìn fùkuǎn ma?|Trả bằng WeChat được không?`},
+{t:"Mua sắm",l:`这个多少钱？|Zhège duōshao qián?|Cái này bao nhiêu tiền?
+太贵了，便宜一点儿吧。|Tài guì le, piányi yìdiǎnr ba.|Đắt quá, rẻ hơn chút đi.
+有大一点儿的吗？|Yǒu dà yìdiǎnr de ma?|Có cỡ lớn hơn không?
+我可以试一下吗？|Wǒ kěyǐ shì yíxià ma?|Tôi mặc thử được không?
+我只是看看。|Wǒ zhǐshì kànkan.|Tôi chỉ xem thôi.`},
+{t:"Hỏi đường, taxi",l:`请问，地铁站在哪儿？|Qǐngwèn, dìtiě zhàn zài nǎr?|Xin hỏi, ga tàu điện ngầm ở đâu?
+离这儿远吗？|Lí zhèr yuǎn ma?|Cách đây có xa không?
+一直往前走。|Yìzhí wǎng qián zǒu.|Cứ đi thẳng về phía trước.
+到路口往左拐。|Dào lùkǒu wǎng zuǒ guǎi.|Đến ngã tư thì rẽ trái.
+师傅，去这个地方。|Shīfu, qù zhège dìfang.|Bác tài ơi, cho đến chỗ này.
+在这儿停一下。|Zài zhèr tíng yíxià.|Dừng ở đây một chút.`},
+{t:"Khách sạn",l:`我预订了一个房间。|Wǒ yùdìng le yí gè fángjiān.|Tôi đã đặt trước một phòng.
+几点退房？|Jǐ diǎn tuì fáng?|Mấy giờ trả phòng?
+无线网的密码是多少？|Wúxiànwǎng de mìmǎ shì duōshao?|Mật khẩu Wi-Fi là gì?
+房间里没有热水。|Fángjiān li méiyǒu rè shuǐ.|Trong phòng không có nước nóng.
+可以帮我放一下行李吗？|Kěyǐ bāng wǒ fàng yíxià xíngli ma?|Gửi giúp tôi hành lý được không?`},
+{t:"Khẩn cấp",l:`救命！|Jiùmìng!|Cứu với!
+我迷路了。|Wǒ mílù le.|Tôi bị lạc đường.
+我的护照丢了。|Wǒ de hùzhào diū le.|Tôi bị mất hộ chiếu.
+请帮我叫救护车。|Qǐng bāng wǒ jiào jiùhùchē.|Làm ơn gọi giúp tôi xe cứu thương.
+最近的医院在哪儿？|Zuì jìn de yīyuàn zài nǎr?|Bệnh viện gần nhất ở đâu?
+对不起，我听不懂。|Duìbuqǐ, wǒ tīng bu dǒng.|Xin lỗi, tôi nghe không hiểu.`}].map(x=>({t:x.t,rows:x.l.split("\n").map(r=>r.split("|"))}));
+let phraseIdx=0;
+function phrasesHTML(){return `<details class="card" id="phBox"><summary><b>Mẫu câu theo tình huống</b> <span class="muted">· ${PHRASES.reduce((a,x)=>a+x.rows.length,0)} câu dùng ngay khi đi Trung Quốc</span></summary>
+  <div class="subtabs" id="phTabs" style="margin-top:12px">${PHRASES.map((x,i)=>`<button data-ph="${i}" aria-pressed="${i===phraseIdx}">${x.t}</button>`).join("")}</div>
+  <div id="phList" class="ex" style="margin-top:12px"></div></details>`}
+function wirePhrases(){const box=$("#phBox");if(!box)return;
+  const draw=()=>{const x=PHRASES[phraseIdx];
+    $("#phList").innerHTML=x.rows.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div>`).join("")+
+      `<div class="row"><button class="btn" id="phPlay">${SPK} Nghe cả nhóm</button><button class="btn primary" id="phSpeak">Luyện nói nhóm này</button></div><div id="phSp"></div>`;
+    $("#phPlay").onclick=async()=>{for(const [zh] of x.rows){if(!await speakWait(zh))break}};
+    $("#phSpeak").onclick=()=>{mountSpeak($("#phSp"),x.rows,"ph"+phraseIdx);$("#phSp").scrollIntoView({behavior:"smooth",block:"nearest"})};
+    box.querySelectorAll("[data-ph]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.ph===phraseIdx));};
+  $("#phTabs").onclick=e=>{const b=e.target.closest("[data-ph]");if(!b)return;phraseIdx=+b.dataset.ph;draw()};
+  draw()}
 function pairQuestions(){const out=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>{const ans=k?p.b:p.a,oth=k?p.a:p.b;
   const shown=esc(sent).replace("___",`<span style="display:inline-block;min-width:${[...ans[0]].length*1.1}em;border-bottom:2px solid var(--jade)">&nbsp;</span>`);
   out.push({type:"pair",w:{h:ans[0],p:ans[1],m:ans[2]+" — "+p.note},prompt:`<span class="eyebrow">Chọn từ đúng</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div>`,
@@ -1896,7 +1944,7 @@ function trapsHTML(){return `<section class="sect" id="trapSec">
   <details class="card" id="pairBox"><summary><b>Cặp từ dễ nhầm</b> <span class="muted">· ${PAIRS.length} cặp người Việt hay dùng sai</span></summary>
     <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="pairGo">Luyện 10 câu cặp từ dễ nhầm</button></div></details>
-  <div id="pairQuiz"></div></section>`}
+  <div id="pairQuiz"></div>${phrasesHTML()}</section>`}
 function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=$("#pairQuiz");box.scrollIntoView({behavior:"smooth",block:"start"});
   runQuiz(box,pairQuestions(),(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Cặp từ dễ nhầm</div><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="pairAgain">Làm lại</button></div>`;$("#pairAgain").onclick=()=>$("#pairGo").click()})}}
 
@@ -1910,7 +1958,7 @@ function viewDict(){
       <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
       <label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="donly" ${dictOnly?"checked":""}> Chỉ từ đã học</label></div>
     <div class="eyebrow num" id="dcount"></div><div class="dlist" id="dlist"></div></section>`;
-  wirePairs();
+  wirePairs();wirePhrases();
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
     const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
     $("#dcount").textContent=res.length+" từ";
