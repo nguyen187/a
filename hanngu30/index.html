@@ -2207,7 +2207,7 @@ document.addEventListener("click",e=>{const lis=e.target.closest("#rrListen");if
 let TR=null;
 function transPool(){return gramDays().flatMap(d=>(d.exs||[]).concat(d.rds||[]).filter(x=>x&&x[0]&&x[2]&&[...x[0].replace(/[^\p{Script=Han}]/gu,"")].length>=3&&[...x[0]].length<=22).map(x=>[x[0],x[1],x[2],d.n]))}
 function transHTML(){const L=transPool();if(L.length<4)return"";return `<div class="card sect" id="trBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Dịch câu</div><h3>Việt → Trung: tự nói ra câu</h3>
-  <div class="muted" style="font-size:.86rem">Đọc câu tiếng Việt, nói to hoặc gõ câu tiếng Trung (chữ Hán hoặc pinyin không dấu), rồi so với đáp án. Đây là bước biến từ “nhận ra được” thành “dùng được”.</div></div>
+  <div class="muted" style="font-size:.86rem">Đọc câu tiếng Việt, bấm Nói (nếu có micro) hoặc gõ câu tiếng Trung (chữ Hán hoặc pinyin không dấu), rồi so với đáp án. Đây là bước biến từ “nhận ra được” thành “dùng được”.</div></div>
   <div class="row"><button class="btn primary" id="trGo">Bắt đầu 8 câu</button></div></div><div id="trWork" aria-live="polite"></div></div>`}
 function pyBare(t){return (t||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z]/g,"")}
 function hanOnly(t){return (t||"").replace(/[^\p{Script=Han}]/gu,"")}
@@ -2218,16 +2218,23 @@ function trShow(){const box=$("#trWork");if(!box||!TR)return;
    <p class="prompt" style="font-size:1.15rem;margin:10px 0">${esc(v)}</p>
    <div class="muted" style="font-size:.84rem;margin-bottom:8px" id="trHint">${n} chữ Hán</div>
    <input class="typein" id="trIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ chữ Hán hoặc pinyin (không bắt buộc)" style="width:100%;max-width:100%;box-sizing:border-box">
-   <div class="row" style="margin-top:10px"><button class="btn ghost" id="trHintB">Gợi ý</button><span class="spacer"></span><button class="btn primary" id="trShow">Xem đáp án</button></div><div id="trAns"></div></div>`;
-  const inp=$("#trIn");inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#trShow").click()}};
+   <div class="row" style="margin-top:10px"><button class="btn ghost" id="trHintB">Gợi ý</button><span class="spacer"></span>${dictNS&&!dictZhOff?`<button class="btn mic" id="trMic">${MIC} <span>Nói</span></button>`:""}<button class="btn primary" id="trShow">Xem đáp án</button></div><div id="trAns"></div></div>`;
+  const inp=$("#trIn");const tm=$("#trMic");
+  if(tm){const setB=on=>{tm.classList.toggle("on",on);tm.querySelector("span").textContent=on?"Dừng":"Nói"};
+    spCtx={text:"",onPartial:t=>{if(t)inp.value=t},onState:(st,reason)=>{setB(st!=="idle");if(st==="idle"&&spCtx&&spCtx.armed){spCtx.armed=false;
+      if(reason==="unavailable"){dictZhOff=true;tm.remove();return}if(spCtx.text.trim()){inp.value=spCtx.text.trim();const sb=$("#trShow");if(sb)sb.click()}}}};
+    tm.onclick=()=>{if(dictNS.active()){dictNS.stop().catch(()=>{});return}spCtx.text="";spCtx.armed=true;inp.value="";
+      dictNS.start({language:"zh"}).catch(err=>{spCtx.armed=false;setB(false);if(err&&err.code==="unavailable"){dictZhOff=true;tm.remove()}else if(err&&err.code!=="stopped")toast("Không mở được micro, bạn gõ câu trả lời nhé.")})}}
+  inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#trShow").click()}};
   $("#trHintB").onclick=e=>{const w=seg(zh).filter(z=>z.w).map(z=>z.t);$("#trHint").innerHTML=`${n} chữ Hán · bắt đầu bằng <b class="zh">${esc([...hanOnly(zh)][0])}</b>${w.length?" · có các từ: "+shuffle(w.slice()).slice(0,3).map(t=>`<span class="zh">${esc(t)}</span>`).join(", "):""}`;e.currentTarget.disabled=true};
   $("#trShow").onclick=()=>{const t=inp.value.trim();let auto=null;
-    if(t){if(/\p{Script=Han}/u.test(t))auto=hanOnly(t)===hanOnly(zh);else auto=pyBare(t)===pyBare(p)}
-    const typed=new Set([...hanOnly(t)]);
-    const mark=t&&/\p{Script=Han}/u.test(t)?[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span style="color:${typed.has(c)?"var(--good)":"var(--bad)"}">${esc(c)}</span>`:esc(c)).join(""):"";
+    if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});
+    const isH=/\p{Script=Han}|\d/u.test(t);let lm=null;
+    if(t){if(isH){lm=lcsMarks(zhOnly(zh),zhOnly(t));auto=lm.score>=.999&&zhOnly(t).length===zhOnly(zh).length}else auto=pyBare(t)===pyBare(p)}
+    let k=0;const mark=lm?[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span style="color:${lm.hit[k++]?"var(--good)":"var(--bad)"}">${esc(c)}</span>`:esc(c)).join(""):"";
     inp.disabled=true;$("#trShow").remove();$("#trHintB").remove();
     $("#trAns").innerHTML=`<div class="ex" style="margin-top:12px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span></div></div>
-     ${mark?`<div class="muted" style="font-size:.84rem;margin-top:6px">Chữ bạn đã có: <span class="zh">${mark}</span></div>`:""}
+     ${mark?`<div class="muted" style="font-size:.84rem;margin-top:6px">Khớp ${Math.round(lm.score*100)}%: <span class="zh">${mark}</span></div>`:""}
      ${auto===true?`<p style="margin:10px 0 0"><b>Chính xác!</b></p>`:""}
      <div class="row" style="margin-top:12px">${auto===true?`<button class="btn primary" data-tr="1">Tiếp</button>`:`<button class="btn" data-tr="0">Chưa đúng</button><button class="btn primary" data-tr="1">Đúng ý</button>`}</div>`;
     say(zh)}};
