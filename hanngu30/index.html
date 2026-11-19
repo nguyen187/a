@@ -1376,10 +1376,10 @@ async function initRemote(){
     else if(S.ts){dirty=true;flush()}
   }catch(e){}
 }
-function touchStreak(){
-  const t=today();S.log[t]=(S.log[t]||0)+1;
+function touchStreak(pts){
+  const t=today();S.log[t]=(S.log[t]||0)+(pts||1);
   if(S.streak.last===t)return;
-  S.streak.count=(S.streak.last===t-1)?S.streak.count+1:1;S.streak.last=t;
+  S.streak.count=(S.streak.last===t-1)?S.streak.count+1:1;S.streak.last=t;S.streak.best=Math.max(S.streak.best||0,S.streak.count);
 }
 function streakNow(){const t=today();return (S.streak.last===t||S.streak.last===t-1)?S.streak.count:0}
 function currentDay(){for(const d of DAYS){if(!S.done[d.n])return d.n}return DAYS.length}
@@ -1594,6 +1594,14 @@ function certHTML(){if(!S.done[30])return"";const ext=!!S.done[40],t=(S.doneAt&&
     <div class="row" style="justify-content:space-between;align-items:flex-end"><span class="muted" style="font-size:.84rem">Ngày ${date}</span><span class="cert-seal">成</span></div>
   </div></section>`}
 document.addEventListener("input",e=>{if(e.target.id==="certName"){S.name=e.target.value.trim();clearTimeout(noteT);noteT=setTimeout(save,600)}});
+const GOALS=[[10,"Nhẹ"],[20,"Vừa"],[40,"Chăm"]];
+function goalHTML(){const g=S.goal||20,pts=S.log[today()]||0,pct=Math.min(100,Math.round(pts/g*100)),done=pts>=g;
+  return `<section class="card goal" id="goalBox"><div class="row"><div style="min-width:0;flex:1 1 200px"><div class="eyebrow">Mục tiêu hôm nay</div>
+    <h3 class="num">${done?"Đã đạt mục tiêu! ":""}${pts}/${g} điểm</h3></div>
+    <div class="subtabs" role="group" aria-label="Chọn mục tiêu">${GOALS.map(([v,l])=>`<button data-goal="${v}" aria-pressed="${v===g}">${l} ${v}</button>`).join("")}</div></div>
+    <div class="qbar" style="height:10px"><i style="width:${pct}%;background:${done?"var(--good)":"var(--jade)"}"></i></div>
+    <div class="muted" style="font-size:.82rem">Mỗi thẻ ôn, câu luyện, chữ viết hay lượt nghe được 1 điểm; hoàn thành bài kiểm tra của ngày được 5 điểm.</div></section>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(!b)return;S.goal=+b.dataset.goal;save();const box=$("#goalBox");if(box)box.outerHTML=goalHTML()});
 function heat(){const t=today();let out="";for(let i=34;i>=0;i--){const d=t-i,c=S.log[d]||0,lv=!c?0:c>=20?4:c>=10?3:c>=4?2:1;
   out+=`<i class="h${lv}${i===0?" today":""}" title="${new Date(d*DAYMS).toLocaleDateString("vi-VN",{timeZone:"UTC"})}: ${c} hoạt động"></i>`}return out}
 function viewToday(){
@@ -1609,10 +1617,11 @@ function viewToday(){
     </div>
     <div class="strip" aria-label="Tiến độ">${(ext?DAYS:DAYS.slice(0,30)).map(x=>`<a href="#day-${x.n}" class="${S.done[x.n]?"done":x.n===cd&&!allDone?"cur":""}" title="Ngày ${x.n}: ${esc(x.t)}">${x.n}</a>`).join("")}</div>
   </section>
+  ${goalHTML()}
   <section class="stats">
     <div class="stat"><b>${learned()}</b><span>từ đã học / ${ALL.length}</span></div>
     <div class="stat"><b>${due}</b><span>thẻ cần ôn hôm nay</span></div>
-    <div class="stat"><b>${streakNow()}</b><span>ngày học liên tiếp</span></div>
+    <div class="stat"><b>${streakNow()}</b><span>ngày liên tiếp · kỷ lục ${Math.max(S.streak.best||0,streakNow())}</span></div>
     <div class="stat"><b>${acc}</b><span>tỉ lệ trả lời đúng</span></div>
   </section>
   <section class="card" style="display:grid;gap:10px"><div class="row"><span class="eyebrow">35 ngày gần nhất</span><span class="spacer"></span><span class="muted" style="font-size:.8rem">Ô càng đậm là ngày học càng nhiều</span></div>
@@ -1721,7 +1730,7 @@ function viewDay(n){
         const passed=pct>=pass;
         if(passed&&!S.done[n]){S.done[n]=true;addToSRS(d.words);S.doneAt=S.doneAt||{};S.doneAt[n]=today()}if(passed)markStep(n,"quiz");
         wrong.forEach(w=>{if(S.srs[w.h])S.srs[w.h]={b:0,d:today()}});
-        touchStreak();save();updateChrome();
+        touchStreak(5);save();updateChrome();
         body.innerHTML=`<div class="card result"><div class="eyebrow">Kết quả</div><div class="score" style="color:${passed?"var(--good)":"var(--bad)"}">${pct}%</div>
           <div>${sc}/${tot} câu đúng. ${passed?(d.final?(d.ext?"Chúc mừng, bạn đã hoàn thành phần mở rộng HSK 3!":"Chúc mừng, bạn đã hoàn thành khóa 30 ngày! Phần mở rộng HSK 3 bắt đầu từ Ngày 31."):"Đã hoàn thành ngày "+n+". Các từ đã được thêm vào bộ thẻ ôn tập."):"Cần "+pass+"% để hoàn thành. Xem lại từ vựng rồi làm lại nhé."}</div>
           ${wrong.length?`<div><div class="eyebrow" style="margin-bottom:6px">Từ cần xem lại</div><div class="row">${[...new Map(wrong.map(w=>[w.h,w])).values()].map(w=>`<button class="chip" data-say="${esc(w.h)}"><span class="han">${w.h}</span> ${pyPlain(w.p)} · ${esc(w.m)}</button>`).join("")}</div></div>`:""}
