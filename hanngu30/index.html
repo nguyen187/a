@@ -1767,6 +1767,7 @@ function viewReview(){
       <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
     <div id="revBody"></div>
     ${weakHTML()}
+    ${speedHTML()}
     ${grammarHTML()}
     <div class="card"><div class="eyebrow" style="margin-bottom:10px">Độ nhớ của ${learned()} từ</div>
       <div class="boxes">${boxes.map((c,i)=>`<div><small class="num">${c}</small><i style="height:${Math.round(c/mx*84)}px"></i><small>${BOXL[i]}</small></div>`).join("")}</div></div>
@@ -1785,6 +1786,28 @@ function viewReview(){
 function noteOf(h){return (S.notes&&S.notes[h])||""}
 let noteT;function setNote(h,v){S.notes=S.notes||{};v=v.trim();if(v)S.notes[h]=v;else delete S.notes[h];clearTimeout(noteT);noteT=setTimeout(save,600)}
 function noteHTML(h){const n=noteOf(h);return n?`<div class="noteline">✎ ${esc(n)}</div>`:""}
+function speedPool(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);if(ws.length>=8)return ws;const cd=currentDay();return ALL.filter(w=>w.day<=Math.max(3,cd))}
+function speedHTML(){return `<div class="card sect" id="spdBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Thử thách 60 giây</div><h3>Nhận diện nhanh nghĩa của từ</h3>
+  <div class="muted" style="font-size:.86rem">Chọn nghĩa đúng càng nhiều càng tốt trong một phút. Kỷ lục của bạn: <b class="num">${S.speedBest||0}</b> từ.</div></div><button class="btn primary" id="spdGo">Bắt đầu</button></div></div>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#spdGo"))return;runSpeed($("#spdBox"))});
+function runSpeed(box){const pool=speedPool(),end=Date.now()+60000;let score=0,miss=[],q=null,lock=false;
+  box.innerHTML=`<div class="quiz" style="max-width:none"><div class="row"><span class="eyebrow num" id="spdT">60 giây</span><span class="spacer"></span><span class="eyebrow num" id="spdS">0 đúng</span></div>
+    <div class="qbar"><i id="spdBar" style="width:100%;transition:none"></i></div><div class="prompt"><div class="h" id="spdH"></div><div class="py" id="spdP"></div></div><div class="opts" id="spdO"></div></div>`;
+  const next=()=>{const w=pool[Math.floor(Math.random()*pool.length)];const ds=pick(ALL.filter(x=>x.h!==w.h&&x.m!==w.m),3);
+    q={w,opts:shuffle([{t:w.m,ok:true},...ds.map(x=>({t:x.m,ok:false}))])};
+    $("#spdH").textContent=w.h;$("#spdP").innerHTML=pyHTML(w.p);
+    $("#spdO").innerHTML=q.opts.map((o,k)=>`<button class="opt" data-sk="${k}"><span class="k">${k+1}</span><span>${esc(o.t)}</span></button>`).join("");lock=false};
+  const answer=k=>{if(lock||!q)return;lock=true;const ok=q.opts[k].ok;const btn=box.querySelector(`[data-sk="${k}"]`);
+    if(ok)score++;else if(!miss.includes(q.w))miss.push(q.w);btn.classList.add(ok?"ok":"no");$("#spdS").textContent=score+" đúng";setTimeout(next,ok?120:450)};
+  $("#spdO").onclick=e=>{const b=e.target.closest("[data-sk]");if(b)answer(+b.dataset.sk)};
+  const key=e=>{if(/^[1-4]$/.test(e.key))answer(+e.key-1)};document.onkeydown=key;
+  const tick=setInterval(()=>{if(!box.isConnected){clearInterval(tick);return}const left=Math.max(0,end-Date.now());
+    $("#spdBar").style.width=(left/600)+"%";$("#spdT").textContent=Math.ceil(left/1000)+" giây";if(left>0)return;
+    clearInterval(tick);if(document.onkeydown===key)document.onkeydown=null;const rec=score>(S.speedBest||0);if(rec)S.speedBest=score;touchStreak();save();updateChrome();
+    box.innerHTML=`<div class="result"><div class="eyebrow">Hết giờ</div><div class="score num">${score}</div><div>${rec?"Kỷ lục mới!":"Kỷ lục: "+S.speedBest+" từ."} ${score>=25?"Phản xạ rất tốt.":score>=12?"Khá nhanh rồi, cố lên!":"Làm vài lượt mỗi ngày, tốc độ sẽ tăng rất nhanh."}</div>
+      ${miss.length?`<div><div class="eyebrow" style="margin-bottom:6px">Từ chọn sai</div><div class="row">${miss.map(w=>`<button class="chip" data-say="${esc(w.h)}"><span class="han">${w.h}</span> ${pyPlain(w.p)} · ${esc(w.m)}</button>`).join("")}</div></div>`:""}
+      <button class="btn primary" id="spdGo">Chơi lại</button></div>`},100);
+  next()}
 function gramDays(){const cd=currentDay();return DAYS.filter(d=>d.words.length&&(S.done[d.n]||d.n<=Math.max(3,cd)))}
 function grammarHTML(){const ds=gramDays();
   return `<div class="card sect" id="gramBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Ôn ngữ pháp</div><h3>${ds.length} điểm ngữ pháp đã gặp</h3>
