@@ -1054,20 +1054,41 @@ const IV=[0,1,3,7,14,30,60];
 function addToSRS(words){const t=today();words.forEach(w=>{if(!S.srs[w.h])S.srs[w.h]={b:0,d:t+1}})}
 
 /* ===================== ÂM THANH ===================== */
-let zhVoice=null, ttsNS=null, ttsTried=false;
-function loadVoices(){try{const vs=speechSynthesis.getVoices();zhVoice=vs.find(v=>/^zh[-_]CN/i.test(v.lang))||vs.find(v=>/^(zh|cmn)/i.test(v.lang))||null}catch(e){}}
-try{loadVoices();speechSynthesis.onvoiceschanged=loadVoices}catch(e){}
-if(window.claude&&window.claude.use){window.claude.use("tts").then(t=>{ttsNS=t;ttsTried=true;refreshAudioHints()}).catch(()=>{ttsTried=true})}
-function canSpeak(){return !!zhVoice||!!ttsNS}
+let zhVoices=[], ttsNS=null;
+const CLAUDE_VOICES=[["buttery","ấm áp"],["airy","nhẹ nhàng"],["glassy","trong trẻo"],["rounded","tròn đầy"]];
+function vRank(v){let r=1;if(/natural|neural|online/i.test(v.name))r=4;else if(/google|premium|enhanced|siri/i.test(v.name))r=3;if(/(zh|cmn)[-_](CN|Hans)/i.test(v.lang))r+=.5;return r}
+function loadVoices(){try{zhVoices=speechSynthesis.getVoices().filter(v=>/^(zh|cmn)/i.test(v.lang)).sort((x,y)=>vRank(y)-vRank(x))}catch(e){}refreshVoicePicker()}
+let voicePref="auto";try{voicePref=localStorage.getItem("hanngu30.voice")||"auto"}catch(e){}
+function engine(){
+  if(voicePref.startsWith("claude:")&&ttsNS)return {k:"claude",v:voicePref.slice(7)};
+  if(voicePref.startsWith("sys:")){const v=zhVoices.find(x=>x.voiceURI===voicePref.slice(4));if(v)return {k:"sys",v}}
+  const best=zhVoices[0];
+  if(best&&vRank(best)>=4)return {k:"sys",v:best};
+  if(ttsNS)return {k:"claude",v:"buttery"};
+  if(best)return {k:"sys",v:best};
+  return null}
+function engineName(){const e=engine();if(!e)return "chưa có giọng đọc tiếng Trung";return e.k==="claude"?"giọng Claude, "+(CLAUDE_VOICES.find(c=>c[0]===e.v)||["",""])[1]:e.v.name}
+function canSpeak(){return !!engine()}
 let rate=0.8;try{const r=parseFloat(localStorage.getItem("hanngu30.rate"));if(r>=0.5&&r<=1.3)rate=r}catch(e){}
-async function speak(text){
-  text=text.replace(/[—…]/g,"，");
-  if(zhVoice){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=zhVoice.lang;u.voice=zhVoice;u.rate=rate;speechSynthesis.speak(u);return true}catch(e){}}
-  if(ttsNS){try{await ttsNS.speak(text,{language:"zh-CN",rate:Math.max(.7,rate)});return true}catch(e){if(e&&e.code==="not_granted"){ttsNS=null;}}}
-  if(speak.warned)return false;speak.warned=true;
-  toast("Thiết bị này chưa có giọng đọc tiếng Trung. Trên điện thoại, hãy cài giọng 中文 trong phần Cài đặt › Chuyển văn bản thành giọng nói.");
-  return false;
-}
+function say(text,wait){text=text.replace(/[—…]/g,"，");const e=engine();
+  return new Promise(res=>{
+    if(!e){if(!say.warned){say.warned=true;toast("Thiết bị này chưa có giọng đọc tiếng Trung. Hãy mở bằng Microsoft Edge (có giọng Natural rất tự nhiên) hoặc cài giọng 中文 trong cài đặt điện thoại.")}res(false);return}
+    if(e.k==="sys"){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=e.v;u.lang=e.v.lang;u.rate=rate;
+      u.onend=()=>setTimeout(()=>res(true),wait?350:0);u.onerror=()=>res(false);speechSynthesis.speak(u);if(!wait)res(true)}catch(x){res(false)}return}
+    ttsNS.speak(text,{language:"zh-CN",voice:e.v,rate:Math.max(.7,rate)}).then(()=>setTimeout(()=>res(true),wait?300:0))
+      .catch(err=>{if(err&&err.code==="not_granted"){ttsNS=null;refreshVoicePicker()}res(false)});
+    if(!wait)res(true);
+  })}
+function speak(t){return say(t,false)}
+function speakWait(t){return say(t,true)}
+function refreshVoicePicker(){const sel=document.getElementById("voiceSel");if(!sel)return;
+  const opts=[["auto","Tự chọn giọng tự nhiên nhất"]];
+  if(ttsNS)CLAUDE_VOICES.forEach(([k,l])=>opts.push(["claude:"+k,"Claude · "+l]));
+  zhVoices.forEach(v=>opts.push(["sys:"+v.voiceURI,v.name+" ("+v.lang+")"+(vRank(v)>=4?" · tự nhiên":"")]));
+  sel.innerHTML=opts.map(([v,l])=>`<option value="${esc(v)}" ${v===voicePref?"selected":""}>${esc(l)}</option>`).join("");
+  const h=document.getElementById("voiceNow");if(h)h.textContent="Đang dùng: "+engineName();}
+try{loadVoices();speechSynthesis.onvoiceschanged=loadVoices}catch(e){}
+if(window.claude&&window.claude.use){window.claude.use("tts").then(t=>{ttsNS=t;refreshAudioHints();refreshVoicePicker()}).catch(()=>{})}
 function refreshAudioHints(){document.querySelectorAll("[data-needs-audio]").forEach(el=>el.hidden=!canSpeak())}
 const SPK=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>`;
 document.addEventListener("click",e=>{const b=e.target.closest("[data-say]");if(b){e.preventDefault();speak(b.dataset.say)}});
@@ -1115,11 +1136,19 @@ function checkPy(v,p){
 }
 function makeOrderQ(ex){const [zh,py,vi]=ex;if(!zh||zh.includes("—"))return null;const chunks=orderChunks(zh);
   if(chunks.length<3||chunks.length>9)return null;return {type:"order",zh,py,vi,chunks}}
+function makeClozeQ(ex,pool,prefer){const [zh,py,vi]=ex;if(!zh||zh.includes("—"))return null;
+  const sg=seg(zh);const cands=sg.map((x,i)=>({x,i})).filter(o=>o.x.w&&[...o.x.t].length<=3);if(!cands.length)return null;
+  const pref=cands.filter(o=>prefer.has(o.x.t));const ch=(pref.length?pref:cands)[Math.floor(Math.random()*(pref.length?pref:cands).length)];
+  const w=ch.x.w,L=[...w.h].length;const others=pool.filter(o=>o.h!==w.h&&!o.h.includes("…"));
+  let ds=shuffle(others.filter(o=>[...o.h].length===L)).slice(0,3);if(ds.length<3)ds=ds.concat(shuffle(others).filter(o=>!ds.includes(o)).slice(0,3-ds.length));
+  const shown=sg.map((x,i)=>i===ch.i?`<span style="display:inline-block;min-width:${L*1.1}em;border-bottom:2px solid var(--jade);color:transparent">${"口".repeat(L)}</span>`:esc(x.t)).join("");
+  return {type:"cloze",w,prompt:`<span class="eyebrow">Điền vào chỗ trống</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div><div class="muted">${esc(vi)}</div>`,
+    opts:shuffle([{html:`<span class="hz">${w.h}</span>`,ok:true},...ds.map(o=>({html:`<span class="hz">${o.h}</span>`,ok:false}))])}}
 function exPool(d){return d.words.length?d.exs:DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
 function buildQuiz(words,pool,count,exs){
   exs=exs||[];
-  const nOrder=exs.length?(count>=30?4:count>=20?3:2):0;
-  const oq=shuffle(exs).map(makeOrderQ).filter(Boolean).slice(0,nOrder);
+  const nEx=exs.length?(count>=30?6:count>=20?5:4):0;const prefer=new Set(words.map(w=>w.h));
+  const oq=[];shuffle(exs).forEach((e,k)=>{if(oq.length>=nEx)return;const q=k%2?makeClozeQ(e,pool,prefer):makeOrderQ(e);if(q)oq.push(q)});
   const types=["mean","hanzi","py","type"].concat(canSpeak()?["listen"]:[]);
   const n=count-oq.length;
   let list=shuffle(words);while(list.length<n&&words.length)list=list.concat(shuffle(words));
@@ -1132,7 +1161,7 @@ function runQuiz(el,qs,onDone){
   const wDetail=w=>`<span class="han" style="font-size:1.2rem">${w.h}</span> · <span class="py">${pyHTML(w.p)}</span> · ${esc(w.m)}`;
   function next(){i++;show()}
   function feedback(ok,detail,say,label){
-    const q=qs[i];q.answered=true;S.stats.ans++;if(ok){score++;S.stats.ok++}else if(q.w)wrong.push(q.w);
+    const q=qs[i];q.answered=true;S.stats.ans++;if(ok){score++;S.stats.ok++;if(q.w&&S.miss&&S.miss[q.w.h])S.miss[q.w.h]--}else if(q.w){wrong.push(q.w);S.miss=S.miss||{};S.miss[q.w.h]=(S.miss[q.w.h]||0)+1}
     $("#fbslot").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${label||(ok?"Chính xác":"Chưa đúng")}</b><span class="detail">${detail}</span><span class="spacer"></span>${say?`<button class="say" data-say="${esc(say)}" aria-label="Nghe">${SPK}</button>`:""}<button class="btn primary" id="nextQ">${i+1<qs.length?"Câu tiếp":"Xem kết quả"}</button></div>`;
     if(!ok&&say)speak(say);
     const nb=$("#nextQ");nb.focus();nb.onclick=next;
@@ -1384,11 +1413,6 @@ function mountSpeak(el,sents,dayN){
   };
   render();
 }
-function speakWait(t){return new Promise(async res=>{
-  if(zhVoice){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=zhVoice.lang;u.voice=zhVoice;u.rate=rate;u.onend=()=>setTimeout(()=>res(true),350);u.onerror=()=>res(false);speechSynthesis.speak(u);return}catch(e){}}
-  if(ttsNS){try{await ttsNS.speak(t,{language:"zh-CN",rate:Math.max(.7,rate)});setTimeout(()=>res(true),300);return}catch(e){res(false);return}}
-  speak(t);res(false);
-})}
 
 /* ===================== VIEW: ÔN TẬP (SRS) ===================== */
 let revQueue=null, revMode="h2m";
@@ -1401,6 +1425,7 @@ function viewReview(){
     <div class="row"><span class="eyebrow">Mặt trước</span>
       <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button></div></div>
     <div id="revBody"></div>
+    ${weakHTML()}
     <div class="card"><div class="eyebrow" style="margin-bottom:10px">Độ nhớ của ${learned()} từ</div>
       <div class="boxes">${boxes.map((c,i)=>`<div><small class="num">${c}</small><i style="height:${Math.round(c/mx*84)}px"></i><small>${BOXL[i]}</small></div>`).join("")}</div></div>
   </section>`;
@@ -1415,6 +1440,15 @@ function viewReview(){
   }
   showCard(rb);
 }
+function weakList(){return Object.entries(S.miss||{}).filter(([h,c])=>BYH[h]&&c>0).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([h,c])=>({w:BYH[h],c}))}
+function weakHTML(){const ws=weakList();if(!ws.length)return"";
+  return `<div class="card sect" id="weak"><div class="row"><div><div class="eyebrow">Từ hay sai</div><h3>${ws.length} từ bạn trả lời sai nhiều nhất</h3></div><span class="spacer"></span><button class="btn primary" id="weakGo">Luyện riêng các từ này</button></div>
+    <div class="row">${ws.map(({w,c})=>`<button class="chip" data-say="${esc(w.h)}"><span class="han">${w.h}</span> ${pyPlain(w.p)} · ${esc(w.m)} <span class="muted num">×${c}</span></button>`).join("")}</div>
+    <div class="muted" style="font-size:.84rem">Trả lời đúng trong bài luyện này sẽ giảm số lần sai của từ đó.</div></div>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#weakGo"))return;const box=$("#weak");const ws=weakList().map(x=>x.w);
+  const qs=buildQuiz(ws,ALL,Math.max(10,Math.min(15,ws.length*2)));
+  runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();
+    box.innerHTML=`<div class="result"><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="weakBack">Xem lại danh sách</button></div>`;$("#weakBack").onclick=viewReview})});
 function showCard(rb){
   const h=revQueue[0],w=BYH[h];let flipped=false;
   const front=revMode==="h2m"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết chữ Hán ra giấy rồi lật thẻ</div>`;
@@ -1429,7 +1463,7 @@ function showCard(rb){
     rb.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>grade(+b.dataset.g))};
   const grade=k=>{
     const t=today();S.stats.rev++;
-    if(k===0){S.srs[h]={b:0,d:t};revQueue.push(revQueue.shift())}
+    if(k===0){S.miss=S.miss||{};S.miss[h]=(S.miss[h]||0)+1;S.srs[h]={b:0,d:t};revQueue.push(revQueue.shift())}
     else{const b=k===1?c.b:Math.min(6,c.b+(k===2?1:2));S.srs[h]={b,d:t+(k===1?1:IV[b])};revQueue.shift()}
     if(k>0){S.stats.ok++;}S.stats.ans++;
     touchStreak();save();updateChrome();
@@ -1459,7 +1493,8 @@ function viewTones(){
   const F=[["a","a","八"],["o","ô (miệng tròn)","我"],["e","ưa / ơ (âm sau)","喝"],["i","i; sau zh ch sh r z c s đọc gần “ư”","是"],["u","u","五"],["ü","uy tròn môi (j q x y viết thành u)","女 · 去"],["ai","ai","买"],["ei","ây","没"],["ao","ao","好"],["ou","âu","口"],["an","an","三"],["en","ân","人"],["ang","ang","忙"],["eng","âng","冷"],["ong","ung","中"],["ie","iê","谢"],["ian","iên","天"],["uan","oan","玩"],["üan","uyên","远"],["in","in","今"],["ing","inh","听"],["iu","iêu","九"],["ui","uây","对"]];
   app.innerHTML=`<section class="sect"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Số 1–5 là độ cao giọng của bạn, 5 là cao nhất. Thanh 1 là 55, thanh 2 là 35, thanh 3 là 214, thanh 4 là 51. Bấm vào từng thẻ để nghe.</p></div>
-    <div class="card rate"><label for="rateR"><b>Tốc độ đọc</b></label><input type="range" id="rateR" min="0.6" max="1.2" step="0.1" value="${rate}"><span class="num" id="rateV">${rate.toFixed(1)}×</span><button class="btn" data-say="你好，认识你很高兴。">Nghe thử</button></div>
+    <div class="card" style="display:grid;gap:12px"><div class="rate"><label for="voiceSel"><b>Giọng đọc</b></label><select id="voiceSel" class="btn" style="max-width:100%;min-width:0;flex:1 1 220px"></select></div><div class="rate"><label for="rateR"><b>Tốc độ đọc</b></label><input type="range" id="rateR" min="0.6" max="1.2" step="0.1" value="${rate}"><span class="num" id="rateV">${rate.toFixed(1)}×</span><button class="btn" data-say="你好，认识你很高兴。我们一起学习汉语吧！">Nghe thử</button></div>
+      <div class="muted" style="font-size:.84rem;max-width:68ch"><span id="voiceNow"></span>. Giọng tự nhiên nhất thường là giọng “Natural” của Microsoft Edge (Xiaoxiao, Yunxi) hoặc giọng Claude. Trên iPhone/Mac: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Trung, tải bản “Nâng cao”. Trên Android: cài Google Text-to-speech và tải giọng tiếng Trung.</div></div>
     <div class="tones">${T.map(([t,p,h,m,code,desc])=>`<button class="tone" data-say="${h}" style="text-align:left"><div class="row"><span class="big t${t}">${p}</span><span class="han" style="font-size:1.4rem">${h}</span><span class="spacer"></span><span class="chip num">${code}</span></div>${contour(t)}<p><b>Thanh ${t}</b> · “${m}”</p><p class="muted">${desc}</p></button>`).join("")}</div>
     <div class="card" style="display:grid;gap:8px"><h3>Thanh nhẹ và quy tắc biến điệu</h3>
       <ul style="margin:0;padding-left:20px;display:grid;gap:4px"><li><b>Thanh nhẹ</b> (không dấu): đọc ngắn, nhẹ, như 吗 ma, 的 de, 谢谢 xièxie.</li>
@@ -1473,6 +1508,7 @@ function viewTones(){
     <p class="muted" style="margin:0;max-width:64ch">Cặp dễ nhầm nhất với người Việt: <b>zh/ch/sh</b> (uốn lưỡi) với <b>z/c/s</b> (đầu lưỡi phẳng), và <b>j/q/x</b>. Cách luyện: đặt tay trước miệng, âm bật hơi (p, t, k, q, ch, c) phải thấy luồng hơi mạnh.</p></section>
   <section class="sect"><div><div class="eyebrow">Vận mẫu</div><h2>Vần thường gặp</h2></div>
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${F.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div></section>`;
+  refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
   toneQuiz($("#tqBody"));
 }
