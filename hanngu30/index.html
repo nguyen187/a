@@ -295,7 +295,8 @@ const WEEKS=[
   {n:2,name:"Đời sống hằng ngày",sub:"Ăn uống, mua sắm, lượng từ, vị trí, thói quen"},
   {n:3,name:"Giao tiếp ứng dụng",sub:"Đi lại, thời tiết, sở thích, sức khỏe, 了 và 过"},
   {n:4,name:"Diễn đạt trôi chảy",sub:"So sánh, bổ ngữ, liên từ, du lịch, công việc"},
-  {n:5,name:"Tổng kết",sub:"Hội thoại tổng hợp và bài kiểm tra cuối"}
+  {n:5,name:"Tổng kết",sub:"Hội thoại tổng hợp và bài kiểm tra cuối"},
+  {n:6,name:"Mở rộng HSK 3",sub:"Học thêm sau khóa chính: 10 ngày, các mẫu câu HSK 3"}
 ];
 const DAYS=[
 {t:"Chào hỏi & thanh điệu",w:`你|nǐ|bạn, anh, chị (ngôi thứ 2)|nhĩ
@@ -925,6 +926,207 @@ ex:""},
 {t:"Bài kiểm tra cuối khóa",w:"",final:true,g:"Bài kiểm tra 30 câu",
 gh:`<p>30 câu ngẫu nhiên từ toàn bộ khóa: nghĩa, chữ Hán, pinyin và nghe. Đạt từ <b>80%</b> là hoàn thành khóa 30 ngày.</p>
 <p>Sau khóa này, bạn đã có nền tảng tương đương HSK 1 và phần lớn HSK 2. Tiếp tục ôn thẻ mỗi ngày để giữ từ vựng.</p>`,
+ex:""},
+
+/* ===== MỞ RỘNG HSK 3 (Ngày 31–40) ===== */
+{t:"Kể chuyện quá khứ: 是…的",w:`出生|chū shēng|sinh ra|xuất sinh
+小时候|xiǎo shí hou|hồi nhỏ|tiểu thời hậu
+年轻|nián qīng|trẻ|niên khinh
+大学|dà xué|đại học|đại học
+毕业|bì yè|tốt nghiệp|tất nghiệp
+留学|liú xué|du học|lưu học
+搬家|bān jiā|chuyển nhà|ban gia
+结婚|jié hūn|kết hôn|kết hôn
+遇到|yù dào|gặp phải, tình cờ gặp|ngộ đáo
+记得|jì de|nhớ (còn nhớ)|ký đắc
+故事|gù shi|câu chuyện|cố sự
+带|dài|mang theo, dẫn|đới`,
+g:"Nhấn mạnh với 是…的",
+gh:`<p>Khi sự việc <b>đã xảy ra</b> và người nói muốn nhấn mạnh <b>thời gian, nơi chốn, cách thức hoặc người làm</b>, đặt phần đó giữa 是 và 的.</p>
+<div class="pat">Chủ ngữ + 是 + (thời gian / nơi / cách thức) + Động từ + 的</div>
+<ul><li>是 có thể lược bỏ trong khẩu ngữ, nhưng 的 thì không.</li>
+<li>Phủ định: 不是…的 (我不是坐飞机来的).</li></ul>`,
+ex:`你是什么时候来中国的？|Nǐ shì shénme shíhou lái Zhōngguó de?|Bạn đến Trung Quốc khi nào?
+我是在河内出生的。|Wǒ shì zài Hénèi chūshēng de.|Tôi sinh ra ở Hà Nội.
+他们是坐火车来的。|Tāmen shì zuò huǒchē lái de.|Họ đến bằng tàu hỏa.
+我是大学毕业以后去留学的。|Wǒ shì dàxué bìyè yǐhòu qù liúxué de.|Tôi đi du học sau khi tốt nghiệp đại học.`},
+
+{t:"Đi lên, đi xuống: bổ ngữ xu hướng",w:`进|jìn|vào|tiến
+出|chū|ra|xuất
+上来|shàng lai|đi lên (về phía người nói)|thượng lai
+下去|xià qu|đi xuống (xa người nói)|hạ khứ
+过来|guò lai|qua đây|quá lai
+起来|qǐ lai|đứng dậy; bắt đầu|khởi lai
+楼|lóu|tòa nhà, tầng lầu|lâu
+层|céng|tầng|tầng
+电梯|diàn tī|thang máy|điện thê
+爬山|pá shān|leo núi|bà sơn
+送|sòng|tiễn, tặng|tống
+接|jiē|đón|tiếp`,
+g:"Động từ + 来 / 去 chỉ hướng",
+gh:`<p><b>来</b>: hướng <b>về phía</b> người nói. <b>去</b>: hướng <b>ra xa</b> người nói. Hai từ này đọc thanh nhẹ khi làm bổ ngữ.</p>
+<div class="pat">进来 · 出去 · 上来 · 下去 · 回来 · 过来 · 起来</div>
+<p>Nơi chốn đứng <b>giữa</b> động từ và 来/去:</p>
+<div class="pat">他回家去了。　你进房间来吧。</div>`,
+ex:`请进来！|Qǐng jìn lai!|Mời vào!
+他跑出去了。|Tā pǎo chū qu le.|Anh ấy chạy ra ngoài rồi.
+你下来吧，我在楼下等你。|Nǐ xià lai ba, wǒ zài lóu xià děng nǐ.|Bạn xuống đi, tôi đợi bạn dưới lầu.
+我去机场接朋友。|Wǒ qù jīchǎng jiē péngyou.|Tôi đi sân bay đón bạn.`},
+
+{t:"Làm được hay không: bổ ngữ khả năng",w:`清楚|qīng chu|rõ ràng|thanh sở
+声音|shēng yīn|âm thanh, giọng|thanh âm
+黑板|hēi bǎn|bảng đen|hắc bản
+字|zì|chữ|tự
+解决|jiě jué|giải quyết|giải quyết
+办法|bàn fǎ|cách, biện pháp|biện pháp
+完成|wán chéng|hoàn thành|hoàn thành
+放心|fàng xīn|yên tâm|phóng tâm
+简单|jiǎn dān|đơn giản|giản đơn
+容易|róng yì|dễ|dung dị
+着急|zháo jí|sốt ruột, cuống|trước cấp
+决定|jué dìng|quyết định|quyết định`,
+g:"Động từ + 得 / 不 + Kết quả",
+gh:`<p>Chèn 得 (được) hoặc 不 (không) giữa động từ và bổ ngữ kết quả/xu hướng để nói <b>có thể hay không thể</b> đạt kết quả đó.</p>
+<div class="pat">听得懂 / 听不懂　看得清楚 / 看不清楚　做得完 / 做不完　找得到 / 找不到</div>
+<p>Câu hỏi chính phản: 你听得懂听不懂？</p>`,
+ex:`你听得懂吗？— 听不懂，声音太小了。|Nǐ tīng de dǒng ma? — Tīng bu dǒng, shēngyīn tài xiǎo le.|Bạn nghe hiểu không? — Không hiểu, tiếng nhỏ quá.
+黑板上的字你看得清楚吗？|Hēibǎn shang de zì nǐ kàn de qīngchu ma?|Chữ trên bảng bạn nhìn rõ không?
+今天的作业太多，我做不完。|Jīntiān de zuòyè tài duō, wǒ zuò bu wán.|Bài tập hôm nay nhiều quá, tôi làm không xong.
+别着急，我们一定能找到办法。|Bié zháojí, wǒmen yídìng néng zhǎo dào bànfǎ.|Đừng sốt ruột, chúng ta nhất định tìm được cách.`},
+
+{t:"Ngày càng…: 越来越",w:`越|yuè|càng|việt
+胖|pàng|béo|bàn
+瘦|shòu|gầy|sấu
+健康|jiàn kāng|khỏe mạnh|kiện khang
+锻炼|duàn liàn|rèn luyện|đoán luyện
+习惯|xí guàn|thói quen; quen|tập quán
+变化|biàn huà|thay đổi|biến hóa
+成绩|chéng jì|thành tích, điểm|thành tích
+提高|tí gāo|nâng cao|đề cao
+水平|shuǐ píng|trình độ|thủy bình
+感兴趣|gǎn xìng qù|có hứng thú|cảm hứng thú
+环境|huán jìng|môi trường|hoàn cảnh`,
+g:"越来越 + Tính từ và 越 A 越 B",
+gh:`<div class="pat">越来越 + Tính từ = ngày càng…</div>
+<p>天气越来越冷了。Không thêm 很 trước tính từ.</p>
+<div class="pat">越 + A + 越 + B = càng A càng B</div>
+<p>雨越下越大 (mưa càng lúc càng to), 汉语越学越有意思.</p>`,
+ex:`天气越来越冷了。|Tiānqì yuè lái yuè lěng le.|Trời ngày càng lạnh.
+我的汉语水平越来越高。|Wǒ de Hànyǔ shuǐpíng yuè lái yuè gāo.|Trình độ tiếng Trung của tôi ngày càng cao.
+雨越下越大。|Yǔ yuè xià yuè dà.|Mưa càng lúc càng to.
+我对中国文化越来越感兴趣。|Wǒ duì Zhōngguó wénhuà yuè lái yuè gǎn xìngqù.|Tôi ngày càng hứng thú với văn hóa Trung Quốc.`},
+
+{t:"Vừa… là…: 一…就… và 只要…就…",w:`只要|zhǐ yào|chỉ cần|chỉ yếu
+马上|mǎ shàng|ngay lập tức|mã thượng
+终于|zhōng yú|cuối cùng (cũng)|chung ư
+突然|tū rán|đột nhiên|đột nhiên
+发现|fā xiàn|phát hiện|phát hiện
+记住|jì zhù|nhớ kỹ|ký trú
+关心|guān xīn|quan tâm|quan tâm
+照顾|zhào gù|chăm sóc|chiếu cố
+满意|mǎn yì|hài lòng|mãn ý
+同意|tóng yì|đồng ý|đồng ý
+打扫|dǎ sǎo|quét dọn|đả tảo
+洗澡|xǐ zǎo|tắm|tẩy táo`,
+g:"一 A 就 B · 只要 A 就 B",
+gh:`<div class="pat">(Chủ ngữ) + 一 + A，(Chủ ngữ) + 就 + B</div>
+<p>Vừa xảy ra A thì B xảy ra ngay: 我一到家就洗澡.</p>
+<div class="pat">只要 + điều kiện，(Chủ ngữ) + 就 + kết quả</div>
+<p>Chỉ cần đủ điều kiện là có kết quả: 只要努力，就能学好.</p>`,
+ex:`我一到家就洗澡。|Wǒ yí dào jiā jiù xǐzǎo.|Tôi vừa về đến nhà là đi tắm.
+他一听就明白了。|Tā yì tīng jiù míngbai le.|Anh ấy vừa nghe là hiểu ngay.
+只要你努力，就一定能学好汉语。|Zhǐyào nǐ nǔlì, jiù yídìng néng xué hǎo Hànyǔ.|Chỉ cần bạn cố gắng là nhất định học giỏi tiếng Trung.
+你别着急，我马上来。|Nǐ bié zháojí, wǒ mǎshàng lái.|Bạn đừng sốt ruột, tôi đến ngay.`},
+
+{t:"Ngoài… ra: 除了…以外",w:`除了|chú le|ngoài… ra, trừ|trừ liễu
+以外|yǐ wài|ngoài, ngoài ra|dĩ ngoại
+其他|qí tā|khác|kỳ tha
+特别|tè bié|đặc biệt|đặc biệt
+一般|yì bān|thông thường|nhất ban
+经常|jīng cháng|thường xuyên|kinh thường
+有时候|yǒu shí hou|thỉnh thoảng|hữu thời hậu
+周末|zhōu mò|cuối tuần|chu mạt
+节目|jié mù|chương trình|tiết mục
+比赛|bǐ sài|trận đấu, cuộc thi|tỉ tái
+参加|cān jiā|tham gia|tham gia
+英语|Yīng yǔ|tiếng Anh|Anh ngữ`,
+g:"除了…以外，还… và 除了…以外，都…",
+gh:`<ul><li><b>除了 A 以外，还 B</b>: ngoài A <b>còn</b> B (cộng thêm).</li>
+<li><b>除了 A 以外，都 B</b>: trừ A ra, <b>đều</b> B (loại trừ A).</li></ul>
+<div class="pat">除了汉语以外，我还学英语。　除了他以外，我们都去了。</div>
+<p>以外 có thể lược bỏ: 除了他，我们都去了。</p>`,
+ex:`除了汉语以外，我还学英语。|Chúle Hànyǔ yǐwài, wǒ hái xué Yīngyǔ.|Ngoài tiếng Trung, tôi còn học tiếng Anh.
+除了他以外，我们都参加了比赛。|Chúle tā yǐwài, wǒmen dōu cānjiā le bǐsài.|Trừ anh ấy ra, chúng tôi đều tham gia thi đấu.
+周末我一般在家，有时候去爬山。|Zhōumò wǒ yìbān zài jiā, yǒu shíhou qù pá shān.|Cuối tuần tôi thường ở nhà, thỉnh thoảng đi leo núi.
+这个节目特别有意思。|Zhège jiémù tèbié yǒu yìsi.|Chương trình này đặc biệt thú vị.`},
+
+{t:"Ngay cả… cũng: 连…都",w:`连|lián|ngay cả|liên
+甚至|shèn zhì|thậm chí|thậm chí
+孩子|hái zi|đứa trẻ, con|hài tử
+讲|jiǎng|giảng, kể|giảng
+历史|lì shǐ|lịch sử|lịch sử
+文化|wén huà|văn hóa|văn hóa
+世界|shì jiè|thế giới|thế giới
+安静|ān jìng|yên tĩnh|an tĩnh
+奇怪|qí guài|kỳ lạ|kỳ quái
+相信|xiāng xìn|tin tưởng|tương tín
+一直|yì zhí|luôn luôn, suốt|nhất trực
+句子|jù zi|câu|cú tử`,
+g:"连 + Danh từ + 都 / 也 + Động từ",
+gh:`<p>Nêu một trường hợp cực đoan để nhấn mạnh: "ngay cả… cũng…".</p>
+<div class="pat">连 + đối tượng + 都/也 + (不/没) + Động từ</div>
+<p>这个问题连孩子都会 (câu hỏi này ngay cả trẻ con cũng biết) → nhấn mạnh câu hỏi rất dễ.</p>`,
+ex:`这个问题太简单了，连孩子都会。|Zhège wèntí tài jiǎndān le, lián háizi dōu huì.|Câu hỏi này dễ quá, ngay cả trẻ con cũng biết.
+我太忙了，连吃饭的时间都没有。|Wǒ tài máng le, lián chī fàn de shíjiān dōu méiyǒu.|Tôi bận quá, ngay cả thời gian ăn cơm cũng không có.
+他连一个汉字也不认识。|Tā lián yí gè Hànzì yě bú rènshi.|Anh ấy một chữ Hán cũng không biết.
+老师给我们讲了很多中国历史。|Lǎoshī gěi wǒmen jiǎng le hěn duō Zhōngguó lìshǐ.|Thầy giảng cho chúng tôi rất nhiều về lịch sử Trung Quốc.`},
+
+{t:"Trạng thái kéo dài: 着",w:`着|zhe|(trạng thái đang duy trì)|trước
+穿|chuān|mặc|xuyên
+戴|dài|đeo, đội|đái
+帽子|mào zi|mũ|mạo tử
+眼镜|yǎn jìng|kính mắt|nhãn kính
+裙子|qún zi|váy|quần tử
+裤子|kù zi|quần|khố tử
+鞋|xié|giày|hài
+站|zhàn|đứng|trạm
+挂|guà|treo|quải
+墙|qiáng|tường|tường
+笑|xiào|cười|tiếu`,
+g:"Động từ + 着",
+gh:`<p>着 sau động từ diễn tả <b>trạng thái đang được duy trì</b> (khác 在 là hành động đang diễn ra).</p>
+<div class="pat">门开着。(Cửa đang mở)　她穿着一条新裙子。</div>
+<p>Câu tồn tại: <b>Nơi chốn + V着 + Vật</b>: 墙上挂着一张地图.</p>
+<p>Hai động từ: <b>V1 着 + V2</b> = làm V2 trong khi V1: 他笑着说.</p>`,
+ex:`她穿着一条新裙子。|Tā chuān zhe yì tiáo xīn qúnzi.|Cô ấy đang mặc một chiếc váy mới.
+门开着，请进吧。|Mén kāi zhe, qǐng jìn ba.|Cửa đang mở, mời vào.
+墙上挂着一张地图。|Qiáng shang guà zhe yì zhāng dìtú.|Trên tường treo một tấm bản đồ.
+他笑着说：“没关系。”|Tā xiào zhe shuō: “Méi guānxi.”|Anh ấy cười nói: “Không sao.”`},
+
+{t:"Không những… mà còn",w:`不但|bú dàn|không những|bất đãn
+而且|ér qiě|mà còn|nhi thả
+一边|yì biān|vừa… (vừa…)|nhất biên
+聪明|cōng ming|thông minh|thông minh
+可爱|kě ài|đáng yêu|khả ái
+热情|rè qíng|nhiệt tình|nhiệt tình
+有名|yǒu míng|nổi tiếng|hữu danh
+方便|fāng biàn|tiện lợi|phương tiện
+干净|gān jìng|sạch sẽ|can tịnh
+饭馆|fàn guǎn|quán ăn|phạn quán
+服务员|fú wù yuán|nhân viên phục vụ|phục vụ viên
+聊天|liáo tiān|trò chuyện|liêu thiên`,
+g:"不但…而且… và 一边…一边…",
+gh:`<div class="pat">不但 A，而且 B = không những A mà còn B</div>
+<p>Nếu hai vế cùng chủ ngữ, chủ ngữ đứng <b>trước</b> 不但: 她不但聪明，而且很热情.</p>
+<div class="pat">一边 + V1，一边 + V2 = vừa V1 vừa V2</div>`,
+ex:`这家饭馆不但便宜，而且很干净。|Zhè jiā fànguǎn búdàn piányi, érqiě hěn gānjìng.|Quán này không những rẻ mà còn rất sạch.
+她不但聪明，而且很热情。|Tā búdàn cōngming, érqiě hěn rèqíng.|Cô ấy không những thông minh mà còn rất nhiệt tình.
+我们一边吃饭一边聊天。|Wǒmen yìbiān chī fàn yìbiān liáotiān.|Chúng tôi vừa ăn cơm vừa trò chuyện.
+服务员，请给我菜单。|Fúwùyuán, qǐng gěi wǒ càidān.|Anh phục vụ ơi, cho tôi thực đơn.`},
+
+{t:"Kiểm tra mở rộng HSK 3",w:"",final:true,ext:true,g:"Bài kiểm tra mở rộng 30 câu",
+gh:`<p>30 câu từ Ngày 31–39: từ vựng, pinyin, điền chỗ trống và sắp xếp câu với các mẫu ngữ pháp HSK 3. Đạt từ <b>80%</b> là hoàn thành phần mở rộng.</p>
+<p>Bước tiếp theo: luyện đề HSK 3 thật, đọc truyện song ngữ cấp độ HSK 3, và duy trì ôn thẻ mỗi ngày.</p>`,
 ex:""}
 ];
 const DIALOG=`A|你好！你最近怎么样？|Nǐ hǎo! Nǐ zuìjìn zěnmeyàng?|Chào bạn! Dạo này bạn thế nào?
@@ -972,7 +1174,7 @@ const READ={
 
 /* ===================== PHÂN TÍCH DỮ LIỆU ===================== */
 DAYS.forEach((d,i)=>{
-  d.n=i+1; d.week=i<7?1:i<14?2:i<21?3:i<28?4:5;
+  d.n=i+1; d.week=i<7?1:i<14?2:i<21?3:i<28?4:i<30?5:6;
   d.words=d.w?d.w.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:i+1}}):[];
   d.exs=d.ex?d.ex.split("\n").map(l=>l.split("|")):[];
   d.rdt=READ[i+1]?READ[i+1][0]:"";d.rds=READ[i+1]?READ[i+1][1].split("\n").map(l=>l.split("|")):[];
@@ -1053,7 +1255,7 @@ function touchStreak(){
   S.streak.count=(S.streak.last===t-1)?S.streak.count+1:1;S.streak.last=t;
 }
 function streakNow(){const t=today();return (S.streak.last===t||S.streak.last===t-1)?S.streak.count:0}
-function currentDay(){for(const d of DAYS){if(!S.done[d.n])return d.n}return 30}
+function currentDay(){for(const d of DAYS){if(!S.done[d.n])return d.n}return DAYS.length}
 function learned(){return Object.keys(S.srs).filter(h=>BYH[h]).length}
 function dueList(){const t=today();return Object.entries(S.srs).filter(([h,c])=>BYH[h]&&c.d<=t).map(([h])=>h)}
 const IV=[0,1,3,7,14,30,60];
@@ -1150,7 +1352,7 @@ function makeClozeQ(ex,pool,prefer){const [zh,py,vi]=ex;if(!zh||zh.includes("—
   const shown=sg.map((x,i)=>i===ch.i?`<span style="display:inline-block;min-width:${L*1.1}em;border-bottom:2px solid var(--jade);color:transparent">${"口".repeat(L)}</span>`:esc(x.t)).join("");
   return {type:"cloze",w,prompt:`<span class="eyebrow">Điền vào chỗ trống</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div><div class="muted">${esc(vi)}</div>`,
     opts:shuffle([{html:`<span class="hz">${w.h}</span>`,ok:true},...ds.map(o=>({html:`<span class="hz">${o.h}</span>`,ok:false}))])}}
-function exPool(d){return d.words.length?d.exs:DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
+function exPool(d){return d.words.length?d.exs:d.ext?DAYS.slice(30,39).flatMap(x=>x.exs):DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
 function buildQuiz(words,pool,count,exs){
   exs=exs||[];
   const nEx=exs.length?(count>=30?6:count>=20?5:4):0;const prefer=new Set(words.map(w=>w.h));
@@ -1226,16 +1428,16 @@ function runQuiz(el,qs,onDone){
 function heat(){const t=today();let out="";for(let i=34;i>=0;i--){const d=t-i,c=S.log[d]||0,lv=!c?0:c>=20?4:c>=10?3:c>=4?2:1;
   out+=`<i class="h${lv}${i===0?" today":""}" title="${new Date(d*DAYMS).toLocaleDateString("vi-VN",{timeZone:"UTC"})}: ${c} hoạt động"></i>`}return out}
 function viewToday(){
-  const cd=currentDay(),d=DAYS[cd-1],due=dueList().length,allDone=Object.keys(S.done).length>=30;
+  const cd=currentDay(),d=DAYS[cd-1],due=dueList().length,allDone=DAYS.every(x=>S.done[x.n]),ext=cd>30;
   const acc=S.stats.ans?Math.round(S.stats.ok/S.stats.ans*100)+"%":"—";
   app.innerHTML=`
   <section class="hero">
     <div>
-      <div class="eyebrow">Tuần ${d.week} · ${WEEKS[d.week-1].name}</div>
-      <div class="daybig"><b class="num">Ngày ${String(cd).padStart(2,"0")}</b><span>/ 30</span></div>
-      <p class="muted">Mỗi ngày khoảng 30 phút: ôn thẻ cũ, học 10–14 từ mới, một điểm ngữ pháp, làm bài kiểm tra nhanh và viết vài chữ. Sau 30 ngày bạn có khoảng ${ALL.length} từ, đủ HSK 1 và phần lớn HSK 2.</p>
+      <div class="eyebrow">Chặng ${d.week} · ${WEEKS[d.week-1].name}</div>
+      <div class="daybig"><b class="num">Ngày ${String(cd).padStart(2,"0")}</b><span>/ ${ext?DAYS.length:30}</span></div>
+      <p class="muted">Mỗi ngày khoảng 30 phút: ôn thẻ cũ, học 10–14 từ mới, một điểm ngữ pháp, làm bài kiểm tra nhanh và viết vài chữ. ${ext?"Bạn đã xong khóa chính và đang học phần mở rộng HSK 3: thêm "+ALL.filter(w=>w.day>30).length+" từ và 9 mẫu câu nâng cao.":"Sau 30 ngày bạn có khoảng "+ALL.filter(w=>w.day<=30).length+" từ, đủ HSK 1 và phần lớn HSK 2. Sau đó có thêm 10 ngày mở rộng HSK 3."}</p>
     </div>
-    <div class="strip" aria-label="Tiến độ 30 ngày">${DAYS.map(x=>`<a href="#day-${x.n}" class="${S.done[x.n]?"done":x.n===cd&&!allDone?"cur":""}" title="Ngày ${x.n}: ${esc(x.t)}">${x.n}</a>`).join("")}</div>
+    <div class="strip" aria-label="Tiến độ">${(ext?DAYS:DAYS.slice(0,30)).map(x=>`<a href="#day-${x.n}" class="${S.done[x.n]?"done":x.n===cd&&!allDone?"cur":""}" title="Ngày ${x.n}: ${esc(x.t)}">${x.n}</a>`).join("")}</div>
   </section>
   <section class="stats">
     <div class="stat"><b>${learned()}</b><span>từ đã học / ${ALL.length}</span></div>
@@ -1249,7 +1451,7 @@ function viewToday(){
     <div class="card lesson-card">
       <div class="eyebrow">${allDone?"Đã hoàn thành khóa":"Bài học hôm nay"}</div>
       <h2>Ngày ${cd}: ${esc(d.t)}</h2>
-      ${d.words.length?`<div class="han-preview">${d.words.slice(0,8).map(w=>w.h).join(" · ")}</div>`:`<div class="muted">${esc(d.g)}</div>`}
+      ${d.words.length?`<div class="han-preview">${d.words.slice(0,8).map(w=>`<span style="white-space:nowrap">${w.h}</span>`).join(" · ")}</div>`:`<div class="muted">${esc(d.g)}</div>`}
       <div class="muted">${d.words.length?d.words.length+" từ mới · Ngữ pháp: "+esc(d.g):d.final?"30 câu · cần 80% để hoàn thành":"Hội thoại + 20 câu tổng ôn"}</div>
       <div class="row"><a class="btn primary" href="#day-${cd}">${S.done[cd]?"Học lại":"Bắt đầu học"}</a><a class="btn ghost" href="#plan">Xem lộ trình</a></div>
     </div>
@@ -1275,7 +1477,7 @@ function viewToday(){
 /* ===================== VIEW: LỘ TRÌNH ===================== */
 function viewPlan(){
   const cd=currentDay();
-  app.innerHTML=`<section class="sect"><div><div class="eyebrow">Lộ trình</div><h2>30 ngày, 5 chặng</h2>
+  app.innerHTML=`<section class="sect"><div><div class="eyebrow">Lộ trình</div><h2>30 ngày, 5 chặng, thêm 10 ngày mở rộng</h2>
     <p class="muted" style="margin:6px 0 0;max-width:62ch">Bạn có thể mở bất kỳ ngày nào, nhưng học theo thứ tự sẽ dễ nhất vì bài sau dùng lại từ của bài trước.</p></div></section>
   ${WEEKS.map(wk=>{const ds=DAYS.filter(d=>d.week===wk.n);const dn=ds.filter(d=>S.done[d.n]).length;
     return `<section class="week"><div class="week-head"><h3>Chặng ${wk.n} · ${wk.name}</h3><span class="muted">${wk.sub}</span><span class="spacer"></span><span class="chip num">${dn}/${ds.length}</span></div>
@@ -1291,10 +1493,10 @@ function viewDay(n){
   if(!tabs.find(t=>t[0]===dayTab))dayTab="vocab";
   app.innerHTML=`<section class="dayhead">
     <div class="row"><a href="#plan" class="muted" style="text-decoration:none;font-weight:600">← Lộ trình</a><span class="spacer"></span>
-      ${n>1?`<a class="btn ghost" href="#day-${n-1}">Ngày ${n-1}</a>`:""}${n<30?`<a class="btn ghost" href="#day-${n+1}">Ngày ${n+1}</a>`:""}</div>
+      ${n>1?`<a class="btn ghost" href="#day-${n-1}">Ngày ${n-1}</a>`:""}${n<DAYS.length?`<a class="btn ghost" href="#day-${n+1}">Ngày ${n+1}</a>`:""}</div>
     <div class="eyebrow">Ngày ${n} · Chặng ${d.week} · ${WEEKS[d.week-1].name}</div>
     <h2 style="font-size:1.7rem">${esc(d.t)}</h2>
-    ${S.done[n]?`<div class="banner"><span class="seal">成</span><div><b>Đã hoàn thành</b><div class="muted">Điểm cao nhất ${S.best[n]}%. ${n<30?`<a href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}</div></div></div>`:""}
+    ${S.done[n]?`<div class="banner"><span class="seal">成</span><div><b>Đã hoàn thành</b><div class="muted">Điểm cao nhất ${S.best[n]}%. ${n<DAYS.length?`<a href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}</div></div></div>`:""}
     <div class="subtabs" role="toolbar">${tabs.map(([k,l])=>`<button aria-pressed="${dayTab===k}" data-tab="${k}">${l}</button>`).join("")}</div>
   </section><section id="dayBody" class="sect"></section>`;
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{dayTab=b.dataset.tab;viewDay(n)});
@@ -1329,7 +1531,7 @@ function viewDay(n){
       <button class="btn primary" id="startQ">Bắt đầu</button></div>`;
     $("#startQ").onclick=()=>{
       const pool=d.words.length?poolUpTo(n):ALL;
-      const src=d.words.length?d.words:ALL.filter(w=>w.day<=28);
+      const src=d.words.length?d.words:d.ext?ALL.filter(w=>w.day>30):ALL.filter(w=>w.day<=28);
       runQuiz(body,buildQuiz(src,pool,cnt,exPool(d)),(sc,tot,wrong)=>{
         const pct=Math.round(sc/tot*100);S.best[n]=Math.max(S.best[n]||0,pct);
         const passed=pct>=pass;
@@ -1337,9 +1539,9 @@ function viewDay(n){
         wrong.forEach(w=>{if(S.srs[w.h])S.srs[w.h]={b:0,d:today()}});
         touchStreak();save();updateChrome();
         body.innerHTML=`<div class="card result"><div class="eyebrow">Kết quả</div><div class="score" style="color:${passed?"var(--good)":"var(--bad)"}">${pct}%</div>
-          <div>${sc}/${tot} câu đúng. ${passed?(d.final?"Chúc mừng, bạn đã hoàn thành khóa 30 ngày!":"Đã hoàn thành ngày "+n+". Các từ đã được thêm vào bộ thẻ ôn tập."):"Cần "+pass+"% để hoàn thành. Xem lại từ vựng rồi làm lại nhé."}</div>
+          <div>${sc}/${tot} câu đúng. ${passed?(d.final?(d.ext?"Chúc mừng, bạn đã hoàn thành phần mở rộng HSK 3!":"Chúc mừng, bạn đã hoàn thành khóa 30 ngày! Phần mở rộng HSK 3 bắt đầu từ Ngày 31."):"Đã hoàn thành ngày "+n+". Các từ đã được thêm vào bộ thẻ ôn tập."):"Cần "+pass+"% để hoàn thành. Xem lại từ vựng rồi làm lại nhé."}</div>
           ${wrong.length?`<div><div class="eyebrow" style="margin-bottom:6px">Từ cần xem lại</div><div class="row">${[...new Map(wrong.map(w=>[w.h,w])).values()].map(w=>`<button class="chip" data-say="${esc(w.h)}"><span class="han">${w.h}</span> ${pyPlain(w.p)} · ${esc(w.m)}</button>`).join("")}</div></div>`:""}
-          <div class="row"><button class="btn" id="again">Làm lại</button>${passed&&n<30?`<a class="btn primary" href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}${passed&&d.words.length?`<button class="btn" data-go="write">Luyện viết chữ</button>`:""}</div></div>`;
+          <div class="row"><button class="btn" id="again">Làm lại</button>${passed&&n<DAYS.length?`<a class="btn primary" href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}${passed&&d.words.length?`<button class="btn" data-go="write">Luyện viết chữ</button>`:""}</div></div>`;
         $("#again").onclick=()=>viewDay(n);
       });
     };
@@ -1630,7 +1832,7 @@ function viewDict(){
   app.innerHTML=`<section class="sect"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Tìm bằng chữ Hán, pinyin không dấu (nihao), nghĩa tiếng Việt hoặc âm Hán Việt (nhĩ hảo).</p></div>
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
-      <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.slice(0,4).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
+      <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
       <label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="donly" ${dictOnly?"checked":""}> Chỉ từ đã học</label></div>
     <div class="eyebrow num" id="dcount"></div><div class="dlist" id="dlist"></div></section>`;
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
