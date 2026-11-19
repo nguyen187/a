@@ -1716,6 +1716,12 @@ function makeQ(w,pool,types){
     if(!w.v||ds2.length<3)return makeQ(w,pool,types.filter(t=>t!=="hv"));
     return {type,w,prompt:`<span class="eyebrow">Âm Hán Việt</span><div class="m">“${esc(w.v)}”</div><div class="muted" style="font-size:.86rem">Từ nào đọc Hán Việt như trên?</div>`,
       opts:shuffle([{html:`<span class="hz">${w.h}</span>`,ok:true},...ds2.map(x=>({html:`<span class="hz">${x.h}</span>`,ok:false}))])}}
+  if(type==="tf"){const L=[...w.h].length,sim=others.filter(x=>[...x.h].length===L&&x.h!==w.h);
+    const close=sim.filter(x=>pyBare(x.p)===pyBare(w.p)),near=sim.filter(x=>pyBare(x.p)[0]===pyBare(w.p)[0]);
+    const same=Math.random()<.5,alt=pick(close.length?close:near.length?near:sim,1)[0];if(!same&&!alt)return makeQ(w,pool,types.filter(t=>t!=="tf"));
+    const shown=same?w:alt;
+    return {type,w,listen:true,prompt:`<span class="eyebrow">Nghe rồi chọn Đúng / Sai</span><button class="btn primary" data-say="${esc(w.h)}">${SPK} Nghe lại</button><div class="h" style="margin-top:8px">${shown.h}</div><div class="muted" style="font-size:.86rem">Từ bạn nghe có phải là từ này không?</div>`,
+      opts:[{html:"Đúng",ok:same},{html:"Sai",ok:!same}]}}
   const ds=pick(others,3);
   if(type==="mean")return {type,w,prompt:`<span class="eyebrow">Nghĩa là gì?</span><div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div>`,
     opts:shuffle([{html:esc(w.m),ok:true},...ds.map(x=>({html:esc(x.m),ok:false}))])};
@@ -1755,7 +1761,7 @@ function buildQuiz(words,pool,count,exs){
   exs=exs||[];
   const nEx=exs.length?(count>=30?6:count>=20?5:4):0;const prefer=new Set(words.map(w=>w.h));
   const oq=[];shuffle(exs).forEach((e,k)=>{if(oq.length>=nEx)return;const q=k%2?makeClozeQ(e,pool,prefer):makeOrderQ(e);if(q){if(q.type==="order"&&canSpeak()&&Math.random()<.5)q.listen=true;oq.push(q)}});
-  const types=["mean","hanzi","py","type"].concat(canSpeak()?["listen"]:[]);
+  const types=["mean","hanzi","py","type"].concat(canSpeak()?["listen","tf"]:[]);
   const n=count-oq.length;
   let list=shuffle(words);while(list.length<n&&words.length)list=list.concat(shuffle(words));
   const wq=list.slice(0,n).map(w=>{let t=w.p.includes("…")?types.filter(t=>t!=="type"):types;if(w.v&&hvUseful(w))t=t.concat("hv");return makeQ(w,pool,t)});
