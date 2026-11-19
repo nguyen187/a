@@ -228,6 +228,11 @@ td b{font-size:1.05rem}
 .lkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.2);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;width:min(440px,calc(100% - 32px))}
 #lk:not([hidden]) + .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .dlist{display:grid;gap:6px}
+.jump{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.jump::-webkit-scrollbar{display:none}
+.jump button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:.84rem;font-weight:600;color:var(--jade)}
+.jump button:hover{border-color:var(--jade)}
+[id^="sec-"],#pairBox,#phBox{scroll-margin-top:120px}
 .note{display:grid;gap:4px}
 .note textarea{font:inherit;font-size:.95rem;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);resize:vertical;min-height:52px}
 .noteline{font-size:.82rem;color:var(--seal);line-height:1.4}
@@ -1387,6 +1392,7 @@ try{loadVoices();speechSynthesis.onvoiceschanged=loadVoices}catch(e){}
 if(window.claude&&window.claude.use){window.claude.use("tts").then(t=>{ttsNS=t;refreshAudioHints();refreshVoicePicker()}).catch(()=>{})}
 function refreshAudioHints(){document.querySelectorAll("[data-needs-audio]").forEach(el=>el.hidden=!canSpeak())}
 const SPK=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>`;
+document.addEventListener("click",e=>{const j=e.target.closest("[data-jump]");if(j){const t=document.getElementById(j.dataset.jump);if(t){if(t.tagName==="DETAILS")t.open=true;t.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})}return}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-say]");if(b){e.preventDefault();speak(b.dataset.say)}});
 
 /* ===================== TIỆN ÍCH ===================== */
@@ -1838,7 +1844,7 @@ function viewTones(){
    ["j","ch, mặt lưỡi chạm ngạc","家 jiā"],["q","ch bật hơi mạnh","七 qī"],["x","x, môi dẹt, mặt lưỡi","谢 xiè"],["zh","tr uốn lưỡi, không bật hơi","中 zhōng"],["ch","tr uốn lưỡi + bật hơi","茶 chá"],["sh","s uốn lưỡi","是 shì"],["r","r uốn lưỡi, gần “gi” nhẹ","人 rén"],
    ["z","ch đầu lưỡi (ts)","在 zài"],["c","ts bật hơi mạnh","菜 cài"],["s","x đầu lưỡi","三 sān"],["y / w","như i / u đầu âm","有 yǒu · 我 wǒ"]];
   const F=[["a","a","八"],["o","ô (miệng tròn)","我"],["e","ưa / ơ (âm sau)","喝"],["i","i; sau zh ch sh r z c s đọc gần “ư”","是"],["u","u","五"],["ü","uy tròn môi (j q x y viết thành u)","女 · 去"],["ai","ai","买"],["ei","ây","没"],["ao","ao","好"],["ou","âu","口"],["an","an","三"],["en","ân","人"],["ang","ang","忙"],["eng","âng","冷"],["ong","ung","中"],["ie","iê","谢"],["ian","iên","天"],["uan","oan","玩"],["üan","uyên","远"],["in","in","今"],["ing","inh","听"],["iu","iêu","九"],["ui","uây","对"]];
-  app.innerHTML=`<section class="sect"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-tones">4 thanh</button><button data-jump="sec-ear">Nghe thanh</button><button data-jump="sec-pairs">Cặp thanh</button><button data-jump="sec-num">Con số</button><button data-jump="sec-ini">Phụ âm đầu</button><button data-jump="sec-fin">Vần</button></nav><section class="sect" id="sec-tones"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Số 1–5 là độ cao giọng của bạn, 5 là cao nhất. Thanh 1 là 55, thanh 2 là 35, thanh 3 là 214, thanh 4 là 51. Bấm vào từng thẻ để nghe.</p></div>
     <div class="card" style="display:grid;gap:12px"><div class="rate"><label for="voiceSel"><b>Giọng đọc</b></label><select id="voiceSel" class="btn" style="max-width:100%;min-width:0;flex:1 1 220px"></select></div><div class="rate"><label for="rateR"><b>Tốc độ đọc</b></label><input type="range" id="rateR" min="0.6" max="1.2" step="0.1" value="${rate}"><span class="num" id="rateV">${rate.toFixed(1)}×</span><button class="btn" data-say="你好，认识你很高兴。我们一起学习汉语吧！">Nghe thử</button></div>
       <div class="muted" style="font-size:.84rem;max-width:68ch"><span id="voiceNow"></span>. Giọng tự nhiên nhất thường là giọng “Natural” của Microsoft Edge (Xiaoxiao, Yunxi) hoặc giọng Claude. Trên iPhone/Mac: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Trung, tải bản “Nâng cao”. Trên Android: cài Google Text-to-speech và tải giọng tiếng Trung.</div></div>
@@ -1849,13 +1855,13 @@ function viewTones(){
       <li><b>不</b> trước thanh 4 thành bú: 不是 bú shì, 不客气 bú kèqi.</li>
       <li><b>一</b> trước thanh 4 thành yí (一个 yí gè), trước thanh 1/2/3 thành yì (一起 yìqǐ).</li></ul></div>
   </section>
-  <section class="sect"><div><div class="eyebrow">Luyện tai</div><h2>Nghe và đoán thanh</h2></div><div id="tqBody"></div></section>
+  <section class="sect" id="sec-ear"><div><div class="eyebrow">Luyện tai</div><h2>Nghe và đoán thanh</h2></div><div id="tqBody"></div></section>
   ${tonePairsHTML()}
   ${numDrillHTML()}
-  <section class="sect"><div><div class="eyebrow">Thanh mẫu</div><h2>21 phụ âm đầu, so với tiếng Việt</h2></div>
+  <section class="sect" id="sec-ini"><div><div class="eyebrow">Thanh mẫu</div><h2>21 phụ âm đầu, so với tiếng Việt</h2></div>
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${I.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div>
     <p class="muted" style="margin:0;max-width:64ch">Cặp dễ nhầm nhất với người Việt: <b>zh/ch/sh</b> (uốn lưỡi) với <b>z/c/s</b> (đầu lưỡi phẳng), và <b>j/q/x</b>. Cách luyện: đặt tay trước miệng, âm bật hơi (p, t, k, q, ch, c) phải thấy luồng hơi mạnh.</p></section>
-  <section class="sect"><div><div class="eyebrow">Vận mẫu</div><h2>Vần thường gặp</h2></div>
+  <section class="sect" id="sec-fin"><div><div class="eyebrow">Vận mẫu</div><h2>Vần thường gặp</h2></div>
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${F.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div></section>`;
   refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
@@ -1868,7 +1874,7 @@ const tPat=w=>w.p.split(" ").map(toneOf);
 function tonePairsHTML(){
   const cell=(a,b)=>{const w=TWO.find(x=>{const t=tPat(x);return t[0]===a&&t[1]===b});
     return w?`<button class="chip" data-say="${w.h}" title="${esc(w.m)}" style="display:grid;gap:0;justify-items:start;padding:6px 10px"><span class="han" style="font-size:1.15rem">${w.h}</span><span class="py" style="font-size:.78rem">${pyHTML(w.p)}</span></button>`:`<span class="muted">—</span>`};
-  return `<section class="sect"><div><div class="eyebrow">Cặp thanh</div><h2>Thanh điệu trong từ hai âm tiết</h2>
+  return `<section class="sect" id="sec-pairs"><div><div class="eyebrow">Cặp thanh</div><h2>Thanh điệu trong từ hai âm tiết</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Phần lớn từ tiếng Trung có hai âm tiết, và cái khó nằm ở cách hai thanh nối nhau. Hàng là thanh của âm đầu, cột là thanh của âm sau. Nhớ: 3 + 3 đọc thành 2 + 3, và thanh 3 đứng trước thanh khác chỉ đọc nửa thấp.</p></div>
     <div class="tbl card" style="padding:0"><table><thead><tr><th></th>${[1,2,3,4,5].map(b=>`<th class="t${b}">+ ${TNAME[b]}</th>`).join("")}</tr></thead>
     <tbody>${[1,2,3,4].map(a=>`<tr><th class="t${a}">${a}</th>${[1,2,3,4,5].map(b=>`<td>${cell(a,b)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
@@ -1914,7 +1920,7 @@ function ndCheck(type,v,ans){v=v.trim().replace(/\s+/g,"");
   if(type==="time"){const m=v.match(/^(\d{1,2})[:h.,]?(\d{0,2})$/i);if(!m)return false;const [h,mm]=ans.split(":").map(Number);return +m[1]===h&&(+(m[2]||0))===mm}
   const m=v.match(/^(\d{1,2})[\/\-.](\d{1,2})$/);if(!m)return false;const [d,mo]=ans.split("/").map(Number);return +m[1]===d&&+m[2]===mo}
 let ndType="num";
-function numDrillHTML(){return `<section class="sect"><div><div class="eyebrow">Con số</div><h2>Luyện nghe số, giá tiền, giờ và ngày</h2>
+function numDrillHTML(){return `<section class="sect" id="sec-num"><div><div class="eyebrow">Con số</div><h2>Luyện nghe số, giá tiền, giờ và ngày</h2>
   <p class="muted" style="margin:6px 0 0;max-width:64ch">Đi chợ, hỏi giờ, đặt lịch đều cần nghe số thật nhanh. Chú ý: 两 thay 二 trước 百, 千 và lượng từ; số 0 ở giữa đọc 零; ngày tháng tiếng Trung đọc tháng trước, ngày sau.</p></div>
   <div class="subtabs" id="ndTabs">${ND_TYPES.map(([k,l])=>`<button data-nd="${k}" aria-pressed="${k===ndType}">${l}</button>`).join("")}</div><div id="ndBody"></div></section>`}
 function numDrill(el){
@@ -2121,7 +2127,7 @@ function pairQuestions(){const out=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>{
     opts:shuffle([{html:`<span class="hz">${ans[0]}</span> <span class="muted" style="font-size:.85rem">${esc(ans[2])}</span>`,ok:true},{html:`<span class="hz">${oth[0]}</span> <span class="muted" style="font-size:.85rem">${esc(oth[2])}</span>`,ok:false}])})}));
   return shuffle(out).slice(0,10)}
 function trapsHTML(){return `<section class="sect" id="trapSec">
-  <details class="card"><summary><b>Bẫy Hán Việt</b> <span class="muted">· ${TRAPS.length} từ có âm Hán Việt dễ khiến bạn hiểu sai</span></summary>
+  <details class="card" id="sec-traps"><summary><b>Bẫy Hán Việt</b> <span class="muted">· ${TRAPS.length} từ có âm Hán Việt dễ khiến bạn hiểu sai</span></summary>
     <div class="dlist" style="margin-top:12px">${TRAPS.map(([h,p,hv,wrong,right])=>`<div class="drow" style="grid-template-columns:minmax(64px,auto) 1fr auto"><span class="han dh">${h}</span><div style="min-width:0"><div class="py">${p}</div><div class="hvs" style="font-size:.74rem">Hán Việt: ${hv}</div><div class="muted" style="font-size:.86rem">Không phải: <s>${esc(wrong)}</s></div><div style="font-size:.92rem">Mà là: <b>${esc(right)}</b></div></div><button class="say" data-say="${h}" aria-label="Nghe">${SPK}</button></div>`).join("")}</div></details>
   <details class="card" id="pairBox"><summary><b>Cặp từ dễ nhầm</b> <span class="muted">· ${PAIRS.length} cặp người Việt hay dùng sai</span></summary>
     <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
@@ -2134,7 +2140,7 @@ function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=
 ALL.forEach(w=>w.k=[nrm(w.p),nrm(w.m),nrm(w.v||"")]);
 let dictQ="",dictWk="0",dictOnly=false;
 function viewDict(){
-  app.innerHTML=`${trapsHTML()}<section class="sect"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Tìm bằng chữ Hán, pinyin không dấu (nihao), nghĩa tiếng Việt hoặc âm Hán Việt (nhĩ hảo).</p></div>
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
       <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
