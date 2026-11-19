@@ -1589,6 +1589,9 @@ const LKEY="hanngu30.v1";
 function blank(){return {v:1,ts:0,done:{},best:{},srs:{},streak:{last:0,count:0},stats:{rev:0,ok:0,ans:0},log:{}}}
 let S=blank();
 try{const r=localStorage.getItem(LKEY);if(r)S=Object.assign(blank(),JSON.parse(r))}catch(e){}
+function backupCode(){return "HN30:"+btoa(unescape(encodeURIComponent(JSON.stringify(S))))}
+function readBackup(t){try{t=(t||"").trim().replace(/\s+/g,"");if(!t.startsWith("HN30:"))return null;const d=JSON.parse(decodeURIComponent(escape(atob(t.slice(5)))));
+  if(!d||typeof d!=="object"||typeof d.done!=="object"||typeof d.srs!=="object")return null;return d}catch(e){return null}}
 let remote=null, saveTimer=null, saving=false, dirty=false;
 function save(){
   S.ts=Date.now();
@@ -1951,8 +1954,20 @@ function viewToday(){
       <div class="stat"><b>${Object.keys(S.write||{}).length}</b><span>chữ đã tự viết đúng</span></div>
       <div class="stat"><b>${Object.keys(S.speak||{}).length}</b><span>câu đã luyện nói</span></div></div>
     <div class="muted" style="font-size:.84rem">${remote?"Tiến độ được lưu vào tài khoản của bạn, chỉ bạn xem được, mở trên máy khác vẫn còn.":"Tiến độ đang được lưu trên trình duyệt này."}</div>
+    <details id="bkBox"><summary class="muted" style="cursor:pointer;font-size:.9rem">Sao lưu hoặc chuyển tiến độ sang máy khác</summary>
+      <div style="display:grid;gap:8px;margin-top:10px"><div class="muted" style="font-size:.84rem">Bấm “Tạo mã” rồi sao chép, gửi cho chính bạn (Zalo, email…). Trên máy kia, dán mã vào ô bên dưới và bấm “Khôi phục”.</div>
+      <div class="row"><button class="btn" id="bkMake">Tạo mã sao lưu</button><button class="btn" id="bkCopy" hidden>Sao chép</button></div>
+      <textarea id="bkOut" readonly hidden rows="3" style="width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--sunk);color:var(--ink);word-break:break-all"></textarea>
+      <textarea id="bkIn" rows="3" placeholder="Dán mã sao lưu (bắt đầu bằng HN30:) vào đây" style="width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)"></textarea>
+      <div class="row" id="bkRow"><button class="btn primary" id="bkLoad">Khôi phục</button></div></div></details>
     <div id="resetBox" class="row"><button class="btn ghost" id="resetBtn">Đặt lại toàn bộ tiến độ</button></div></section>`;
   const pg=$("#placeGo");if(pg)pg.onclick=runPlacement;
+  $("#bkMake").onclick=()=>{const o=$("#bkOut");o.value=backupCode();o.hidden=false;$("#bkCopy").hidden=false;o.select()};
+  $("#bkCopy").onclick=async()=>{const o=$("#bkOut");try{await navigator.clipboard.writeText(o.value);toast("Đã sao chép mã sao lưu.")}catch(e){o.select();try{document.execCommand("copy");toast("Đã sao chép mã sao lưu.")}catch(_){toast("Hãy chọn và sao chép mã thủ công.")}}};
+  $("#bkLoad").onclick=()=>{const d=readBackup($("#bkIn").value);if(!d){toast("Mã không hợp lệ. Hãy dán đủ cả đoạn bắt đầu bằng HN30:");return}
+    const n=Object.keys(d.done||{}).length,w=Object.keys(d.srs||{}).length;
+    $("#bkRow").innerHTML=`<span style="min-width:0;flex:1 1 200px">Mã chứa <b class="num">${n}</b> ngày đã xong và <b class="num">${w}</b> thẻ. Thay tiến độ hiện tại bằng mã này?</span><button class="btn" id="bkNo">Hủy</button><button class="btn primary" id="bkYes">Thay</button>`;
+    $("#bkNo").onclick=viewToday;$("#bkYes").onclick=()=>{S=Object.assign(blank(),d);save();updateChrome();toast("Đã khôi phục tiến độ.");viewToday()}};
   $("#resetBtn").onclick=()=>{$("#resetBox").innerHTML=`<span><b>Xóa toàn bộ tiến độ, thẻ ôn và chuỗi ngày?</b> Không thể hoàn tác.</span><button class="btn" id="resetYes" style="color:var(--bad);border-color:var(--bad)">Xóa hết</button><button class="btn" id="resetNo">Giữ lại</button>`;
     $("#resetNo").onclick=viewToday;$("#resetYes").onclick=()=>{S=blank();save();updateChrome();toast("Đã đặt lại tiến độ.");viewToday()}};
 }
