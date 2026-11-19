@@ -228,6 +228,8 @@ td b{font-size:1.05rem}
 .lkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.2);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;width:min(440px,calc(100% - 32px))}
 #lk:not([hidden]) + .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .dlist{display:grid;gap:6px}
+.bm{border:0;background:none;color:var(--muted);font-size:1.05rem;padding:0 6px;vertical-align:middle;line-height:1}
+.bm[aria-pressed="true"]{color:var(--warn)}
 .jump{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .jump::-webkit-scrollbar{display:none}
 .jump button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:.84rem;font-weight:600;color:var(--jade)}
@@ -1647,7 +1649,7 @@ function viewDay(n){
     }else if(d.review){
       body.innerHTML=`<div class="card gram">${d.gh}</div><h3>Hội thoại: Hẹn gặp ở Bắc Kinh</h3>
       <div class="row"><button class="btn" id="playDl">${SPK} Nghe cả đoạn</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="hidePy"> Ẩn pinyin</label></div>
-      <div class="dialog" id="dlg">${DIALOG.split("\n").map(l=>{const [who,zh,p,v]=l.split("|");return `<div class="dl"><span class="who ${who==="B"?"b":""}">${who}</span><span class="zh">${segHTML(zh)}</span><span class="p">${p}</span><span class="v">${v}</span><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button></div>`}).join("")}</div>
+      <div class="dialog" id="dlg">${DIALOG.split("\n").map(l=>{const [who,zh,p,v]=l.split("|");return `<div class="dl"><span class="who ${who==="B"?"b":""}">${who}</span><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${p}</span><span class="v">${v}</span><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button></div>`}).join("")}</div>
       ${rcHTML(29)}
       <div class="row"><button class="btn primary" data-go="quiz">Làm bài tổng ôn →</button></div>`;
       $("#hidePy").onchange=e=>$("#dlg").querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
@@ -1657,7 +1659,7 @@ function viewDay(n){
     }
   }else if(dayTab==="gram"){
     body.innerHTML=`<div class="card gram"><div class="eyebrow">Ngữ pháp</div><h3>${esc(d.g)}</h3>${d.gh}</div>
-      <div class="row" style="align-items:baseline"><h3>Câu ví dụ</h3><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div class="ex">${d.exs.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>
+      <div class="row" style="align-items:baseline"><h3>Câu ví dụ</h3><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div class="ex">${d.exs.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>
       <div class="row"><button class="btn primary" data-go="speak">Tiếp: Luyện nói →</button></div>`;
   }else if(dayTab==="speak"){
     mountSpeak(body,d.words.length?d.exs.concat(d.rds):DIALOG.split("\n").map(l=>l.split("|").slice(1)),n);
@@ -1702,7 +1704,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-rc]");if(!
 function readingHTML(d){if(!d.rds.length)return"";
   return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc cuối chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
   <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div>
-  <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
+  <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
   $("#rdVi").onchange=e=>b.querySelectorAll(".v").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
@@ -1783,6 +1785,7 @@ function viewReview(){
       <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
     <div id="revBody"></div>
     ${weakHTML()}
+    ${savedHTML()}
     ${passiveHTML()}
     ${speedHTML()}
     ${grammarHTML()}
@@ -1805,6 +1808,23 @@ function viewReview(){
 function noteOf(h){return (S.notes&&S.notes[h])||""}
 let noteT;function setNote(h,v){S.notes=S.notes||{};v=v.trim();if(v)S.notes[h]=v;else delete S.notes[h];clearTimeout(noteT);noteT=setTimeout(save,600)}
 function noteHTML(h){const n=noteOf(h);return n?`<div class="noteline">✎ ${esc(n)}</div>`:""}
+function bmHas(zh){return Array.isArray(S.bm)&&S.bm.some(x=>x[0]===zh)}
+function bmBtn(zh,p,v){const on=bmHas(zh);return `<button class="bm" data-bm="${esc(zh)}" data-bp="${esc(p)}" data-bv="${esc(v)}" aria-pressed="${on}" aria-label="${on?"Bỏ lưu câu":"Lưu câu"}" title="${on?"Bỏ lưu câu":"Lưu câu vào Ôn tập"}">${on?"★":"☆"}</button>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-bm]");if(!b)return;e.stopPropagation();if(!Array.isArray(S.bm))S.bm=[];const zh=b.dataset.bm;
+  if(bmHas(zh)){S.bm=S.bm.filter(x=>x[0]!==zh);toast("Đã bỏ lưu câu.")}else{S.bm.push([zh,b.dataset.bp,b.dataset.bv,Date.now()]);toast("Đã lưu câu vào Ôn tập.")}
+  save();document.querySelectorAll(`[data-bm="${CSS.escape(zh)}"]`).forEach(x=>{const on=bmHas(zh);x.setAttribute("aria-pressed",on);x.textContent=on?"★":"☆"});
+  if(e.target.closest("#savedBox")){const box=$("#savedBox");if(box)box.outerHTML=savedHTML()}},true);
+function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
+function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
+  <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
+  ${L.length?`<div class="row"><button class="btn primary" id="svSpeak">Luyện nói</button>${L.length>=2?`<button class="btn" id="svOrder">Sắp xếp câu</button>`:""}</div>`:""}</div>
+  ${L.length?`<details><summary class="muted" style="cursor:pointer">Xem danh sách</summary><div class="ex" style="margin-top:10px">${L.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div></details>`:""}
+  <div id="svWork"></div></div>`}
+document.addEventListener("click",e=>{
+  if(e.target.closest("#svSpeak")){mountSpeak($("#svWork"),savedList(),"saved");return}
+  if(e.target.closest("#svOrder")){const qs=shuffle(savedList()).map(makeOrderQ).filter(Boolean).slice(0,10);const box=$("#svWork");
+    if(!qs.length){toast("Các câu đã lưu quá ngắn để sắp xếp.");return}
+    runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><button class="btn" id="svOrder">Làm lại</button></div>`})}});
 let psvRun=0;
 function exampleFor(h){let best=null;DAYS.forEach(d=>d.exs.concat(d.rds).forEach(e=>{if(e[0].includes(h)&&e[0]!==h&&(!best||e[0].length<best[0].length))best=e}));return best}
 function passiveHTML(){const ok=canSpeak();return `<div class="card sect" id="psvBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Nghe thụ động</div><h3>Nghe lại từ đã học khi đang bận tay</h3>
@@ -2197,7 +2217,7 @@ function phrasesHTML(){return `<details class="card" id="phBox"><summary><b>Mẫ
   <div id="phList" class="ex" style="margin-top:12px"></div></details>`}
 function wirePhrases(){const box=$("#phBox");if(!box)return;
   const draw=()=>{const x=PHRASES[phraseIdx];
-    $("#phList").innerHTML=x.rows.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div>`).join("")+
+    $("#phList").innerHTML=x.rows.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div>`).join("")+
       `<div class="row"><button class="btn" id="phPlay">${SPK} Nghe cả nhóm</button><button class="btn primary" id="phSpeak">Luyện nói nhóm này</button></div><div id="phSp"></div>`;
     $("#phPlay").onclick=async()=>{for(const [zh] of x.rows){if(!await speakWait(zh))break}};
     $("#phSpeak").onclick=()=>{mountSpeak($("#phSp"),x.rows,"ph"+phraseIdx);$("#phSp").scrollIntoView({behavior:"smooth",block:"nearest"})};
