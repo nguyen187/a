@@ -2657,9 +2657,14 @@ function showCard(rb){
     <div id="gradeSlot"><button class="btn primary" id="flip" style="width:100%">Lật thẻ (Space)</button></div></div>`;
   const flip=()=>{if(flipped)return;flipped=true;$("#fc").innerHTML=back+`<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>`;speak(w.h);
     $("#gradeSlot").innerHTML=`<div class="grade">${["Quên","Khó","Nhớ","Dễ"].map((l,k)=>`<button class="g${k}" data-g="${k}">${l}<small>${nxt(k)}</small></button>`).join("")}</div>
-      <label class="note"><span class="eyebrow">Mẹo nhớ của bạn</span><textarea id="noteIn" rows="2" maxlength="300" placeholder="Ví dụ: 好 = 女 + 子, có vợ có con là tốt">${esc(noteOf(w.h))}</textarea></label>`;
+      <label class="note"><span class="row" style="justify-content:space-between"><span class="eyebrow">Mẹo nhớ của bạn</span>${aiNS&&!aiOff?`<button type="button" class="btn ghost" id="noteAI" style="padding:4px 10px;font-size:.84rem">✨ Nhờ AI gợi ý</button>`:""}</span><textarea id="noteIn" rows="2" maxlength="300" placeholder="Ví dụ: 好 = 女 + 子, có vợ có con là tốt">${esc(noteOf(w.h))}</textarea></label>`;
     rb.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>grade(+b.dataset.g));
-    $("#noteIn").oninput=e=>setNote(w.h,e.target.value)};
+    $("#noteIn").oninput=e=>setNote(w.h,e.target.value);
+    const na=$("#noteAI");if(na)na.onclick=async ev=>{ev.preventDefault();na.disabled=true;const ta=$("#noteIn");const old=ta.value;ta.value="AI đang nghĩ mẹo nhớ…";
+      const prompt=`Tạo một mẹo nhớ ngắn (tối đa 35 từ, 1-2 câu) bằng tiếng Việt cho từ tiếng Trung ${w.h} (${w.p}, nghĩa: ${w.m}${w.v?", Hán Việt: "+w.v:""}). Ưu tiên: tách chữ thành bộ phận có nghĩa và kể thành hình ảnh dễ nhớ; hoặc liên hệ âm Hán Việt với từ tiếng Việt quen thuộc; hoặc câu vần giúp nhớ thanh điệu. Chỉ trả về mẹo nhớ, không markdown, không lời dẫn.`;
+      try{const r=await aiNS(prompt,{modelTier:"quick",onText:({text})=>{if(ta.isConnected)ta.value=text}});if(ta.isConnected){ta.value=r.text.trim().slice(0,300);setNote(w.h,ta.value)}}
+      catch(err){if(ta.isConnected)ta.value=old;const c=err&&err.code;if(c==="not_granted"){aiOff=true;na.remove();return}toast(c==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau.":"Chưa tạo được mẹo nhớ.")}
+      if(na.isConnected)na.disabled=false}};
   const grade=k=>{
     const t=today();S.stats.rev++;
     if(k===0){S.miss=S.miss||{};S.miss[h]=(S.miss[h]||0)+1;S.srs[h]={b:0,d:t};revQueue.push(revQueue.shift())}
