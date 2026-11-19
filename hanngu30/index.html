@@ -1650,6 +1650,19 @@ function say(text,wait){text=text.replace(/[—…]/g,"，");const e=engine();
   })}
 function speak(t){return say(t,false)}
 function speakWait(t){return say(t,true)}
+function dayQuizDone(n){const d=DAYS[n-1],pass=d.final?80:70;return (sc,tot,wrong)=>{const body=$("#dayBody");if(!body)return;
+        const pct=Math.round(sc/tot*100);S.best[n]=Math.max(S.best[n]||0,pct);
+        const passed=pct>=pass;
+        if(passed&&!S.done[n]){S.done[n]=true;addToSRS(d.words);S.doneAt=S.doneAt||{};S.doneAt[n]=today()}if(passed)markStep(n,"quiz");
+        wrong.forEach(w=>{if(S.srs[w.h])S.srs[w.h]={b:0,d:today()}});
+        touchStreak(5);save();updateChrome();
+        body.innerHTML=`<div class="card result"><div class="eyebrow">Kết quả</div><div class="score" style="color:${passed?"var(--good)":"var(--bad)"}">${pct}%</div>
+          <div>${sc}/${tot} câu đúng. ${passed?(d.final?(d.ext?"Chúc mừng, bạn đã hoàn thành phần mở rộng HSK 3!":"Chúc mừng, bạn đã hoàn thành khóa 30 ngày! Phần mở rộng HSK 3 bắt đầu từ Ngày 31."):"Đã hoàn thành ngày "+n+". Các từ đã được thêm vào bộ thẻ ôn tập."):"Cần "+pass+"% để hoàn thành. Xem lại từ vựng rồi làm lại nhé."}</div>
+          ${wrong.length?`<div><div class="eyebrow" style="margin-bottom:6px">Từ cần xem lại</div><div class="row">${[...new Map(wrong.map(w=>[w.h,w])).values()].map(w=>`<button class="chip" data-say="${esc(w.h)}"><span class="han">${w.h}</span> ${pyPlain(w.p)} · ${esc(w.m)}</button>`).join("")}</div></div>`:""}
+          <div class="row"><button class="btn" id="again">Làm lại</button>${passed&&n<DAYS.length?`<a class="btn primary" href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}${passed&&d.words.length?`<button class="btn" data-go="write">Luyện viết chữ</button>`:""}</div></div>`;
+        $("#again").onclick=()=>viewDay(n);
+}}
+
 function coverPref(k){try{return !!localStorage.getItem("hanngu30.cover."+k)}catch(e){return false}}
 let viVoice=null;
 function sayViWait(t){return new Promise(res=>{
@@ -1737,19 +1750,22 @@ function buildQuiz(words,pool,count,exs){
   const wq=list.slice(0,n).map(w=>makeQ(w,pool,w.p.includes("…")?types.filter(t=>t!=="type"):types));
   return shuffle(wq.concat(oq));
 }
-function runQuiz(el,qs,onDone){
-  let i=0,score=0,wrong=[];
+let QZ=null;
+function runQuiz(el,qs,onDone,resume){
+  let i=resume?resume.i:0,score=resume?resume.score:0,wrong=resume?(resume.wrong||[]).map(h=>BYH[h]).filter(Boolean):[];
+  if(resume&&qs[i]&&qs[i].answered)i++;
   const head=()=>`<div class="row"><span class="eyebrow num">Câu ${i+1}/${qs.length}</span><span class="spacer"></span><span class="eyebrow num">Đúng ${score}</span></div><div class="qbar"><i style="width:${i/qs.length*100}%"></i></div>`;
   const wDetail=w=>`<span class="han" style="font-size:1.2rem">${w.h}</span> · <span class="py">${pyHTML(w.p)}</span> · ${esc(w.m)}`;
   function next(){i++;show()}
   function feedback(ok,detail,say,label){
-    const q=qs[i];q.answered=true;q.ok=ok;S.stats.ans++;if(ok){score++;S.stats.ok++;if(q.w&&S.miss&&S.miss[q.w.h])S.miss[q.w.h]--}else if(q.w){wrong.push(q.w);S.miss=S.miss||{};S.miss[q.w.h]=(S.miss[q.w.h]||0)+1}
+    const q=qs[i];q.answered=true;q.ok=ok;S.stats.ans++;setTimeout(()=>{if(QZ&&QZ.qs===qs){QZ.score=score;QZ.wrong=wrong.map(w=>w.h)}},0);if(ok){score++;S.stats.ok++;if(q.w&&S.miss&&S.miss[q.w.h])S.miss[q.w.h]--}else if(q.w){wrong.push(q.w);S.miss=S.miss||{};S.miss[q.w.h]=(S.miss[q.w.h]||0)+1}
     $("#fbslot").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${label||(ok?"Chính xác":"Chưa đúng")}</b><span class="detail">${detail}</span><span class="spacer"></span>${say?`<button class="say" data-say="${esc(say)}" aria-label="Nghe">${SPK}</button>`:""}<button class="btn primary" id="nextQ">${i+1<qs.length?"Câu tiếp":"Xem kết quả"}</button></div>`;
     if(!ok&&say)speak(say);
     const nb=$("#nextQ");nb.focus();nb.onclick=next;
   }
   function show(){
-    if(i>=qs.length){document.onkeydown=null;onDone(score,qs.length,wrong);return}
+    if(i>=qs.length){QZ=null;document.onkeydown=null;onDone(score,qs.length,wrong);return}
+    QZ={id:el.id,qs,i,score,wrong:wrong.map(w=>w.h)};
     const q=qs[i];
     if(q.type==="order")return showOrder(q);
     if(q.type==="type")return showType(q);
@@ -1996,18 +2012,7 @@ function viewDay(n){
     $("#startQ").onclick=()=>{
       const pool=d.words.length?poolUpTo(n):ALL;
       const src=d.words.length?d.words:d.ext?ALL.filter(w=>w.day>30):ALL.filter(w=>w.day<=28);
-      runQuiz(body,buildQuiz(src,pool,cnt,exPool(d)),(sc,tot,wrong)=>{
-        const pct=Math.round(sc/tot*100);S.best[n]=Math.max(S.best[n]||0,pct);
-        const passed=pct>=pass;
-        if(passed&&!S.done[n]){S.done[n]=true;addToSRS(d.words);S.doneAt=S.doneAt||{};S.doneAt[n]=today()}if(passed)markStep(n,"quiz");
-        wrong.forEach(w=>{if(S.srs[w.h])S.srs[w.h]={b:0,d:today()}});
-        touchStreak(5);save();updateChrome();
-        body.innerHTML=`<div class="card result"><div class="eyebrow">Kết quả</div><div class="score" style="color:${passed?"var(--good)":"var(--bad)"}">${pct}%</div>
-          <div>${sc}/${tot} câu đúng. ${passed?(d.final?(d.ext?"Chúc mừng, bạn đã hoàn thành phần mở rộng HSK 3!":"Chúc mừng, bạn đã hoàn thành khóa 30 ngày! Phần mở rộng HSK 3 bắt đầu từ Ngày 31."):"Đã hoàn thành ngày "+n+". Các từ đã được thêm vào bộ thẻ ôn tập."):"Cần "+pass+"% để hoàn thành. Xem lại từ vựng rồi làm lại nhé."}</div>
-          ${wrong.length?`<div><div class="eyebrow" style="margin-bottom:6px">Từ cần xem lại</div><div class="row">${[...new Map(wrong.map(w=>[w.h,w])).values()].map(w=>`<button class="chip" data-say="${esc(w.h)}"><span class="han">${w.h}</span> ${pyPlain(w.p)} · ${esc(w.m)}</button>`).join("")}</div></div>`:""}
-          <div class="row"><button class="btn" id="again">Làm lại</button>${passed&&n<DAYS.length?`<a class="btn primary" href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}${passed&&d.words.length?`<button class="btn" data-go="write">Luyện viết chữ</button>`:""}</div></div>`;
-        $("#again").onclick=()=>viewDay(n);
-      });
+      runQuiz(body,buildQuiz(src,pool,cnt,exPool(d)),dayQuizDone(n));
     };
   }else if(dayTab==="write"){
     mountWriter(body,d.words,false,n);
@@ -2777,7 +2782,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày`;const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
-  document.onkeydown=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
+  document.onkeydown=null;QZ=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
   const h=(location.hash||"#today").slice(1);
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
@@ -2786,13 +2791,14 @@ function route(){
   updateChrome();refreshAudioHints();
 }
 window.addEventListener("hashchange",()=>{route();window.scrollTo({top:0})});
-function snapshot(){return {dayTab,lastDay,revMode,revQueue:revQueue&&revQueue.length?revQueue.slice():null,dictQ,dictWk,dictOnly,dictDay,ndType,rpIdx,phraseIdx,scroll:window.scrollY}}
+function snapshot(){return {qz:QZ&&QZ.id==="dayBody"?{...QZ,hash:location.hash}:null,dayTab,lastDay,revMode,revQueue:revQueue&&revQueue.length?revQueue.slice():null,dictQ,dictWk,dictOnly,dictDay,ndType,rpIdx,phraseIdx,scroll:window.scrollY}}
 function start(data){data=data||{};
   if(data.dayTab)dayTab=data.dayTab;if(data.lastDay!=null)lastDay=data.lastDay;if(data.revMode)revMode=data.revMode;
   if(typeof data.dictQ==="string")dictQ=data.dictQ;if(data.dictWk)dictWk=data.dictWk;if(data.dictOnly!=null)dictOnly=data.dictOnly;if(data.dictDay)dictDay=data.dictDay;
   if(data.ndType)ndType=data.ndType;if(data.rpIdx!=null)rpIdx=data.rpIdx;if(data.phraseIdx!=null)phraseIdx=data.phraseIdx;
   route();
   if(data.revQueue&&location.hash==="#review"){revQueue=data.revQueue.filter(h=>S.srs[h]);if(revQueue.length)viewReview()}
+  if(data.qz&&data.qz.hash===location.hash&&dayTab==="quiz"&&$("#dayBody")){const n=+location.hash.slice(5);if(DAYS[n-1])runQuiz($("#dayBody"),data.qz.qs,dayQuizDone(n),data.qz)}
   if(data.scroll)requestAnimationFrame(()=>window.scrollTo(0,data.scroll));
   initRemote()}
 try{window.claude?.hot?.snapshot?.(snapshot)}catch(e){}
