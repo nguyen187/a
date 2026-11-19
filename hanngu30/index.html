@@ -1860,9 +1860,11 @@ function nextHTML(){const items=[],due=dueList().length,cd=currentDay(),d=DAYS[c
   if(d&&d.words.length){const k=STEPS.find(x=>!stepDone(cd,x));if(k)items.push([`#day-${cd}`,k,`${STEPL[k]} · Ngày ${cd}`,esc(d.t)])}
   else if(d&&!S.done[cd])items.push([`#day-${cd}`,"quiz",d.final?`Làm bài kiểm tra Ngày ${cd}`:`Tổng ôn Ngày ${cd}`,esc(d.t)]);
   const wk=weakList().length;if(wk>=3)items.push(["#review","",`Luyện ${wk} từ hay sai`,"Những từ bạn trả lời sai nhiều nhất"]);
+  if(learned()>=15&&S.trDay!==today()&&transPool().length>=8)items.push(["#review","","Dịch 8 câu Việt → Trung","Tự nói ra câu từ những gì đã học","trBox"]);
   if(items.length<3&&(S.log[today()]||0)<(S.goal||20)&&learned()>=6)items.push(["#review","","Chơi ghép cặp 6 từ","Cách nhẹ nhàng để đủ điểm hôm nay"]);
   if(!items.length)return"";
-  return `<section class="card sect"><div class="eyebrow">Việc nên làm tiếp</div><div class="dlist">${items.slice(0,3).map(([h,tab,t,sub],i)=>`<a class="drow" href="${h}" ${tab?`data-tabgo="${tab}" data-day="${cd}"`:""} style="grid-template-columns:32px 1fr auto;text-decoration:none;color:var(--ink)"><span class="chip num" style="justify-content:center">${i+1}</span><div style="min-width:0"><b style="font-size:.95rem">${t}</b><div class="muted" style="font-size:.82rem">${sub}</div></div><span class="muted">→</span></a>`).join("")}</div></section>`}
+  return `<section class="card sect"><div class="eyebrow">Việc nên làm tiếp</div><div class="dlist">${items.slice(0,3).map(([h,tab,t,sub,go],i)=>`<a class="drow" href="${h}" ${tab?`data-tabgo="${tab}" data-day="${cd}"`:""} ${go?`data-go="${go}"`:""} style="grid-template-columns:32px 1fr auto;text-decoration:none;color:var(--ink)"><span class="chip num" style="justify-content:center">${i+1}</span><div style="min-width:0"><b style="font-size:.95rem">${t}</b><div class="muted" style="font-size:.82rem">${sub}</div></div><span class="muted">→</span></a>`).join("")}</div></section>`}
+let pendingGo=null;document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g)pendingGo=g.dataset.go},true);
 document.addEventListener("click",e=>{const a=e.target.closest("[data-tabgo]");if(!a)return;dayTab=a.dataset.tabgo;lastDay=+a.dataset.day},true);
 function goalHTML(){const g=S.goal||20,pts=S.log[today()]||0,pct=Math.min(100,Math.round(pts/g*100)),done=pts>=g;
   return `<section class="card goal" id="goalBox"><div class="row"><div style="min-width:0;flex:1 1 200px"><div class="eyebrow">Mục tiêu hôm nay</div>
@@ -2181,6 +2183,7 @@ function viewReview(){
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
   $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
+  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}},60)}
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
   if(!revQueue||!revQueue.length)revQueue=shuffle(due);
@@ -2220,7 +2223,7 @@ function transHTML(){const L=transPool();if(L.length<4)return"";return `<div cla
 function pyBare(t){return (t||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z]/g,"")}
 function hanOnly(t){return (t||"").replace(/[^\p{Script=Han}]/gu,"")}
 function trShow(){const box=$("#trWork");if(!box||!TR)return;
-  if(TR.i>=TR.q.length){const ok=TR.ok;touchStreak(2);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${ok}/${TR.q.length}</div><p class="muted">${ok>=6?"Rất tốt! Bạn đã chủ động dùng được các mẫu câu.":"Câu nào sai đã được lưu vào “Câu đã lưu” để luyện thêm."}</p><button class="btn primary" id="trGo">Làm 8 câu khác</button></div>`;TR=null;return}
+  if(TR.i>=TR.q.length){const ok=TR.ok;S.trDay=today();touchStreak(2);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${ok}/${TR.q.length}</div><p class="muted">${ok>=6?"Rất tốt! Bạn đã chủ động dùng được các mẫu câu.":"Câu nào sai đã được lưu vào “Câu đã lưu” để luyện thêm."}</p><button class="btn primary" id="trGo">Làm 8 câu khác</button></div>`;TR=null;return}
   const [zh,p,v,dn]=TR.q[TR.i];const n=[...hanOnly(zh)].length;
   box.innerHTML=`<div class="quiz" style="margin-top:12px"><div class="row"><span class="eyebrow num">Câu ${TR.i+1}/${TR.q.length} · ngày ${dn}</span><span class="spacer"></span><span class="eyebrow num">Đúng ${TR.ok}</span></div>
    <p class="prompt" style="font-size:1.15rem;margin:10px 0">${esc(v)}</p>
