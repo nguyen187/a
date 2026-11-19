@@ -229,6 +229,11 @@ td b{font-size:1.05rem}
 .lkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.2);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;width:min(440px,calc(100% - 32px))}
 #lk:not([hidden]) + .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .dlist{display:grid;gap:6px}
+.wbars{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end}
+.wbars div{display:grid;gap:3px;justify-items:center;align-self:end}
+.wbars i{display:block;width:100%;max-width:34px;border-radius:4px 4px 0 0}
+.wbars small{font-size:.7rem;color:var(--muted)}
+.wgoal{position:absolute;left:0;right:0;border-top:1px dashed var(--seal);opacity:.7}
 .words.hide-py .word:not(.shown) .py,.words.hide-m .word:not(.shown) .m,.words.hide-m .word:not(.shown) .hv,.words.hide-m .word:not(.shown) .noteline{visibility:hidden}
 .blind .exl .zh,.blind .exl .p,.blind .exl .v{visibility:hidden}
 .blind .exl{min-height:48px}
@@ -1840,7 +1845,12 @@ function goalHTML(){const g=S.goal||20,pts=S.log[today()]||0,pct=Math.min(100,Ma
     <h3 class="num">${done?"Đã đạt mục tiêu! ":""}${pts}/${g} điểm</h3></div>
     <div class="subtabs" role="group" aria-label="Chọn mục tiêu">${GOALS.map(([v,l])=>`<button data-goal="${v}" aria-pressed="${v===g}">${l} ${v}</button>`).join("")}</div></div>
     <div class="qbar" style="height:10px"><i style="width:${pct}%;background:${done?"var(--good)":"var(--jade)"}"></i></div>
+    ${weekBars(g)}
     <div class="muted" style="font-size:.82rem">Mỗi thẻ ôn, câu luyện, chữ viết hay lượt nghe được 1 điểm; hoàn thành bài kiểm tra của ngày được 5 điểm.</div></section>`}
+function weekBars(g){const t=today(),wd=["CN","T2","T3","T4","T5","T6","T7"];const d=[6,5,4,3,2,1,0].map(i=>({i,p:S.log[t-i]||0,w:wd[new Date((t-i)*DAYMS).getUTCDay()]}));
+  const mx=Math.max(g,...d.map(x=>x.p)),H=64,met=d.filter(x=>x.p>=g).length,gy=Math.round(H-g/mx*H);
+  return `<div><div class="row" style="margin-bottom:6px"><span class="eyebrow">7 ngày gần nhất</span><span class="spacer"></span><span class="muted num" style="font-size:.8rem">Đạt mục tiêu ${met}/7 ngày</span></div>
+    <div class="wbars" style="height:${H+18}px"><span class="wgoal" style="top:${gy}px" aria-hidden="true"></span>${d.map(x=>`<div title="${x.p} điểm"><i style="height:${Math.max(2,Math.round(x.p/mx*H))}px;background:${x.p>=g?"var(--good)":x.i===0?"var(--jade)":"color-mix(in srgb,var(--jade) 45%,var(--sunk))"}"></i><small class="num">${x.i===0?"Nay":x.w}</small></div>`).join("")}</div></div>`}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(!b)return;S.goal=+b.dataset.goal;save();const box=$("#goalBox");if(box)box.outerHTML=goalHTML()});
 function stageDays(n){const cd=currentDay();return DAYS.filter(d=>d.week===n&&d.words.length&&(S.done[d.n]||d.n<cd))}
 function stageOK(n){return n!==5&&stageDays(n).length>0}
