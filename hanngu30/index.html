@@ -1170,7 +1170,13 @@ const READ={
 我的老师说得很快，但是我都听懂了。|Wǒ de lǎoshī shuō de hěn kuài, dànshì wǒ dōu tīng dǒng le.|Thầy giáo nói rất nhanh, nhưng tôi đều nghe hiểu.
 因为我每天都练习，所以我比以前说得更流利。|Yīnwèi wǒ měitiān dōu liànxí, suǒyǐ wǒ bǐ yǐqián shuō de gèng liúlì.|Vì ngày nào tôi cũng luyện tập nên tôi nói lưu loát hơn trước.
 如果明年有机会，我就去中国旅游。|Rúguǒ míngnián yǒu jīhuì, wǒ jiù qù Zhōngguó lǚyóu.|Nếu năm sau có cơ hội, tôi sẽ đi du lịch Trung Quốc.
-我已经把护照准备好了！|Wǒ yǐjīng bǎ hùzhào zhǔnbèi hǎo le!|Tôi đã chuẩn bị xong hộ chiếu rồi!`]};
+我已经把护照准备好了！|Wǒ yǐjīng bǎ hùzhào zhǔnbèi hǎo le!|Tôi đã chuẩn bị xong hộ chiếu rồi!`],
+39:["Cuộc sống du học ở Bắc Kinh",`我是去年来北京留学的。|Wǒ shì qùnián lái Běijīng liúxué de.|Tôi đến Bắc Kinh du học từ năm ngoái.
+刚来的时候，我连菜单都看不懂。|Gāng lái de shíhou, wǒ lián càidān dōu kàn bu dǒng.|Lúc mới đến, tôi ngay cả thực đơn cũng đọc không hiểu.
+现在我的汉语越来越好了。|Xiànzài wǒ de Hànyǔ yuè lái yuè hǎo le.|Bây giờ tiếng Trung của tôi ngày càng tốt.
+除了上课以外，我还经常跟中国朋友一起聊天。|Chúle shàngkè yǐwài, wǒ hái jīngcháng gēn Zhōngguó péngyou yìqǐ liáotiān.|Ngoài giờ học, tôi còn thường trò chuyện với bạn bè Trung Quốc.
+学校旁边有一家饭馆，不但便宜，而且很干净。|Xuéxiào pángbiān yǒu yì jiā fànguǎn, búdàn piányi, érqiě hěn gānjìng.|Cạnh trường có một quán ăn, không những rẻ mà còn rất sạch.
+只要有时间，我就去那儿吃饭。|Zhǐyào yǒu shíjiān, wǒ jiù qù nàr chī fàn.|Chỉ cần có thời gian là tôi đến đó ăn.`]};
 
 /* ===================== PHÂN TÍCH DỮ LIỆU ===================== */
 DAYS.forEach((d,i)=>{
@@ -1352,11 +1358,11 @@ function makeClozeQ(ex,pool,prefer){const [zh,py,vi]=ex;if(!zh||zh.includes("—
   const shown=sg.map((x,i)=>i===ch.i?`<span style="display:inline-block;min-width:${L*1.1}em;border-bottom:2px solid var(--jade);color:transparent">${"口".repeat(L)}</span>`:esc(x.t)).join("");
   return {type:"cloze",w,prompt:`<span class="eyebrow">Điền vào chỗ trống</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div><div class="muted">${esc(vi)}</div>`,
     opts:shuffle([{html:`<span class="hz">${w.h}</span>`,ok:true},...ds.map(o=>({html:`<span class="hz">${o.h}</span>`,ok:false}))])}}
-function exPool(d){return d.words.length?d.exs:d.ext?DAYS.slice(30,39).flatMap(x=>x.exs):DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
+function exPool(d){return d.words.length?d.exs:d.ext?DAYS.slice(30,39).flatMap(x=>x.exs.concat(x.rds)):DAYS.slice(0,28).flatMap(x=>x.exs.concat(x.rds))}
 function buildQuiz(words,pool,count,exs){
   exs=exs||[];
   const nEx=exs.length?(count>=30?6:count>=20?5:4):0;const prefer=new Set(words.map(w=>w.h));
-  const oq=[];shuffle(exs).forEach((e,k)=>{if(oq.length>=nEx)return;const q=k%2?makeClozeQ(e,pool,prefer):makeOrderQ(e);if(q)oq.push(q)});
+  const oq=[];shuffle(exs).forEach((e,k)=>{if(oq.length>=nEx)return;const q=k%2?makeClozeQ(e,pool,prefer):makeOrderQ(e);if(q){if(q.type==="order"&&canSpeak()&&Math.random()<.5)q.listen=true;oq.push(q)}});
   const types=["mean","hanzi","py","type"].concat(canSpeak()?["listen"]:[]);
   const n=count-oq.length;
   let list=shuffle(words);while(list.length<n&&words.length)list=list.concat(shuffle(words));
@@ -1401,7 +1407,7 @@ function runQuiz(el,qs,onDone){
     const bank=q.chunks.map((t,k)=>({t,k}));let order=shuffle(bank),g=0;
     while(g++<6&&order.map(c=>c.t).join("")===q.chunks.join(""))order=shuffle(bank);
     let placed=[];
-    el.innerHTML=`<div class="quiz">${head()}<div class="prompt"><span class="eyebrow">Sắp xếp thành câu đúng</span><div class="m">${esc(q.vi)}</div></div>
+    el.innerHTML=`<div class="quiz">${head()}<div class="prompt">${q.listen?`<span class="eyebrow">Nghe rồi sắp xếp lại câu</span><button class="btn primary" data-say="${esc(q.zh)}">${SPK} Nghe lại</button>`:`<span class="eyebrow">Sắp xếp thành câu đúng</span><div class="m">${esc(q.vi)}</div>`}</div>
       <div class="slots" id="slots"></div><div class="bank" id="bank"></div>
       <div class="row"><button class="btn primary" id="chk" disabled>Kiểm tra</button><button class="btn ghost" id="rst">Xếp lại</button></div><div id="fbslot"></div></div>`;
     const draw=()=>{
@@ -1414,8 +1420,8 @@ function runQuiz(el,qs,onDone){
     $("#rst").onclick=()=>{if(q.answered)return;placed=[];draw()};
     $("#chk").onclick=()=>{if(q.answered)return;const ok=placed.map(c=>c.t).join("")===q.chunks.join("");
       $("#slots").classList.add(ok?"ok":"no");$("#rst").disabled=true;$("#chk").disabled=true;
-      feedback(ok,`<span class="han" style="font-size:1.15rem">${esc(q.zh)}</span> · <span class="muted">${esc(q.py)}</span>`,q.zh)};
-    draw();
+      feedback(ok,`<span class="han" style="font-size:1.15rem">${esc(q.zh)}</span> · <span class="muted">${esc(q.py)}</span>${q.listen?" · "+esc(q.vi):""}`,q.zh)};
+    draw();if(q.listen)setTimeout(()=>speak(q.zh),150);
   }
   document.onkeydown=e=>{if(!el.isConnected)return;const q=qs[i];if(!q)return;
     if(e.target&&e.target.closest&&e.target.closest("input,select,textarea"))return;
