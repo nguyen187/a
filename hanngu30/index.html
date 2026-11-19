@@ -232,7 +232,7 @@ td b{font-size:1.05rem}
 .jump::-webkit-scrollbar{display:none}
 .jump button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:.84rem;font-weight:600;color:var(--jade)}
 .jump button:hover{border-color:var(--jade)}
-[id^="sec-"],#pairBox,#phBox,#mwBox{scroll-margin-top:120px}
+[id^="sec-"],#pairBox,#phBox,#mwBox,#rpBox{scroll-margin-top:120px}
 .note{display:grid;gap:4px}
 .note textarea{font:inherit;font-size:.95rem;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);resize:vertical;min-height:52px}
 .noteline{font-size:.82rem;color:var(--seal);line-height:1.4}
@@ -1261,7 +1261,12 @@ const EXTRA=`辣|là|cay|lạt
 您|nín|ngài, ông, bà (kính trọng)|nâm
 雨|yǔ|mưa|vũ
 起|qǐ|dậy|khởi
-阿明|Ā Míng|Minh (tên người)|a minh`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
+阿明|Ā Míng|Minh (tên người)|a minh
+位|wèi|vị (lượng từ lịch sự cho người)|vị
+几位|jǐ wèi|mấy vị, mấy người|kỷ vị
+碗|wǎn|bát|oản
+一共|yí gòng|tổng cộng|nhất cộng
+分钟|fēn zhōng|phút (khoảng thời gian)|phân chung`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
 EXTRA.forEach(w=>{if(!BYH[w.h])BYH[w.h]=w});
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
 /* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
@@ -1476,7 +1481,7 @@ function runQuiz(el,qs,onDone){
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt">${q.prompt}</div>
       <div class="opts">${q.opts.map((o,k)=>`<button class="opt" data-k="${k}"><span class="k">${k+1}</span><span>${o.html}</span></button>`).join("")}</div>
       <div id="fbslot"></div></div>`;
-    if(q.listen)setTimeout(()=>speak(q.w.h),150);
+    if(q.listen)setTimeout(()=>speak(q.w.h),150);if(q.autoSay)setTimeout(()=>speak(q.autoSay),150);
     el.querySelectorAll(".opt").forEach(b=>b.onclick=()=>pickOpt(+b.dataset.k));
   }
   function pickOpt(k){const q=qs[i];if(q.answered)return;const ok=q.opts[k].ok;
@@ -2170,6 +2175,44 @@ document.addEventListener("click",e=>{if(!e.target.closest("#mwGo"))return;const
       opts:shuffle([{html:`<span class="hz">${ans}</span> <span class="muted" style="font-size:.82rem">${esc(MW[ans])}</span>`,ok:true},...ds.map(x=>({html:`<span class="hz">${x}</span> <span class="muted" style="font-size:.82rem">${esc(MW[x])}</span>`,ok:false}))]),
       explain:`<span class="han" style="font-size:1.15rem">${num}${ok.join("/")}${n}</span>${ok.length>1?" · dùng được cả "+ok.join(" và "):""}`,say:num+ans+n}});
   runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><div>${sc>=8?"Bạn dùng lượng từ rất chuẩn!":"Xem lại bảng lượng từ phía trên rồi thử lại nhé."}</div><button class="btn" id="mwGo">Làm lại</button></div>`})});
+const RP=[
+{t:"Ở nhà hàng",me:"Khách",you:"Phục vụ",l:`A|你好，几位？|Nǐ hǎo, jǐ wèi?|Xin chào, mấy người ạ?
+B|两位。|Liǎng wèi.|Hai người.
+A|你们想吃什么？|Nǐmen xiǎng chī shénme?|Các bạn muốn ăn gì?
+B|我要一个烤鸭，两碗米饭。|Wǒ yào yí gè kǎoyā, liǎng wǎn mǐfàn.|Cho tôi một con vịt quay, hai bát cơm.
+A|喝什么？|Hē shénme?|Uống gì ạ?
+B|两杯茶，谢谢。|Liǎng bēi chá, xièxie.|Hai cốc trà, cảm ơn.
+A|一共一百二十块。|Yígòng yìbǎi èrshí kuài.|Tổng cộng 120 tệ.
+B|可以用微信付款吗？|Kěyǐ yòng Wēixìn fùkuǎn ma?|Trả bằng WeChat được không?`},
+{t:"Mua quần áo",me:"Khách",you:"Người bán",l:`A|你好，你想买什么？|Nǐ hǎo, nǐ xiǎng mǎi shénme?|Chào bạn, bạn muốn mua gì?
+B|我想买一件衣服。|Wǒ xiǎng mǎi yí jiàn yīfu.|Tôi muốn mua một bộ quần áo.
+A|这件怎么样？|Zhè jiàn zěnmeyàng?|Bộ này thế nào?
+B|很漂亮，多少钱？|Hěn piàoliang, duōshao qián?|Đẹp lắm, bao nhiêu tiền?
+A|三百块。|Sānbǎi kuài.|300 tệ.
+B|太贵了，便宜一点儿吧。|Tài guì le, piányi yìdiǎnr ba.|Đắt quá, rẻ hơn chút đi.
+A|好吧，两百五十块。|Hǎo ba, liǎngbǎi wǔshí kuài.|Thôi được, 250 tệ.
+B|好，我买了。|Hǎo, wǒ mǎi le.|Được, tôi mua.`},
+{t:"Hỏi đường",me:"Bạn",you:"Người đi đường",l:`B|请问，地铁站在哪儿？|Qǐngwèn, dìtiě zhàn zài nǎr?|Xin hỏi, ga tàu điện ngầm ở đâu?
+A|一直往前走，到路口往左拐。|Yìzhí wǎng qián zǒu, dào lùkǒu wǎng zuǒ guǎi.|Cứ đi thẳng, đến ngã tư thì rẽ trái.
+B|远吗？|Yuǎn ma?|Có xa không?
+A|不远，走五分钟就到了。|Bù yuǎn, zǒu wǔ fēnzhōng jiù dào le.|Không xa, đi bộ năm phút là tới.
+B|谢谢你！|Xièxie nǐ!|Cảm ơn bạn!
+A|不客气。|Bú kèqi.|Không có gì.`},
+{t:"Hẹn gặp ở Bắc Kinh",me:"B",you:"A",l:DIALOG}].map(x=>({...x,rows:x.l.split("\n").map(r=>r.split("|"))}));
+let rpIdx=0;
+function rpHTML(){return `<details class="card" id="rpBox"><summary><b>Hội thoại nhập vai</b> <span class="muted">· nghe người kia nói, chọn câu đáp của bạn</span></summary>
+  <div class="subtabs" id="rpTabs" style="margin-top:12px">${RP.map((x,i)=>`<button data-rp="${i}" aria-pressed="${i===rpIdx}">${x.t}</button>`).join("")}</div>
+  <div class="row" style="margin-top:10px"><span class="muted" style="font-size:.86rem" id="rpRole"></span><span class="spacer"></span><button class="btn primary" id="rpGo">Bắt đầu nhập vai</button></div><div id="rpQuiz" style="margin-top:12px"></div></details>`}
+function rpRole(){const x=RP[rpIdx];const r=$("#rpRole");if(r)r.textContent=`Bạn đóng vai ${x.me}, app đóng vai ${x.you}.`}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-rp]");if(t){rpIdx=+t.dataset.rp;document.querySelectorAll("[data-rp]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.rp===rpIdx));rpRole();$("#rpQuiz").innerHTML="";return}
+  if(!e.target.closest("#rpGo"))return;const x=RP[rpIdx],box=$("#rpQuiz");const mine=x.rows.filter(r=>r[0]==="B");const others=RP.flatMap(d=>d.rows.filter(r=>r[0]==="B"));
+  const qs=[];x.rows.forEach((r,i)=>{if(r[0]!=="B")return;const prev=i>0&&x.rows[i-1][0]==="A"?x.rows[i-1]:null;
+    const ds=pick(mine.filter(o=>o!==r),2);if(ds.length<2)ds.push(...pick(others.filter(o=>o!==r&&!ds.includes(o)),2-ds.length));
+    qs.push({type:"rp",autoSay:prev?prev[1]:null,
+      prompt:`<span class="eyebrow">${esc(x.t)} · lượt ${qs.length+1}/${mine.length}</span>${prev?`<div class="han" style="font-size:1.5rem">${x.you}: ${segHTML(prev[1])}</div><div class="muted">${esc(prev[2])}</div><button class="btn" data-say="${esc(prev[1])}">${SPK} Nghe lại</button>`:`<div class="m">Bạn mở lời: ${esc(r[3])}</div>`}`,
+      opts:shuffle([{html:`<span class="hz" style="font-size:1.2rem">${esc(r[1])}</span>`,ok:true},...ds.map(o=>({html:`<span class="hz" style="font-size:1.2rem">${esc(o[1])}</span>`,ok:false}))]),
+      explain:`<span class="han">${esc(r[1])}</span> · <span class="muted">${esc(r[2])}</span> · ${esc(r[3])}${prev?`<div class="muted" style="font-size:.84rem">${x.you} nói: ${esc(prev[3])}</div>`:""}`,say:r[1]})});
+  runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><div>${sc===tot?"Bạn xử lý tình huống rất tự nhiên!":"Nghe lại đoạn hội thoại và thử lần nữa nhé."}</div><button class="btn" id="rpGo">Nhập vai lại</button></div>`})});
 function pairQuestions(){const out=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>{const ans=k?p.b:p.a,oth=k?p.a:p.b;
   const shown=esc(sent).replace("___",`<span style="display:inline-block;min-width:${[...ans[0]].length*1.1}em;border-bottom:2px solid var(--jade)">&nbsp;</span>`);
   out.push({type:"pair",w:{h:ans[0],p:ans[1],m:ans[2]+" — "+p.note},prompt:`<span class="eyebrow">Chọn từ đúng</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div>`,
@@ -2181,7 +2224,7 @@ function trapsHTML(){return `<section class="sect" id="trapSec">
   <details class="card" id="pairBox"><summary><b>Cặp từ dễ nhầm</b> <span class="muted">· ${PAIRS.length} cặp người Việt hay dùng sai</span></summary>
     <div class="dlist" style="margin-top:12px">${PAIRS.map(p=>`<div class="drow" style="grid-template-columns:1fr"><div class="row" style="gap:14px"><span><span class="han" style="font-size:1.4rem">${p.a[0]}</span> <span class="muted">${p.a[1]}</span> · ${esc(p.a[2])}</span><span><span class="han" style="font-size:1.4rem">${p.b[0]}</span> <span class="muted">${p.b[1]}</span> · ${esc(p.b[2])}</span></div><div style="font-size:.9rem">${esc(p.note)}</div></div>`).join("")}</div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="pairGo">Luyện 10 câu cặp từ dễ nhầm</button></div></details>
-  <div id="pairQuiz"></div>${mwHTML()}${phrasesHTML()}</section>`}
+  <div id="pairQuiz"></div>${mwHTML()}${rpHTML()}${phrasesHTML()}</section>`}
 function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=$("#pairQuiz");box.scrollIntoView({behavior:"smooth",block:"start"});
   runQuiz(box,pairQuestions(),(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="card result"><div class="eyebrow">Cặp từ dễ nhầm</div><div class="score num">${Math.round(sc/tot*100)}%</div><div>${sc}/${tot} câu đúng.</div><button class="btn" id="pairAgain">Làm lại</button></div>`;$("#pairAgain").onclick=()=>$("#pairGo").click()})}}
 
@@ -2189,13 +2232,13 @@ function wirePairs(){const b=$("#pairGo");if(!b)return;b.onclick=()=>{const box=
 ALL.forEach(w=>w.k=[nrm(w.p),nrm(w.m),nrm(w.v||"")]);
 let dictQ="",dictWk="0",dictOnly=false;
 function viewDict(){
-  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="mwBox">Lượng từ</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-search">Tra từ</button><button data-jump="sec-traps">Bẫy Hán Việt</button><button data-jump="pairBox">Cặp từ dễ nhầm</button><button data-jump="mwBox">Lượng từ</button><button data-jump="rpBox">Nhập vai</button><button data-jump="phBox">Mẫu câu</button></nav>${trapsHTML()}<section class="sect" id="sec-search"><div><div class="eyebrow">Từ điển</div><h2>${ALL.length} từ của khóa học</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Tìm bằng chữ Hán, pinyin không dấu (nihao), nghĩa tiếng Việt hoặc âm Hán Việt (nhĩ hảo).</p></div>
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
       <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select>
       <label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="donly" ${dictOnly?"checked":""}> Chỉ từ đã học</label></div>
     <div class="eyebrow num" id="dcount"></div><div class="dlist" id="dlist"></div></section>`;
-  wirePairs();wirePhrases();
+  wirePairs();wirePhrases();rpRole();
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
     const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
     $("#dcount").textContent=res.length+" từ";
