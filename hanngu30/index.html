@@ -1471,7 +1471,17 @@ function viewToday(){
       <div><i>5 phút</i><b>Kiểm tra</b>Đạt 70% để mở khóa từ vào bộ ôn tập.</div>
       <div><i>5 phút</i><b>Viết chữ</b>Viết 3–5 chữ trên ô 田, nhìn mờ rồi tự viết.</div>
     </div>
-  </section>`;
+  </section>
+  <section class="card sect"><div class="row"><div><div class="eyebrow">Dữ liệu học tập</div><h3>Tổng kết của bạn</h3></div></div>
+    <div class="stats">
+      <div class="stat"><b>${Object.keys(S.done).length}</b><span>ngày đã hoàn thành / ${DAYS.length}</span></div>
+      <div class="stat"><b>${S.stats.rev}</b><span>lượt ôn thẻ</span></div>
+      <div class="stat"><b>${Object.keys(S.write||{}).length}</b><span>chữ đã tự viết đúng</span></div>
+      <div class="stat"><b>${Object.keys(S.speak||{}).length}</b><span>câu đã luyện nói</span></div></div>
+    <div class="muted" style="font-size:.84rem">${remote?"Tiến độ được lưu vào tài khoản của bạn, chỉ bạn xem được, mở trên máy khác vẫn còn.":"Tiến độ đang được lưu trên trình duyệt này."}</div>
+    <div id="resetBox" class="row"><button class="btn ghost" id="resetBtn">Đặt lại toàn bộ tiến độ</button></div></section>`;
+  $("#resetBtn").onclick=()=>{$("#resetBox").innerHTML=`<span><b>Xóa toàn bộ tiến độ, thẻ ôn và chuỗi ngày?</b> Không thể hoàn tác.</span><button class="btn" id="resetYes" style="color:var(--bad);border-color:var(--bad)">Xóa hết</button><button class="btn" id="resetNo">Giữ lại</button>`;
+    $("#resetNo").onclick=viewToday;$("#resetYes").onclick=()=>{S=blank();save();updateChrome();toast("Đã đặt lại tiến độ.");viewToday()}};
 }
 
 /* ===================== VIEW: LỘ TRÌNH ===================== */
