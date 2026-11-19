@@ -1432,7 +1432,10 @@ DAYS.forEach((d,i)=>{
 const ALL=DAYS.flatMap(d=>d.words);
 const BYH=Object.fromEntries(ALL.map(w=>[w.h,w]));
 /* từ bổ sung: chỉ để tra nghĩa trong mẫu câu, hội thoại, bài đọc (không vào thẻ ôn) */
-const EXTRA=`辣|là|cay|lạt
+const EXTRA=`国|guó|nước, quốc gia|quốc
+哪国|nǎ guó|nước nào|na quốc
+多长时间|duō cháng shíjiān|bao lâu|đa trường thời gian
+辣|là|cay|lạt
 点菜|diǎn cài|gọi món|điểm thái
 买单|mǎi dān|tính tiền|mãi đơn
 菜单|cài dān|thực đơn|thái đơn
@@ -2352,10 +2355,10 @@ function shQs(n,L){const ls=canSpeak();const L0=shuffle((L||SANDHI).slice()).sli
       opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}}).map((q,k)=>(q.key="sh:"+L0[k][0],q))}
 function qaQs(n,L){const ls=canSpeak();const L0=shuffle((L||QA).slice()).slice(0,n);return L0.map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
     return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}`,
-      explain:`<span class="han">${esc(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${esc(a)}</span> <span class="muted">${esc(av)}</span>`,
+      explain:`<span class="han">${segHTML(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${segHTML(a)}</span> <span class="muted">${esc(av)}</span>`,
       opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}}).map((q,k)=>(q.key="qa:"+L0[k][1],q))}
 function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||ERRS).slice()).slice(0,n);return L0.map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
-    explain:`<span class="han">${esc(ok)}</span><div style="font-size:.88rem">${esc(why)}</div>`,
+    explain:`<span class="han">${segHTML(ok)}</span><div style="font-size:.88rem">${esc(why)}</div>`,
     opts:shuffle([{html:`<span class="han">${esc(ok)}</span>`,ok:true},{html:`<span class="han">${esc(bad)}</span>`,ok:false}])})).map((q,k)=>(q.key="err:"+L0[k][0],q))}
 
 
