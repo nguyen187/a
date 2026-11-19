@@ -1215,6 +1215,18 @@ const READ={
 因为我每天都练习，所以我比以前说得更流利。|Yīnwèi wǒ měitiān dōu liànxí, suǒyǐ wǒ bǐ yǐqián shuō de gèng liúlì.|Vì ngày nào tôi cũng luyện tập nên tôi nói lưu loát hơn trước.
 如果明年有机会，我就去中国旅游。|Rúguǒ míngnián yǒu jīhuì, wǒ jiù qù Zhōngguó lǚyóu.|Nếu năm sau có cơ hội, tôi sẽ đi du lịch Trung Quốc.
 我已经把护照准备好了！|Wǒ yǐjīng bǎ hùzhào zhǔnbèi hǎo le!|Tôi đã chuẩn bị xong hộ chiếu rồi!`],
+31:["Câu chuyện của bố",`我爸爸是在河内出生的。|Wǒ bàba shì zài Hénèi chūshēng de.|Bố tôi sinh ra ở Hà Nội.
+他是二十二岁大学毕业的。|Tā shì èrshí'èr suì dàxué bìyè de.|Bố tốt nghiệp đại học năm 22 tuổi.
+年轻的时候，他在北京留学了两年。|Niánqīng de shíhou, tā zài Běijīng liúxué le liǎng nián.|Hồi trẻ, bố đã du học ở Bắc Kinh hai năm.
+他和我妈妈是在北京认识的。|Tā hé wǒ māma shì zài Běijīng rènshi de.|Bố và mẹ tôi quen nhau ở Bắc Kinh.
+他们是坐飞机回越南结婚的。|Tāmen shì zuò fēijī huí Yuènán jiéhūn de.|Họ đi máy bay về Việt Nam để kết hôn.
+我小时候，爸爸经常给我讲他留学的故事。|Wǒ xiǎo shíhou, bàba jīngcháng gěi wǒ jiǎng tā liúxué de gùshi.|Hồi nhỏ, bố thường kể cho tôi nghe chuyện du học của bố.`],
+32:["Đón bạn ở sân bay",`今天我的朋友从越南来北京。|Jīntiān wǒ de péngyou cóng Yuènán lái Běijīng.|Hôm nay bạn tôi từ Việt Nam đến Bắc Kinh.
+我去机场接他。|Wǒ qù jīchǎng jiē tā.|Tôi ra sân bay đón bạn.
+他一出来，我就跑过去帮他拿行李。|Tā yì chūlai, wǒ jiù pǎo guòqu bāng tā ná xíngli.|Bạn vừa đi ra, tôi liền chạy lại giúp bạn cầm hành lý.
+我们坐地铁回家。|Wǒmen zuò dìtiě huí jiā.|Chúng tôi đi tàu điện ngầm về nhà.
+我家在十二层，我们坐电梯上去。|Wǒ jiā zài shí'èr céng, wǒmen zuò diàntī shàngqu.|Nhà tôi ở tầng 12, chúng tôi đi thang máy lên.
+进了房间，他说：“你家真漂亮！”|Jìn le fángjiān, tā shuō: “Nǐ jiā zhēn piàoliang!”|Vào phòng, bạn nói: “Nhà cậu đẹp thật!”`],
 33:["Lớp học tiếng Trung",`我们的汉语老师说话很快。|Wǒmen de Hànyǔ lǎoshī shuōhuà hěn kuài.|Thầy dạy tiếng Trung của chúng tôi nói rất nhanh.
 刚开始的时候，我听不懂，也看不清楚黑板上的字。|Gāng kāishǐ de shíhou, wǒ tīng bu dǒng, yě kàn bu qīngchu hēibǎn shang de zì.|Lúc mới bắt đầu, tôi nghe không hiểu, cũng nhìn không rõ chữ trên bảng.
 我很着急，就去问老师有什么办法。|Wǒ hěn zháojí, jiù qù wèn lǎoshī yǒu shénme bànfǎ.|Tôi rất sốt ruột, liền đi hỏi thầy có cách nào không.
@@ -1314,7 +1326,10 @@ const EXTRA=`辣|là|cay|lạt
 说话|shuō huà|nói, nói chuyện|thuyết thoại
 话|huà|lời nói|thoại
 前边|qián bian|phía trước|tiền biên
-小王|Xiǎo Wáng|Tiểu Vương (tên người)|tiểu vương`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
+小王|Xiǎo Wáng|Tiểu Vương (tên người)|tiểu vương
+从|cóng|từ (nơi chốn, thời gian)|tùng
+过去|guò qu|qua đó (xa người nói)|quá khứ
+上去|shàng qu|đi lên (xa người nói)|thượng khứ`.split("\n").map(l=>{const [h,p,m,v]=l.split("|");return {h,p,m,v,day:0,extra:true}});
 EXTRA.forEach(w=>{if(!BYH[w.h])BYH[w.h]=w});
 const BOXL=["Mới","1 ngày","3 ngày","1 tuần","2 tuần","1 tháng","2 tháng"];
 /* họ chữ: âm Hán Việt của từng chữ và các từ cùng chữ */
@@ -1789,6 +1804,8 @@ const RQ={
 21:[["Họ đến Bắc Kinh bằng gì?","Máy bay","Tàu hỏa","Taxi"],["Thời tiết ở Bắc Kinh thế nào?","Lạnh, có tuyết rơi","Nóng, nắng to","Mưa to"],["Về nhà, Minh gặp chuyện gì?","Bị cảm, hơi khó chịu","Mất hộ chiếu","Bị lạc đường"]],
 28:[["Minh học tiếng Trung được bao lâu?","4 tuần","4 tháng","4 năm"],["Vì sao Minh nói lưu loát hơn trước?","Ngày nào cũng luyện tập","Có thầy dạy riêng","Đang sống ở Trung Quốc"],["Minh đã chuẩn bị xong cái gì?","Hộ chiếu","Vé máy bay","Hành lý"]],
 29:[["A đã học tiếng Trung bao lâu?","30 ngày","3 tháng","3 năm"],["A đã đến Trung Quốc chưa?","Chưa từng đến","Đã đến rồi","Đang ở đó"],["Hai người hẹn sẽ cùng làm gì?","Đi Trường Thành, ăn vịt quay","Đi Thượng Hải","Cùng học tiếng Anh"]],
+31:[["Bố của người viết sinh ra ở đâu?","Hà Nội","Bắc Kinh","Thượng Hải"],["Bố và mẹ quen nhau ở đâu?","Ở Bắc Kinh","Ở Hà Nội","Trên tàu hỏa"],["Hồi nhỏ, người viết thường được nghe gì?","Chuyện du học của bố","Nhạc Trung Quốc","Chuyện cổ tích"]],
+32:[["Người viết đi đâu để đón bạn?","Sân bay","Ga tàu hỏa","Trường học"],["Họ về nhà bằng gì?","Tàu điện ngầm","Taxi","Xe buýt"],["Nhà người viết ở tầng mấy?","Tầng 12","Tầng 2","Tầng 20"]],
 33:[["Lúc mới bắt đầu, người viết gặp khó khăn gì?","Nghe không hiểu, nhìn không rõ bảng","Không có sách để học","Không có bạn cùng lớp"],["Thầy giáo khuyên gì?","Nghe nhiều, luyện nhiều","Đổi sang lớp khác","Học thêm tiếng Anh"],["Bây giờ người viết ngồi ở đâu?","Phía trước","Phía sau","Cạnh cửa sổ"]],
 35:[["Vì sao người viết quyết định tập thể dục?","Vì ngày càng béo","Vì bác sĩ bắt buộc","Vì muốn thi chạy"],["Người viết đi chạy bộ lúc nào?","Ngay sau khi ngủ dậy","Buổi tối","Cuối tuần"],["Sau một thời gian tập, kết quả thế nào?","Khỏe hơn, gầy đi 5 cân","Bị ốm phải nghỉ","Tăng thêm 5 cân"]],
 37:[["Tiểu Vương thích gì?","Văn hóa Trung Quốc","Bóng đá","Âm nhạc phương Tây"],["Tiểu Vương luyện tập thế nào?","Ngày nào cũng luyện, cả cuối tuần","Chỉ học vào cuối tuần","Mỗi tuần một lần"],["Tiểu Vương thậm chí biết làm gì?","Kể chuyện bằng tiếng Trung","Lái máy bay","Nấu vịt quay"]],
