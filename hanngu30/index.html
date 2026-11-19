@@ -228,6 +228,9 @@ td b{font-size:1.05rem}
 .lkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:21;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 32px rgba(0,0,0,.2);border-radius:12px;padding:12px 14px;display:flex;gap:12px;align-items:center;width:min(440px,calc(100% - 32px))}
 #lk:not([hidden]) + .toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .dlist{display:grid;gap:6px}
+.note{display:grid;gap:4px}
+.note textarea{font:inherit;font-size:.95rem;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);resize:vertical;min-height:52px}
+.noteline{font-size:.82rem;color:var(--seal);line-height:1.4}
 .fam{font-size:.84rem;color:var(--muted);line-height:1.6}
 .fam .seg{color:var(--ink);font-family:var(--f-han);font-size:1rem;padding:0 2px}
 details.card summary{cursor:pointer;list-style-position:outside}
@@ -1616,7 +1619,7 @@ function viewDay(n){
   if(dayTab==="vocab"){
     if(d.words.length){
       body.innerHTML=`<div class="row"><button class="btn" id="playAll">${SPK} Nghe lần lượt cả bài</button><span class="muted" style="font-size:.86rem">Bấm vào thẻ để nghe từng từ. Âm Hán Việt giúp bạn đoán nghĩa nhanh hơn.</span></div>
-      <div class="words">${d.words.map(w=>`<button class="word" data-say="${esc(w.h)}"><span class="spk">${SPK}</span><span class="h">${w.h}</span><span class="py">${pyHTML(w.p)}</span><span class="m">${esc(w.m)}</span>${w.v?`<span class="hv">${esc(w.v)}</span>`:""}</button>`).join("")}</div>
+      <div class="words">${d.words.map(w=>`<button class="word" data-say="${esc(w.h)}"><span class="spk">${SPK}</span><span class="h">${w.h}</span><span class="py">${pyHTML(w.p)}</span><span class="m">${esc(w.m)}</span>${noteHTML(w.h)}${w.v?`<span class="hv">${esc(w.v)}</span>`:""}</button>`).join("")}</div>
       ${readingHTML(d)}<div class="row"><button class="btn primary" data-go="gram">Tiếp: Ngữ pháp →</button></div>`;
       $("#playAll").onclick=async()=>{for(const w of d.words){const ok=await speakWait(w.h);if(!ok)break}};wireReading(d);
     }else if(d.review){
@@ -1760,6 +1763,9 @@ function viewReview(){
   }
   showCard(rb);
 }
+function noteOf(h){return (S.notes&&S.notes[h])||""}
+let noteT;function setNote(h,v){S.notes=S.notes||{};v=v.trim();if(v)S.notes[h]=v;else delete S.notes[h];clearTimeout(noteT);noteT=setTimeout(save,600)}
+function noteHTML(h){const n=noteOf(h);return n?`<div class="noteline">✎ ${esc(n)}</div>`:""}
 function weakList(){return Object.entries(S.miss||{}).filter(([h,c])=>BYH[h]&&c>0).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([h,c])=>({w:BYH[h],c}))}
 function weakHTML(){const ws=weakList();if(!ws.length)return"";
   return `<div class="card sect" id="weak"><div class="row"><div><div class="eyebrow">Từ hay sai</div><h3>${ws.length} từ bạn trả lời sai nhiều nhất</h3></div><span class="spacer"></span><button class="btn primary" id="weakGo">Luyện riêng các từ này</button></div>
@@ -1781,8 +1787,10 @@ function showCard(rb){
     <div class="fc" id="fc" tabindex="0" role="button" aria-label="Lật thẻ">${front}</div>
     <div id="gradeSlot"><button class="btn primary" id="flip" style="width:100%">Lật thẻ (Space)</button></div></div>`;
   const flip=()=>{if(flipped)return;flipped=true;$("#fc").innerHTML=back+`<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>`;speak(w.h);
-    $("#gradeSlot").innerHTML=`<div class="grade">${["Quên","Khó","Nhớ","Dễ"].map((l,k)=>`<button class="g${k}" data-g="${k}">${l}<small>${nxt(k)}</small></button>`).join("")}</div>`;
-    rb.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>grade(+b.dataset.g))};
+    $("#gradeSlot").innerHTML=`<div class="grade">${["Quên","Khó","Nhớ","Dễ"].map((l,k)=>`<button class="g${k}" data-g="${k}">${l}<small>${nxt(k)}</small></button>`).join("")}</div>
+      <label class="note"><span class="eyebrow">Mẹo nhớ của bạn</span><textarea id="noteIn" rows="2" maxlength="300" placeholder="Ví dụ: 好 = 女 + 子, có vợ có con là tốt">${esc(noteOf(w.h))}</textarea></label>`;
+    rb.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>grade(+b.dataset.g));
+    $("#noteIn").oninput=e=>setNote(w.h,e.target.value)};
   const grade=k=>{
     const t=today();S.stats.rev++;
     if(k===0){S.miss=S.miss||{};S.miss[h]=(S.miss[h]||0)+1;S.srs[h]={b:0,d:t};revQueue.push(revQueue.shift())}
@@ -1792,7 +1800,7 @@ function showCard(rb){
     if(revQueue.length)showCard(rb);else viewReview();
   };
   $("#fc").onclick=e=>{if(e.target.closest("[data-say]"))return;flip()};$("#flip").onclick=flip;if(audioMode)setTimeout(()=>speak(w.h),150);
-  document.onkeydown=e=>{if(!$("#fc"))return;if(!flipped&&(e.key===" "||e.key==="Enter")){e.preventDefault();flip()}else if(flipped&&/^[1-4]$/.test(e.key))grade(+e.key-1)};
+  document.onkeydown=e=>{if(!$("#fc"))return;if(e.target&&e.target.closest&&e.target.closest("input,textarea"))return;if(!flipped&&(e.key===" "||e.key==="Enter")){e.preventDefault();flip()}else if(flipped&&/^[1-4]$/.test(e.key))grade(+e.key-1)};
 }
 
 /* ===================== VIEW: PHÁT ÂM ===================== */
@@ -2119,7 +2127,7 @@ function viewDict(){
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
     const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
     $("#dcount").textContent=res.length+" từ";
-    $("#dlist").innerHTML=res.map(w=>{const c=S.srs[w.h];return `<div class="drow"><span class="han dh">${w.h}</span><div style="min-width:0"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div></div><div class="dmeta"><span class="hvs">${esc(w.v||"")}</span><a href="#day-${w.day}">Ngày ${w.day}</a>${c?`<span class="chip">Ôn: ${BOXL[Math.min(6,c.b)]}</span>`:""}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div>`}).join("")||`<div class="card muted">Không tìm thấy từ nào. Thử gõ không dấu hoặc bỏ bớt bộ lọc.</div>`};
+    $("#dlist").innerHTML=res.map(w=>{const c=S.srs[w.h];return `<div class="drow"><span class="han dh">${w.h}</span><div style="min-width:0"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div>${noteHTML(w.h)}</div><div class="dmeta"><span class="hvs">${esc(w.v||"")}</span><a href="#day-${w.day}">Ngày ${w.day}</a>${c?`<span class="chip">Ôn: ${BOXL[Math.min(6,c.b)]}</span>`:""}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div>`}).join("")||`<div class="card muted">Không tìm thấy từ nào. Thử gõ không dấu hoặc bỏ bớt bộ lọc.</div>`};
   $("#dq").oninput=e=>{dictQ=e.target.value;draw()};
   $("#dw").onchange=e=>{dictWk=e.target.value;draw()};
   $("#donly").onchange=e=>{dictOnly=e.target.checked;draw()};
@@ -2127,7 +2135,7 @@ function viewDict(){
 }
 document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.closest("[data-lk]");
   if(sp){const w=BYH[sp.dataset.lk];if(!w)return;
-    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${famHTML(w)}${w.extra?`<span class="muted" style="font-size:.8rem">Từ bổ sung, ngoài 40 ngày học</span>`:`<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a>`}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
+    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${noteHTML(w.h)}${famHTML(w)}${w.extra?`<span class="muted" style="font-size:.8rem">Từ bổ sung, ngoài 40 ngày học</span>`:`<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a>`}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
     bar.hidden=false;speak(w.h);return}
   if(!e.target.closest("#lk")||e.target.closest("#lkx")||e.target.closest("#lk a"))bar.hidden=true;
 });
