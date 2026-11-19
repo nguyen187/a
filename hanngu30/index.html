@@ -1815,6 +1815,14 @@ function goalHTML(){const g=S.goal||20,pts=S.log[today()]||0,pct=Math.min(100,Ma
     <div class="qbar" style="height:10px"><i style="width:${pct}%;background:${done?"var(--good)":"var(--jade)"}"></i></div>
     <div class="muted" style="font-size:.82rem">Mỗi thẻ ôn, câu luyện, chữ viết hay lượt nghe được 1 điểm; hoàn thành bài kiểm tra của ngày được 5 điểm.</div></section>`}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(!b)return;S.goal=+b.dataset.goal;save();const box=$("#goalBox");if(box)box.outerHTML=goalHTML()});
+function stageDays(n){const cd=currentDay();return DAYS.filter(d=>d.week===n&&d.words.length&&(S.done[d.n]||d.n<cd))}
+function stageOK(n){return n!==5&&stageDays(n).length>0}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-stq]");if(!b)return;const n=+b.dataset.stq,box=$("#stq-"+n),ds=stageDays(n);if(!ds.length)return;
+  const words=ds.flatMap(d=>d.words),exs=ds.flatMap(d=>d.exs.concat(d.rds));
+  box.scrollIntoView({behavior:"smooth",block:"start"});
+  runQuiz(box,buildQuiz(words,words.length>=4?words:ALL,15,exs),(sc,tot)=>{const pct=Math.round(sc/tot*100);S.stageBest=S.stageBest||{};const rec=pct>(S.stageBest[n]||0);if(rec)S.stageBest[n]=pct;touchStreak(3);save();updateChrome();
+    box.innerHTML=`<div class="card result"><div class="eyebrow">Ôn chặng ${n}</div><div class="score num">${pct}%</div><div>${sc}/${tot} câu đúng. ${rec?"Điểm cao nhất mới!":""} ${pct>=80?"Chặng này bạn đã nắm chắc.":"Xem lại các ngày trong chặng rồi thử lại nhé."}</div><div class="row"><button class="btn" data-stq="${n}">Làm lại</button><button class="btn ghost" id="stqClose">Đóng</button></div></div>`;
+    $("#stqClose").onclick=viewPlan})});
 function heat(){const t=today();let out="";for(let i=34;i>=0;i--){const d=t-i,c=S.log[d]||0,lv=!c?0:c>=20?4:c>=10?3:c>=4?2:1;
   out+=`<i class="h${lv}${i===0?" today":""}" title="${new Date(d*DAYMS).toLocaleDateString("vi-VN",{timeZone:"UTC"})}: ${c} hoạt động"></i>`}return out}
 function viewToday(){
@@ -1885,7 +1893,8 @@ function viewPlan(){
   app.innerHTML=`<section class="sect"><div><div class="eyebrow">Lộ trình</div><h2>30 ngày, 5 chặng, thêm 10 ngày mở rộng</h2>
     <p class="muted" style="margin:6px 0 0;max-width:62ch">Bạn có thể mở bất kỳ ngày nào, nhưng học theo thứ tự sẽ dễ nhất vì bài sau dùng lại từ của bài trước.</p></div></section>
   ${WEEKS.map(wk=>{const ds=DAYS.filter(d=>d.week===wk.n);const dn=ds.filter(d=>S.done[d.n]).length;
-    return `<section class="week"><div class="week-head"><h3>Chặng ${wk.n} · ${wk.name}</h3><span class="muted">${wk.sub}</span><span class="spacer"></span>${dn===ds.length?`<span class="chip seal-c">成 Hoàn thành</span>`:`<span class="chip num">${dn}/${ds.length}</span>`}</div>
+    return `<section class="week"><div class="week-head"><h3>Chặng ${wk.n} · ${wk.name}</h3><span class="muted">${wk.sub}</span><span class="spacer"></span>${dn===ds.length?`<span class="chip seal-c">成 Hoàn thành</span>`:`<span class="chip num">${dn}/${ds.length}</span>`}${stageOK(wk.n)?`<button class="btn" data-stq="${wk.n}" style="padding:5px 12px;font-size:.84rem">Ôn chặng${S.stageBest&&S.stageBest[wk.n]!=null?` · ${S.stageBest[wk.n]}%`:""}</button>`:""}</div>
+    <div id="stq-${wk.n}"></div>
     <div class="days">${ds.map(d=>`<a class="dcard ${S.done[d.n]?"done":d.n===cd?"cur":""}" href="#day-${d.n}"><span class="n">${d.n}</span><b>${esc(d.t)}</b>
       <small>${d.words.length?d.words.length+" từ"+(stepCount(d.n)?" · "+stepCount(d.n)+"/5 bước":""):d.final?"Kiểm tra":"Tổng ôn"}${S.best[d.n]!=null?" · cao nhất "+S.best[d.n]+"%":""}</small></a>`).join("")}</div></section>`}).join("")}`;
 }
