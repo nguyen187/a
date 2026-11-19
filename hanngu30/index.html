@@ -1809,6 +1809,7 @@ function viewTones(){
   </section>
   <section class="sect"><div><div class="eyebrow">Luyện tai</div><h2>Nghe và đoán thanh</h2></div><div id="tqBody"></div></section>
   ${tonePairsHTML()}
+  ${numDrillHTML()}
   <section class="sect"><div><div class="eyebrow">Thanh mẫu</div><h2>21 phụ âm đầu, so với tiếng Việt</h2></div>
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${I.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div>
     <p class="muted" style="margin:0;max-width:64ch">Cặp dễ nhầm nhất với người Việt: <b>zh/ch/sh</b> (uốn lưỡi) với <b>z/c/s</b> (đầu lưỡi phẳng), và <b>j/q/x</b>. Cách luyện: đặt tay trước miệng, âm bật hơi (p, t, k, q, ch, c) phải thấy luồng hơi mạnh.</p></section>
@@ -1816,7 +1817,7 @@ function viewTones(){
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${F.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div></section>`;
   refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
-  toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));
+  toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));numDrill($("#ndBody"));
 }
 /* cặp thanh trong từ hai âm tiết */
 const TNAME={1:"1",2:"2",3:"3",4:"4",5:"nhẹ"};
@@ -1847,6 +1848,48 @@ function tonePairQuiz(el){
       el.querySelectorAll("[data-i]").forEach(x=>{x.disabled=true;if(key(sh[+x.dataset.i])===key(pat))x.classList.add("ok");else if(x===b)x.classList.add("no")});
       $("#tpfb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Đúng":"Sai"}</b><span class="detail"><span class="han" style="font-size:1.2rem">${w.h}</span> · <span class="py">${pyHTML(w.p)}</span> · ${esc(w.m)}</span><span class="spacer"></span><button class="say" data-say="${w.h}" aria-label="Nghe">${SPK}</button><button class="btn primary" id="tpN">Tiếp</button></div>`;
       if(!ok)speak(w.h);$("#tpN").onclick=()=>{round++;next()}});
+  };
+  next();
+}
+/* luyện số, giá tiền, giờ, ngày tháng */
+function cnNum(n){if(n===0)return "零";const d=String(n).split("").map(Number),L=d.length;let out="",zero=false;
+  for(let i=0;i<L;i++){const v=d[i],pos=L-1-i;if(v===0){zero=true;continue}if(zero&&out)out+="零";zero=false;
+    let dig=ZD[v];if(v===2&&pos>=2)dig="两";if(v===1&&pos===1&&i===0)dig="";out+=dig+["","十","百","千","万"][pos]}
+  return out}
+const NPY={"零":"líng","一":"yī","二":"èr","两":"liǎng","三":"sān","四":"sì","五":"wǔ","六":"liù","七":"qī","八":"bā","九":"jiǔ","十":"shí","百":"bǎi","千":"qiān","块":"kuài","点":"diǎn","分":"fēn","半":"bàn","月":"yuè","号":"hào"};
+const ND_TYPES=[["num","Số"],["price","Giá tiền"],["time","Giờ"],["date","Ngày tháng"]];
+const rint=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function ndMake(type){
+  if(type==="num"){const r=Math.random();let n=r<.35?rint(1,99):r<.65?rint(100,999):rint(1000,9999);if(Math.random()<.3)n=Number(String(n).replace(/\d(?=\d)/,m=>m).split("").map((c,i,a)=>i>0&&i<a.length-1&&Math.random()<.5?"0":c).join(""));
+    return {zh:cnNum(n),ans:String(n),hint:"Gõ số, ví dụ 2026"}}
+  if(type==="price"){const y=rint(1,200),j=Math.random()<.4?rint(1,9):0;return {zh:(y===2?"两":cnNum(y))+"块"+(j?ZD[j]:""),ans:j?`${y}.${j}`:`${y}`,hint:"Gõ số tệ, ví dụ 35.5 (35 tệ 5 hào)"}}
+  if(type==="time"){const h=rint(1,12),m=[0,5,10,15,20,25,30,40,45,50,rint(1,59)][rint(0,10)];
+    return {zh:(h===2?"两":cnNum(h))+"点"+(m===0?"":m===30?"半":m<10?"零"+ZD[m]+"分":cnNum(m)+"分"),ans:`${h}:${String(m).padStart(2,"0")}`,hint:"Gõ giờ:phút, ví dụ 3:30"}}
+  const mo=rint(1,12),d=rint(1,30);return {zh:cnNum(mo)+"月"+cnNum(d)+"号",ans:`${d}/${mo}`,hint:"Gõ ngày/tháng kiểu Việt, ví dụ 19/11"}}
+function ndCheck(type,v,ans){v=v.trim().replace(/\s+/g,"");
+  if(type==="num")return v.replace(/[.,]/g,"")===ans;
+  if(type==="price"){const a=parseFloat(v.replace(",","."));return Math.abs(a-parseFloat(ans))<1e-9}
+  if(type==="time"){const m=v.match(/^(\d{1,2})[:h.,]?(\d{0,2})$/i);if(!m)return false;const [h,mm]=ans.split(":").map(Number);return +m[1]===h&&(+(m[2]||0))===mm}
+  const m=v.match(/^(\d{1,2})[\/\-.](\d{1,2})$/);if(!m)return false;const [d,mo]=ans.split("/").map(Number);return +m[1]===d&&+m[2]===mo}
+let ndType="num";
+function numDrillHTML(){return `<section class="sect"><div><div class="eyebrow">Con số</div><h2>Luyện nghe số, giá tiền, giờ và ngày</h2>
+  <p class="muted" style="margin:6px 0 0;max-width:64ch">Đi chợ, hỏi giờ, đặt lịch đều cần nghe số thật nhanh. Chú ý: 两 thay 二 trước 百, 千 và lượng từ; số 0 ở giữa đọc 零; ngày tháng tiếng Trung đọc tháng trước, ngày sau.</p></div>
+  <div class="subtabs" id="ndTabs">${ND_TYPES.map(([k,l])=>`<button data-nd="${k}" aria-pressed="${k===ndType}">${l}</button>`).join("")}</div><div id="ndBody"></div></section>`}
+function numDrill(el){
+  const tabs=$("#ndTabs");if(tabs)tabs.onclick=e=>{const b=e.target.closest("[data-nd]");if(!b)return;ndType=b.dataset.nd;tabs.querySelectorAll("[data-nd]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.nd===ndType));numDrill(el)};
+  const audio=canSpeak();let round=0,score=0;const N=10;let showZh=!audio;
+  const next=()=>{
+    if(round>=N){el.innerHTML=`<div class="card result"><div class="score num">${score}/${N}</div><div>${score>=8?"Tai nghe số của bạn rất tốt!":"Luyện thêm vài lượt nữa, số sẽ quen tai rất nhanh."}</div><button class="btn primary" id="ndA">Làm lại</button></div>`;$("#ndA").onclick=()=>numDrill(el);touchStreak();save();updateChrome();return}
+    const q=ndMake(ndType);let done=false;
+    el.innerHTML=`<div class="tq"><div class="row"><span class="eyebrow num">Lượt ${round+1}/${N} · Đúng ${score}</span><span class="spacer"></span>${audio?`<label class="row" style="gap:6px;font-size:.86rem"><input type="checkbox" id="ndShow" ${showZh?"checked":""}> Hiện chữ</label>`:""}</div>
+      <div class="prompt">${audio?`<button class="btn primary" data-say="${q.zh}">${SPK} Nghe</button>`:""}<div class="h" id="ndZh" style="font-size:2.2rem" ${showZh?"":"hidden"}>${q.zh}</div></div>
+      <form class="typein" id="ndF"><input id="ndIn" inputmode="decimal" autocomplete="off" placeholder="${esc(q.hint)}" aria-label="Đáp án"><button class="btn primary">Kiểm tra</button></form><div id="ndFb"></div></div>`;
+    if(audio){setTimeout(()=>speak(q.zh),150);$("#ndShow").onchange=e=>{showZh=e.target.checked;$("#ndZh").hidden=!showZh}}
+    const inp=$("#ndIn");inp.focus();
+    $("#ndF").onsubmit=e=>{e.preventDefault();if(done||!inp.value.trim())return;done=true;const ok=ndCheck(ndType,inp.value,q.ans);if(ok)score++;
+      inp.disabled=true;inp.classList.add(ok?"ok":"no");$("#ndZh").hidden=false;
+      $("#ndFb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Đúng":"Đáp án: "+q.ans}</b><span class="detail"><span class="han" style="font-size:1.2rem">${q.zh}</span> · <span class="muted">${[...q.zh].map(c=>NPY[c]||"").join(" ")}</span></span><span class="spacer"></span><button class="say" data-say="${q.zh}" aria-label="Nghe">${SPK}</button><button class="btn primary" id="ndN">Tiếp</button></div>`;
+      if(!ok)speak(q.zh);const nb=$("#ndN");nb.focus();nb.onclick=()=>{round++;next()}};
   };
   next();
 }
