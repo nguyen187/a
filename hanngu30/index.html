@@ -249,7 +249,7 @@ td b{font-size:1.05rem}
 .jump::-webkit-scrollbar{display:none}
 .jump button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:.84rem;font-weight:600;color:var(--jade)}
 .jump button:hover{border-color:var(--jade)}
-[id^="sec-"],#pairBox,#phBox,#mwBox,#rpBox,#lookBox{scroll-margin-top:120px}
+[id^="sec-"],#pairBox,#phBox,#mwBox,#rpBox,#lookBox,.card.sect{scroll-margin-top:120px}
 .note{display:grid;gap:4px}
 .note textarea{font:inherit;font-size:.95rem;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);resize:vertical;min-height:52px}
 .noteline{font-size:.82rem;color:var(--seal);line-height:1.4}
@@ -2078,7 +2078,7 @@ function viewReview(){
   const due=dueList();
   const boxes=[0,0,0,0,0,0,0];Object.entries(S.srs).forEach(([h,c])=>{if(BYH[h])boxes[Math.min(6,c.b)]++});
   const mx=Math.max(1,...boxes);
-  app.innerHTML=`<section class="sect"><div><div class="eyebrow">Ôn tập ngắt quãng</div><h2>${due.length?`${due.length} thẻ đến hạn hôm nay`:"Bạn đã ôn xong hôm nay"}</h2>
+  app.innerHTML=`<nav class="jump" id="rvJump" aria-label="Đi tới mục"></nav><section class="sect" id="sec-cards"><div><div class="eyebrow">Ôn tập ngắt quãng</div><h2>${due.length?`${due.length} thẻ đến hạn hôm nay`:"Bạn đã ôn xong hôm nay"}</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Nhìn mặt trước, tự nhớ nghĩa và cách đọc rồi mới lật thẻ. Chấm điểm thật lòng: thẻ “Quên” quay lại ngay trong phiên, thẻ “Nhớ” giãn dần tới 60 ngày.</p></div>
     <div class="row"><span class="eyebrow">Mặt trước</span>
       <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
@@ -2095,6 +2095,7 @@ function viewReview(){
     ${forecastHTML()}
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
+  $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
   if(!revQueue||!revQueue.length)revQueue=shuffle(due);
