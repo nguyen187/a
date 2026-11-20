@@ -2052,7 +2052,7 @@ function viewDay(n){
     }else if(d.review){
       body.innerHTML=`<div class="card gram">${d.gh}</div><h3>Hội thoại: Hẹn gặp ở Bắc Kinh</h3>
       <div class="row"><button class="btn" id="playDl">${SPK} Nghe cả đoạn</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="hidePy"> Ẩn pinyin</label></div>
-      <div class="dialog" id="dlg">${DIALOG.split("\n").map(l=>{const [who,zh,p,v]=l.split("|");return `<div class="dl"><span class="who ${who==="B"?"b":""}">${who}</span><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${p}</span><span class="v">${v}</span><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button></div>`}).join("")}</div>
+      <div class="dialog" id="dlg">${DIALOG.split("\n").map(l=>{const [who,zh,p,v]=l.split("|");return `<div class="dl"><span class="who ${who==="B"?"b":""}">${who}</span><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button></div>`}).join("")}</div>
       ${rcHTML(29)}
       <div class="row"><button class="btn primary" data-go="quiz">Làm bài tổng ôn →</button></div>`;
       $("#hidePy").onchange=e=>$("#dlg").querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
@@ -2062,7 +2062,7 @@ function viewDay(n){
     }
   }else if(dayTab==="gram"){
     body.innerHTML=`<div class="card gram"><div class="eyebrow">Ngữ pháp</div><h3>${esc(d.g)}</h3>${d.gh}</div>
-      <div class="row" style="align-items:baseline"><h3>Câu ví dụ</h3><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div class="ex">${d.exs.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>
+      <div class="row" style="align-items:baseline"><h3>Câu ví dụ</h3><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div class="ex">${d.exs.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>
       <div class="row"><button class="btn primary" data-go="speak">Tiếp: Luyện nói →</button></div>`;
   }else if(dayTab==="speak"){
     mountSpeak(body,d.words.length?d.exs.concat(d.rds):DIALOG.split("\n").map(l=>l.split("|").slice(1)),n);
@@ -2142,7 +2142,7 @@ function cultureHTML(n){const c=CULTURE[n];return c?`<details class="card" style
 function readingHTML(d){if(!d.rds.length)return"";
   return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc · Chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
   <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div>
-  <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${p}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
+  <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
   $("#rdVi").onchange=e=>b.querySelectorAll(".v").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
@@ -2321,7 +2321,7 @@ function trShow(){const box=$("#trWork");if(!box||!TR)return;
     if(t){if(isH){lm=lcsMarks(zhOnly(zh),zhOnly(t));auto=lm.score>=.999&&zhOnly(t).length===zhOnly(zh).length}else auto=pyBare(t)===pyBare(p)}
     let k=0;const mark=lm?[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span style="color:${lm.hit[k++]?"var(--good)":"var(--bad)"}">${esc(c)}</span>`:esc(c)).join(""):"";
     inp.disabled=true;$("#trShow").remove();$("#trHintB").remove();
-    $("#trAns").innerHTML=`<div class="ex" style="margin-top:12px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span></div></div>
+    $("#trAns").innerHTML=`<div class="ex" style="margin-top:12px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span></div></div>
      ${mark?`<div class="muted" style="font-size:.84rem;margin-top:6px">Khớp ${Math.round(lm.score*100)}%: <span class="zh">${mark}</span></div>`:""}
      ${auto===true?`<p style="margin:10px 0 0"><b>Chính xác!</b></p>`:""}
      ${auto!==true&&t&&aiNS&&!aiOff?`<div style="margin-top:8px"><button class="btn ghost" id="trAI">Câu của mình có đúng không? Nhờ gia sư chấm</button><div id="trAIo" aria-live="polite" style="white-space:pre-wrap;font-size:.92rem;line-height:1.55;margin-top:6px"></div></div>`:""}
@@ -2619,6 +2619,8 @@ function contourSVG(track,tones){const W=300,H=90,v=track.filter(q=>q!=null);if(
     ${exp.map(p=>`<polyline points="${p}" fill="none" stroke="var(--line)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
     ${[...Array(n-1)].map((_,i)=>`<line x1="${(i+1)/n*W}" x2="${(i+1)/n*W}" y1="0" y2="${H}" stroke="var(--line)" stroke-dasharray="3 3"/>`).join("")}
     <polyline points="${pts.join(" ")}" fill="none" stroke="var(--jade)" stroke-width="2.5" stroke-linejoin="round"/></svg>`}
+const SYLRE=/(?:zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?[aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]+(?:ng|n(?![aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ])|r(?![aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]))?/gi;
+function pyColor(p){const e=esc(p||"");if(e.includes("&"))return e;return e.replace(SYLRE,m=>`<span class="t${toneOf(m)}">${m}</span>`)}
 function pySyl(p){return (p||"").toLowerCase().normalize("NFC").replace(/[^a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜü' ]+/g," ").split(/[\s']+/).filter(Boolean).flatMap(w=>w.match(/(?:[bpmfdtnlgkhjqxrzcsyw]|zh|ch|sh)?[aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]+(?:ng|n(?![aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ])|r(?![aeiouüāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]))?/g)||[])}
 function expTones(zh,p){const hz=[...zhOnly(zh)],sy=pySyl(p);let t=sy.map(toneOf);const ne=hz.filter(c=>c==="儿").length;if(ne&&hz.length-t.length===ne){let k=0;t=hz.map(c=>c==="儿"?5:t[k++])}if(t.length!==hz.length)return hz.map(()=>5);
   for(let i=0;i<t.length-1;i++){if(t[i]===3&&t[i+1]===3)t[i]=2;if(hz[i]==="不"&&t[i+1]===4)t[i]=2}return t}
@@ -2674,7 +2676,7 @@ function dctShow(){const w=$("#dctW");if(!w||!DCT)return;
     else if(t){const sy=pySyl(p).map(pyBare),got=t.toLowerCase().split(/[^a-zü]+/).filter(Boolean).flatMap(w=>pySyl(w).length?pySyl(w).map(pyBare):[w]);const lm=lcsMarks(sy,got);pct=Math.round(lm.score*100);mark=sy.map((x,i)=>`<span style="color:${lm.hit[i]?"var(--good)":"var(--bad)"}">${esc(x)}</span>`).join(" ")}
     DCT.sum+=pct;inp.disabled=true;$("#dctChk").remove();
     $("#dctA").innerHTML=`<div class="heard" style="margin-top:10px"><div class="row"><b class="num" style="color:${pct>=85?"var(--good)":pct>=60?"var(--warn)":"var(--bad)"}">${pct}%</b>${mark?`<span class="zh">${mark}</span>`:""}</div>
-      <div class="ex" style="margin-top:6px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div></div>
+      <div class="ex" style="margin-top:6px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${esc(v)}</span></div></div>
       <div class="row" style="margin-top:8px"><span class="spacer"></span><button class="btn primary" id="dctNext">Tiếp</button></div></div>`;
     S.stats.ans++;if(pct>=85)S.stats.ok++;tySkill({type:"listen"},pct>=85);$("#dctNext").onclick=()=>{DCT.i++;dctShow()};$("#dctNext").focus()};
   inp.focus({preventScroll:true})}
@@ -2692,7 +2694,7 @@ function svShow(){const box=$("#svWork");if(!box||!SVR)return;
   const si=$("#svIn");si.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();const f=$("#svFlip");if(f)f.click()}};
   $("#svFlip").onclick=()=>{say(zh);const t=si.value.trim();si.disabled=true;let mk="";if(t){const isH=/\p{Script=Han}/u.test(t);const lm=isH?lcsMarks(zhOnly(zh),zhOnly(t)):lcsMarks(pySyl(p).map(pyBare),t.toLowerCase().split(/[^a-zü]+/).filter(Boolean).flatMap(w=>pySyl(w).length?pySyl(w).map(pyBare):[w]));const pc=Math.round(lm.score*100);
       let k=0;mk=`<div style="margin-top:8px"><b class="num" style="color:${pc>=85?"var(--good)":pc>=60?"var(--warn)":"var(--bad)"}">${pc}%</b> <span class="zh">${isH?[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span style="color:${lm.hit[k++]?"var(--good)":"var(--bad)"}">${esc(c)}</span>`:esc(c)).join(""):pySyl(p).map((x,i)=>`<span style="color:${lm.hit[i]?"var(--good)":"var(--bad)"}">${esc(x)}</span>`).join(" ")}</span></div>`}
-    $("#svBack").innerHTML=mk+`<div class="ex" style="margin-top:10px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${esc(p)}</span></div></div>
+    $("#svBack").innerHTML=mk+`<div class="ex" style="margin-top:10px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${pyColor(p)}</span></div></div>
     <div class="row" style="margin-top:10px"><button class="btn" data-svg="0">Quên</button><button class="btn" data-svg="1">Nhớ một phần</button><button class="btn primary" data-svg="2">Nhớ rõ</button></div>`;
     document.querySelectorAll("[data-svg]").forEach(b=>b.onclick=()=>{const g=+b.dataset.svg;S.bmS=S.bmS||{};const c=S.bmS[zh]||{b:0,d:0};c.b=g===0?0:g===1?Math.max(1,c.b):Math.min(6,c.b+1);c.d=today()+(g===0?1:IV[c.b]||1);S.bmS[zh]=c;if(g)SVR.ok++;S.stats.rev++;SVR.i++;save();svShow()})}}
 document.addEventListener("click",e=>{if(!e.target.closest("#svRev"))return;const q=svDue().slice(0,12);if(!q.length)return;SVR={q:shuffle(q.slice()),i:0,ok:0};svShow();$("#svWork").scrollIntoView({behavior:"smooth",block:"nearest"})});
@@ -2730,7 +2732,7 @@ function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
   ${L.length?`<div class="row">${svDue().length?`<button class="btn primary" id="svRev">Ôn ${svDue().length} câu đến hạn</button>`:""}<button class="btn ${svDue().length?"":"primary"}" id="svSpeak">Luyện nói</button>${L.length>=2?`<button class="btn" id="svOrder">Sắp xếp câu</button>`:""}</div>`:""}</div>
-  ${L.length?`<details><summary class="muted" style="cursor:pointer">Xem danh sách</summary><div class="ex" style="margin-top:10px">${L.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div></details>`:""}
+  ${L.length?`<details><summary class="muted" style="cursor:pointer">Xem danh sách</summary><div class="ex" style="margin-top:10px">${L.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div></details>`:""}
   <div id="svWork"></div></div>`}
 document.addEventListener("click",e=>{
   if(e.target.closest("#svSpeak")){mountSpeak($("#svWork"),savedList(),"saved");return}
@@ -3230,7 +3232,7 @@ function phrasesHTML(){return `<details class="card" id="phBox"><summary><b>Mẫ
   <div id="phList" class="ex" style="margin-top:12px"></div></details>`}
 function wirePhrases(){const box=$("#phBox");if(!box)return;
   const draw=()=>{const x=PHRASES[phraseIdx];
-    $("#phList").innerHTML=x.rows.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div>`).join("")+
+    $("#phList").innerHTML=x.rows.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${esc(v)}</span></div>`).join("")+
       `<div class="row"><button class="btn" id="phPlay">${SPK} Nghe cả nhóm</button><button class="btn primary" id="phSpeak">Luyện nói nhóm này</button></div><div id="phSp"></div>`;
     $("#phPlay").onclick=async()=>{for(const [zh] of x.rows){if(!await speakWait(zh))break}};
     $("#phSpeak").onclick=()=>{mountSpeak($("#phSp"),x.rows,"ph"+phraseIdx);$("#phSp").scrollIntoView({behavior:"smooth",block:"nearest"})};
