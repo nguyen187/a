@@ -2050,7 +2050,7 @@ function viewDay(n){
       ${n>1?`<a class="btn ghost" href="#day-${n-1}">Ngày ${n-1}</a>`:""}${n<DAYS.length?`<a class="btn ghost" href="#day-${n+1}">Ngày ${n+1}</a>`:""}</div>
     <div class="eyebrow">Ngày ${n} · Chặng ${d.week} · ${WEEKS[d.week-1].name}</div>
     <h2 style="font-size:1.7rem">${esc(d.t)}</h2>
-    ${S.done[n]?`<div class="banner"><span class="seal">成</span><div><b>Đã hoàn thành</b><div class="muted">Điểm cao nhất ${S.best[n]}%. ${n<DAYS.length?`<a href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}</div></div></div>`:""}
+    ${S.done[n]?`<div class="banner"><span class="seal">成</span><div><b>Đã hoàn thành</b><div class="muted">${S.best[n]!=null?`Điểm cao nhất ${S.best[n]}%. `:""}${n<DAYS.length?`<a href="#day-${n+1}">Sang Ngày ${n+1} →</a>`:""}</div></div></div>`:""}
     <div class="subtabs" role="toolbar">${tabs.map(([k,l])=>`<button aria-pressed="${dayTab===k}" data-tab="${k}">${l}${stepDone(n,k)?` <span style="color:var(--good)" aria-label="đã xong">✓</span>`:""}</button>`).join("")}</div>
   </section><section id="dayBody" class="sect"></section>`;
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{dayTab=b.dataset.tab;viewDay(n)});
