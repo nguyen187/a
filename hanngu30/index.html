@@ -1970,7 +1970,7 @@ function viewToday(){
   </section>
   <div class="row" style="justify-content:center"><button class="btn ghost" id="liteT" style="font-size:.86rem">${S.lite?"Hiện đầy đủ: thử thách, kỹ năng, thống kê ▾":"Giao diện gọn (ẩn thống kê) ▴"}</button></div>
   <div class="${S.lite?"lite-hide":""}" style="display:grid;gap:inherit">
-  ${mixHTML()}
+  ${mixHTML()}${cyHTML()}
   ${skillHTML()}
   <section class="stats">
     <div class="stat"><b>${learned()}</b><span>từ đã học / ${ALL.length}</span></div>
@@ -2912,6 +2912,45 @@ function cpy(c){if(!CPY){CPY=Object.assign({},CPY_EX);ALL.forEach(w=>{const h=[.
 function homNorm(got,tgt,p){const T=[...tgt],sy=pySyl(p||""),tp=T.length===sy.length?sy:T.map(cpy),sw=[];
   const out=[...got].map(g=>{if(T.includes(g))return g;const gp=cpy(g);if(!gp)return g;const k=T.findIndex((t,i)=>tp[i]&&tp[i].normalize("NFC")===gp.normalize("NFC"));if(k<0)return g;sw.push([g,T[k]]);return T[k]});
   return {got:out.join(""),sw}}
+
+/* thành ngữ: tận dụng âm Hán Việt người Việt đã quen */
+const CHENGYU=`一路平安|yí lù píng'ān|nhất lộ bình an|Thượng lộ bình an (chúc người đi xa)
+万事如意|wàn shì rú yì|vạn sự như ý|Mọi việc như ý (lời chúc Tết)
+马马虎虎|mǎmǎhūhū|mã mã hổ hổ|Tàm tạm, qua loa
+一心一意|yì xīn yí yì|nhất tâm nhất ý|Một lòng một dạ
+三心二意|sān xīn èr yì|tam tâm nhị ý|Không chuyên tâm, đứng núi này trông núi nọ
+一举两得|yì jǔ liǎng dé|nhất cử lưỡng đắc|Một công đôi việc
+半信半疑|bàn xìn bàn yí|bán tín bán nghi|Nửa tin nửa ngờ
+百闻不如一见|bǎi wén bù rú yí jiàn|bách văn bất như nhất kiến|Trăm nghe không bằng một thấy
+入乡随俗|rù xiāng suí sú|nhập hương tùy tục|Nhập gia tùy tục
+熟能生巧|shú néng shēng qiǎo|thục năng sinh xảo|Làm nhiều thành quen tay, trăm hay không bằng tay quen
+好事多磨|hǎo shì duō mó|hảo sự đa ma|Việc tốt thường lắm gian nan
+同心协力|tóng xīn xié lì|đồng tâm hiệp lực|Đồng lòng chung sức
+守株待兔|shǒu zhū dài tù|thủ chu đãi thố|Ôm cây đợi thỏ
+画蛇添足|huà shé tiān zú|họa xà thiêm túc|Vẽ rắn thêm chân, làm thừa hỏng việc
+对牛弹琴|duì niú tán qín|đối ngưu đàn cầm|Đàn gảy tai trâu
+半途而废|bàn tú ér fèi|bán đồ nhi phế|Bỏ dở nửa chừng
+自相矛盾|zì xiāng máo dùn|tự tương mâu thuẫn|Tự mâu thuẫn với chính mình
+一石二鸟|yì shí èr niǎo|nhất thạch nhị điểu|Một mũi tên trúng hai đích
+井底之蛙|jǐng dǐ zhī wā|tỉnh để chi oa|Ếch ngồi đáy giếng
+塞翁失马|sài wēng shī mǎ|tái ông thất mã|Tái ông mất ngựa, họa phúc khó lường
+有志者事竟成|yǒu zhì zhě shì jìng chéng|hữu chí giả sự cánh thành|Có chí thì nên
+一见钟情|yí jiàn zhōng qíng|nhất kiến chung tình|Yêu từ cái nhìn đầu tiên
+七上八下|qī shàng bā xià|thất thượng bát hạ|Lòng dạ thấp thỏm, bồn chồn
+乱七八糟|luàn qī bā zāo|loạn thất bát tao|Lộn xộn, bừa bãi
+口是心非|kǒu shì xīn fēi|khẩu thị tâm phi|Miệng nói một đằng, lòng nghĩ một nẻo
+一模一样|yì mú yí yàng|nhất mô nhất dạng|Giống hệt nhau
+人山人海|rén shān rén hǎi|nhân sơn nhân hải|Biển người, đông nghịt
+九牛一毛|jiǔ niú yì máo|cửu ngưu nhất mao|Nhỏ nhoi như muối bỏ bể
+亡羊补牢|wáng yáng bǔ láo|vong dương bổ lao|Mất bò mới lo làm chuồng (vẫn còn kịp sửa)
+千方百计|qiān fāng bǎi jì|thiên phương bách kế|Trăm phương nghìn kế`.split("\n").map(l=>l.split("|"));
+let cyOff=0;
+function cyHTML(){const n=CHENGYU.length,i=((today()+cyOff)%n+n)%n,[zh,p,hv,m]=CHENGYU[i];
+  return `<section class="card sect" id="cyBox"><div class="row"><div class="eyebrow">Thành ngữ ${cyOff?"":"hôm nay"}</div><span class="spacer"></span><button class="btn ghost" id="cyNext" style="padding:4px 10px;font-size:.82rem">Thành ngữ khác →</button></div>
+  <div class="row" style="gap:10px;align-items:center;margin-top:6px;flex-wrap:nowrap"><button class="say" data-say="${zh}" aria-label="Nghe">${SPK}</button><div style="min-width:0;flex:1"><div class="han" style="font-size:1.7rem;line-height:1.3">${segHTML(zh)}</div><div class="py">${pyColor(p)}</div></div>${bmBtn(zh,p,m)}</div>
+  <div class="hvs" style="font-size:.8rem;margin-top:4px">Hán Việt: ${esc(hv)}</div><div style="margin-top:2px">${esc(m)}</div>
+  <div class="muted" style="font-size:.8rem;margin-top:6px">Đọc âm Hán Việt trước, bạn sẽ thấy nhiều thành ngữ đã quen từ tiếng Việt. Bấm ☆ để lưu và ôn trong mục Câu đã lưu.</div></section>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#cyNext"))return;cyOff++;const b=$("#cyBox");if(b){b.outerHTML=cyHTML();const z=CHENGYU[((today()+cyOff)%CHENGYU.length+CHENGYU.length)%CHENGYU.length][0];speak(z)}});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
