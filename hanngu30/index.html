@@ -2766,6 +2766,13 @@ document.addEventListener("click",async e=>{const b=e.target.closest("#chatSum")
       ${fx.length?`<div class="eyebrow" style="margin-top:10px">Câu nên sửa</div><div class="ex">${fx.map(([a,c,p,v,why])=>`<div class="exl"><button class="say" data-say="${esc(c)}" aria-label="Nghe">${SPK}</button><span class="zh"><s class="muted" style="font-size:.85em">${esc(a)}</s> → ${segHTML(c)}${bmBtn(c,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${esc(v)}${why?` · <i>${esc(why)}</i>`:""}</span></div>`).join("")}</div><div class="muted" style="font-size:.84rem">Bấm ☆ để lưu câu đúng vào “Câu đã lưu” và ôn theo lịch.</div>`:`<p class="muted">Không có câu nào cần sửa, rất tốt!</p>`}
       ${Array.isArray(r.tips)&&r.tips.length?`<div class="eyebrow" style="margin-top:10px">Mẹo</div><ul style="margin:4px 0 0;padding-left:20px">${r.tips.slice(0,3).map(t=>`<li>${esc(String(t))}</li>`).join("")}</ul>`:""}</div>`;touchStreak(2);save();updateChrome()}
   catch(err){const c=err&&err.code;o.innerHTML=`<div class="heard muted">${c==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa nhận xét được, thử lại nhé."}</div>`;b.disabled=false}});
+
+let EXIDX=null;
+function exampleFor(h){if(!EXIDX){EXIDX=[];DAYS.forEach(d=>(d.exs||[]).concat(d.rds||[]).forEach(x=>{if(x&&x[0])EXIDX.push([x[0],x[1],x[2],d.n])}))}
+  const w=BYH[h],c=EXIDX.filter(x=>x[0].includes(h)&&[...hanOnly(x[0])].length<=16);if(!c.length)return null;
+  return c.sort((a,b)=>(a[3]===(w&&w.day)?0:1)-(b[3]===(w&&w.day)?0:1)||a[0].length-b[0].length)[0]}
+function exHTML(w){const x=exampleFor(w.h);if(!x)return"";const [zh,p,v]=x;
+  return `<div style="margin-top:6px;text-align:left;max-width:100%;border-top:1px dashed var(--line);padding-top:8px"><div class="han" style="font-size:1.1rem">${esc(zh).split(esc(w.h)).join(`<b style="color:var(--jade)">${esc(w.h)}</b>`)} <button class="say" data-say="${esc(zh)}" aria-label="Nghe câu" style="vertical-align:middle">${SPK}</button></div><div style="font-size:.85rem">${pyColor(p)}</div><div class="muted" style="font-size:.85rem">${esc(v)}</div></div>`}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2872,7 +2879,7 @@ function showCard(rb){
   const audioMode=revMode==="a2m"&&canSpeak();
   if(revMode==="a2m"&&!canSpeak()&&!showCard.warned){showCard.warned=true;toast("Thiết bị chưa có giọng đọc tiếng Trung, nên thẻ hiện chữ Hán thay cho âm thanh.")}
   const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết chữ Hán ra giấy rồi lật thẻ</div>`;
-  const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div style="display:grid;gap:2px;justify-items:center">${famHTML(w)}</div><div class="muted" style="font-size:.8rem">Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}</div>`;
+  const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div style="display:grid;gap:2px;justify-items:center">${famHTML(w)}</div>${exHTML(w)}<div class="muted" style="font-size:.8rem">Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}</div>`;
   const c=S.srs[h];
   const nxt=k=>{const b=k===0?0:k===1?c.b:Math.min(6,c.b+(k===2?1:2));const days=k===0?0:k===1?1:IV[b];return days===0?"ngay bây giờ":days+" ngày"};
   rb.innerHTML=`<div class="flash"><div class="row"><span class="eyebrow num">Còn ${revQueue.length} thẻ</span></div>
