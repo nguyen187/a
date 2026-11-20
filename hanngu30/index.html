@@ -2164,7 +2164,7 @@ function wireDict(d){dictNS=d;
   d.onState(e=>{if(spCtx&&spCtx.onState)spCtx.onState(e.state,e.reason)});
   if(location.hash.startsWith("#day-")&&dayTab==="speak"&&!QZ||location.hash==="#tones"&&!($("#spHubW")&&$("#spHubW").innerHTML))route();
 }
-if(window.claude&&window.claude.use){window.claude.use("dictation").then(d=>{d=d||webDict();if(d)wireDict(d)}).catch(()=>{const d=webDict();if(d)wireDict(d)})}else{const d=webDict();if(d)setTimeout(()=>wireDict(d),0)}
+if(window.claude&&window.claude.use){window.claude.use("dictation").then(d=>{DICT_RAW=d?"có":"không có (trang hoặc thiết bị không hỗ trợ)";d=d||webDict();if(d)wireDict(d)}).catch(()=>{const d=webDict();if(d)wireDict(d)})}else{const d=webDict();if(d)setTimeout(()=>wireDict(d),0)}
 const ZD="零一二三四五六七八九";
 function num2zh(n){n=+n;if(n>=1000)return String(n).split("").map(x=>ZD[x]).join("");if(n<10)return ZD[n];
   if(n<100){const t=Math.floor(n/10),u=n%10;return (t>1?ZD[t]:"")+"十"+(u?ZD[u]:"")}
@@ -2562,7 +2562,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.i
 function speakPool(){const ds=gramDays();const L=(ds.length?ds:DAYS.slice(0,2)).flatMap(d=>(d.exs||[]).concat(d.rds||[])).filter(x=>x&&x[0]&&!x[0].includes("—"));return L}
 function speakHubHTML(){const n=speakPool().length,done=Object.keys(S.speak||{}).length;return `<section class="card sect" id="sec-speak"><div class="row"><div style="min-width:0;flex:1 1 220px"><div class="eyebrow">Luyện nói</div><h2 style="margin:2px 0">Đọc to câu đã học</h2>
   <div class="muted" style="font-size:.88rem">${dictNS&&!dictZhOff?"Bấm <b>Nói</b> và đọc cả câu, máy chấm phần trăm và tô đỏ chữ đọc chưa chuẩn.":"Nghe mẫu rồi nói to theo (shadowing), lặp lại 3 lần, rồi tự chấm."} ${n} câu từ các ngày bạn đã học${done?` · đã luyện <b class="num">${done}</b> lượt`:""}. Mỗi ngày học cũng có tab <b>Luyện nói</b> riêng.</div></div>
-  <button class="btn primary" id="spHub">Luyện 10 câu</button></div><div id="spHubW"></div></section>`}
+  <div class="row"><button class="btn primary" id="spHub">Luyện 10 câu</button><button class="btn ghost" id="micDiag">Kiểm tra micro</button></div></div><div id="micDiagO"></div><div id="spHubW"></div></section>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#spHub"))return;const w=$("#spHubW");if(!w)return;mountSpeak(w,shuffle(speakPool().slice()).slice(0,10),"hub");w.scrollIntoView({behavior:"smooth",block:"nearest"})});
 
 let REC=null;
@@ -2629,6 +2629,18 @@ function trecShow(){const w=$("#trecW");if(!w||!TREC)return;const x=TREC.q[TREC.
     o.insertAdjacentHTML("afterbegin",`<div class="heard"><div class="row" style="gap:8px">${tones.map((t,i)=>`<span class="chip" style="color:${got[i]===t?"var(--good)":"var(--bad)"}">${[...x.h][i]}: ${got[i]===t?"✓ thanh "+t:"nghe như thanh "+(got[i]||"?")}</span>`).join("")}</div>${contourSVG(tr,tones)}</div>`)}
     catch(e){o.insertAdjacentHTML("afterbegin",`<div class="heard muted">Không phân tích được bản ghi trên trình duyệt này.</div>`)}})}
 document.addEventListener("click",e=>{if(!e.target.closest("#trecGo"))return;const L=trecPool();if(!L.length)return;TREC={q:pick(L,8),i:0,ok:0,tot:0};trecShow()});
+
+let DICT_RAW="chưa rõ";
+async function micDiag(){const o=$("#micDiagO");if(!o)return;o.innerHTML=`<div class="heard muted">Đang kiểm tra…</div>`;const L=[];
+  const ua=navigator.userAgent,dev=/iPhone|iPad/.test(ua)?"iPhone/iPad":/Android/.test(ua)?"Android":/Mac/.test(ua)?"Mac":/Windows/.test(ua)?"Windows":"khác",br=/Edg\//.test(ua)?"Edge":/CriOS|Chrome\//.test(ua)?"Chrome":/Safari\//.test(ua)?"Safari":/Firefox/.test(ua)?"Firefox":"khác",app=/Claude/i.test(ua)?" (app Claude)":"";
+  L.push(["Thiết bị",`${dev} · ${br}${app}`,null]);
+  L.push(["Nhận giọng của Claude",DICT_RAW,DICT_RAW==="có"]);
+  const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;L.push(["Nhận giọng của trình duyệt",SRC?"có":"không có",!!SRC]);
+  let mic="không hỗ trợ",mok=false;if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop());mic="được phép";mok=true}catch(e){mic=e&&e.name==="NotAllowedError"?"bị chặn (khung trang hoặc quyền micro)":e&&e.name==="NotFoundError"?"không tìm thấy micro":"lỗi: "+(e&&e.name||"?")}}
+  L.push(["Micro trong trang",mic,mok]);
+  const tip=DICT_RAW==="có"?"Nút Nói dùng nhận giọng của Claude, có chấm điểm.":mok&&SRC?"Nút Nói dùng nhận giọng của trình duyệt; Ghi âm và Chấm thanh điệu dùng được.":mok?"Dùng được Ghi âm và Chấm thanh điệu (đo cao độ); chưa có nhận ra chữ.":"Thiết bị này đang chặn micro trong trang. Cách chắc chắn nhất: mở link bằng Chrome hoặc Edge trên máy tính (hoặc app Claude trên máy tính), cho phép micro khi được hỏi.";
+  o.innerHTML=`<div class="heard"><div style="display:grid;gap:4px">${L.map(([k,v,ok])=>`<div style="font-size:.88rem">${ok===null?"•":ok?"✅":"❌"} <b>${k}:</b> ${esc(v)}</div>`).join("")}</div><div style="margin-top:8px;font-size:.88rem">${tip}</div></div>`}
+document.addEventListener("click",e=>{if(e.target.closest("#micDiag"))micDiag()});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
