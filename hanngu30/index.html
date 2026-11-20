@@ -2076,6 +2076,7 @@ function viewDay(n){
   }else if(dayTab==="gram"){
     body.innerHTML=`<div class="card gram"><div class="eyebrow">Ngữ pháp</div><h3>${esc(d.g)}</h3>${d.gh}</div>
       <div class="row" style="align-items:baseline"><h3>Câu ví dụ</h3><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div class="ex">${d.exs.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>
+      ${aiNS&&!aiOff?`<div class="row"><button class="btn" id="gramMore" data-n="${n}">✨ Thêm 3 ví dụ mới (AI)</button></div><div id="gramMoreO"></div>`:""}
       <div class="row"><button class="btn primary" data-go="speak">Tiếp: Luyện nói →</button></div>`;
   }else if(dayTab==="speak"){
     mountSpeak(body,d.words.length?d.exs.concat(d.rds):DIALOG.split("\n").map(l=>l.split("|").slice(1)),n);
@@ -2822,6 +2823,14 @@ document.addEventListener("click",e=>{const b=e.target.closest("#blindRd");if(!b
   box.classList.add("blind");b.textContent="👁 Hiện chữ";const pr=$("#playRd");if(pr&&!pr._g)pr.click();toast("Nghe cả bài, thử hiểu ý chính (và làm câu hỏi đọc hiểu nếu có) rồi mới bấm “Hiện chữ”.")});
 
 document.addEventListener("click",e=>{if(!e.target.closest("#liteT"))return;S.lite=!S.lite;save();const y=window.scrollY;viewToday();window.scrollTo(0,y)});
+
+document.addEventListener("click",async e=>{const b=e.target.closest("#gramMore");if(!b||!aiNS)return;const d=DAYS[+b.dataset.n-1];if(!d)return;const o=$("#gramMoreO");b.disabled=true;o.innerHTML=`<p class="muted">AI đang đặt câu…</p>`;
+  const known=Object.keys(S.srs).filter(h=>BYH[h]).concat(d.words.map(w=>w.h)).slice(-120).join("、");
+  try{const r=await aiNS.json(`Điểm ngữ pháp tiếng Trung: "${d.g}". Đặt 3 câu ví dụ MỚI, ngắn (dưới 14 chữ Hán), tự nhiên, khác các câu sau: ${d.exs.map(x=>x[0]).join(" ")}. Chỉ dùng từ trong danh sách (cùng số đếm, đại từ, trợ từ): ${known}. Mỗi câu kèm 1 ghi chú tiếng Việt rất ngắn chỉ ra cấu trúc ngữ pháp trong câu. Trả về JSON {"ex":[["câu chữ Hán","pinyin có dấu","nghĩa tiếng Việt","ghi chú"]]}`,{cache:false});
+    const cl=x=>String(x||"").replace(/[<>&"]/g,"");const L=(Array.isArray(r.ex)?r.ex:[]).filter(x=>Array.isArray(x)&&x[0]).slice(0,3).map(x=>x.map(cl));
+    o.innerHTML=L.length?`<div class="ex">${L.map(([zh,p,v,note])=>`<div class="exl"><button class="say" data-say="${zh}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}${note?` <i class="muted">· ${note}</i>`:""}</span></div>`).join("")}</div><div class="muted" style="font-size:.8rem">Câu do AI tạo. Bấm ☆ để lưu câu muốn ôn.</div>`:`<p class="muted">Chưa tạo được câu, thử lại nhé.</p>`;b.textContent="✨ 3 ví dụ khác";touchStreak(1);save()}
+  catch(err){o.innerHTML=`<p class="muted">${err&&err.code==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau.":"Chưa tạo được câu, thử lại nhé."}</p>`}
+  b.disabled=false});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
