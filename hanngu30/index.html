@@ -2896,6 +2896,14 @@ function toneCheck(typed,p){const sy=pySyl(p);if(!sy.length)return null;const ex
   else if(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/.test(t)){const g=pySyl(t).map(toneOf);if(g.length===exp.length)got=g}
   if(!got)return null;const ok=got.every((x,i)=>x===exp[i]);
   const show=a=>a.map((x,i)=>`<span class="t${x}">${mark(base[i],x)}</span>`).join(" ");return {ok,you:show(got),right:show(exp)}}
+
+/* chấm phát âm qua chữ mà micro bàn phím nhận ra */
+function hzPy(t){if(BYH[t])return BYH[t].p;const o=[];for(const c of t){const w=BYH[c];if(!w)return "";o.push(w.p)}return o.join(" ")}
+function spkVerdict(txt,w){const got=hanOnly(txt);if(!got)return txt.trim()?`<span class="muted">Hãy đọc bằng micro trên bàn phím tiếng Trung để máy chuyển thành chữ Hán.</span>`:"";
+  if(got===hanOnly(w.h)){S.spk=(S.spk||0)+1;return `<span style="color:var(--good)">✓ Máy nghe đúng: <b class="han">${esc(got)}</b>. Phát âm rõ ràng!</span>`}
+  const gp=hzPy(got);if(gp&&pyBare(gp)===pyBare(w.p)){const tc=toneCheck(gp,w.p);return tc&&!tc.ok?`<span style="color:var(--seal)">≈ Máy nghe thành <b class="han">${esc(got)}</b> (${tc.you}): đúng âm, có thể sai thanh. Đúng là ${tc.right}.</span>`:`<span style="color:var(--good)">✓ Máy nghe thành từ đồng âm <b class="han">${esc(got)}</b>: phát âm đúng.</span>`}
+  if(!gp)return `<span class="muted">Máy nghe thành <b class="han">${esc(got)}</b>, có chữ ngoài từ điển của khóa nên chưa chấm được. Bấm 🔊 so với mẫu.</span>`;
+  return `<span style="color:var(--bad)">✗ Máy nghe thành <b class="han">${esc(got)}</b>${gp?` (${pyColor(gp)})`:""}. Bấm 🔊 nghe mẫu rồi đọc lại.</span>`}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -3001,7 +3009,7 @@ function showCard(rb){
   const h=revQueue[0],w=BYH[h];let flipped=false;
   const audioMode=revMode==="a2m"&&canSpeak();
   if(revMode==="a2m"&&!canSpeak()&&!showCard.warned){showCard.warned=true;toast("Thiết bị chưa có giọng đọc tiếng Trung, nên thẻ hiện chữ Hán thay cho âm thanh.")}
-  const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết ra giấy, hoặc gõ chữ Hán / pinyin vào ô (tuỳ chọn, thêm số thanh như ni3hao3 để kiểm tra cả thanh điệu), rồi lật thẻ</div><input class="typein" id="fcIn" lang="zh-CN" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ câu trả lời…" style="width:100%;max-width:280px;box-sizing:border-box;margin-top:6px" onclick="event.stopPropagation()">`;
+  const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>${revMode==="h2m"?`<input class="typein" id="fcSpk" lang="zh-CN" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="🎤 Đọc to bằng micro bàn phím (tuỳ chọn)" style="width:100%;max-width:300px;box-sizing:border-box;margin-top:6px;font-size:.9rem" onclick="event.stopPropagation()"><div id="fcSpkR" aria-live="polite" style="font-size:.86rem;min-height:1em"></div>`:""}`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết ra giấy, hoặc gõ chữ Hán / pinyin vào ô (tuỳ chọn, thêm số thanh như ni3hao3 để kiểm tra cả thanh điệu), rồi lật thẻ</div><input class="typein" id="fcIn" lang="zh-CN" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ câu trả lời…" style="width:100%;max-width:280px;box-sizing:border-box;margin-top:6px" onclick="event.stopPropagation()">`;
   const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div style="display:grid;gap:2px;justify-items:center">${famHTML(w)}</div>${exHTML(w)}<div class="muted" style="font-size:.8rem">${w.day?`Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}`:"Từ bạn tự thêm"}</div>`;
   const c=S.srs[h];
   const nxt=k=>{const b=k===0?0:k===1?c.b:Math.min(6,c.b+(k===2?1:2));const days=k===0?0:k===1?1:IV[b];return days===0?"ngay bây giờ":days+" ngày"};
@@ -3032,6 +3040,7 @@ function showCard(rb){
   };
   $("#fc").onclick=e=>{if(e.target.closest("[data-say]"))return;flip()};$("#flip").onclick=flip;if(audioMode)setTimeout(()=>speak(w.h),150);
   document.onkeydown=e=>{if(!$("#fc"))return;if(e.target&&e.target.closest&&e.target.closest("input,textarea"))return;if(!flipped&&(e.key===" "||e.key==="Enter")){e.preventDefault();flip()}else if(flipped&&/^[1-4]$/.test(e.key))grade(+e.key-1)};const fi0=$("#fcIn");if(fi0)fi0.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();flip()}};
+  const fs0=$("#fcSpk");if(fs0){let tm;const run=()=>{const r=$("#fcSpkR");if(r)r.innerHTML=spkVerdict(fs0.value,w)};fs0.oninput=()=>{clearTimeout(tm);tm=setTimeout(run,700)};fs0.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();clearTimeout(tm);run()}}}
 }
 
 /* ===================== VIEW: PHÁT ÂM ===================== */
