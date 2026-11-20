@@ -2887,6 +2887,15 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-exp]
   const txt=rows.map(r=>r.map(x=>String(x).replace(/[\t\n]/g," ")).join("\t")).join("\n"),o=$("#expOut");o.hidden=false;o.value=txt;
   let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(_){try{o.focus();o.select();ok=document.execCommand("copy")}catch(_){}}
   toast(ok?`Đã chép ${rows.length} dòng. Dán vào Anki hoặc Quizlet.`:`Chưa chép tự động được: chọn hết ô bên dưới rồi sao chép (${rows.length} dòng).`);if(!ok){o.focus();o.select()}});
+
+/* kiểm tra thanh điệu khi gõ pinyin: số (ni3hao3) hoặc dấu (nǐhǎo); null nếu người học không gõ thanh */
+function toneCheck(typed,p){const sy=pySyl(p);if(!sy.length)return null;const exp=sy.map(toneOf),base=sy.map(baseOf);let got=null;
+  const t=typed.toLowerCase().replace(/v|u:/g,"ü");
+  if(/[0-5]/.test(t)){const d=(t.match(/[0-5]/g)||[]).map(x=>+x||5);
+    if(d.length===exp.length)got=d;else{const nn=exp.filter(x=>x!==5);if(d.length===nn.length){let k=0;got=exp.map(x=>x===5?5:d[k++])}}}
+  else if(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/.test(t)){const g=pySyl(t).map(toneOf);if(g.length===exp.length)got=g}
+  if(!got)return null;const ok=got.every((x,i)=>x===exp[i]);
+  const show=a=>a.map((x,i)=>`<span class="t${x}">${mark(base[i],x)}</span>`).join(" ");return {ok,you:show(got),right:show(exp)}}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2992,7 +3001,7 @@ function showCard(rb){
   const h=revQueue[0],w=BYH[h];let flipped=false;
   const audioMode=revMode==="a2m"&&canSpeak();
   if(revMode==="a2m"&&!canSpeak()&&!showCard.warned){showCard.warned=true;toast("Thiết bị chưa có giọng đọc tiếng Trung, nên thẻ hiện chữ Hán thay cho âm thanh.")}
-  const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết ra giấy, hoặc gõ chữ Hán / pinyin không dấu vào ô (tuỳ chọn), rồi lật thẻ</div><input class="typein" id="fcIn" lang="zh-CN" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ câu trả lời…" style="width:100%;max-width:280px;box-sizing:border-box;margin-top:6px" onclick="event.stopPropagation()">`;
+  const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết ra giấy, hoặc gõ chữ Hán / pinyin vào ô (tuỳ chọn, thêm số thanh như ni3hao3 để kiểm tra cả thanh điệu), rồi lật thẻ</div><input class="typein" id="fcIn" lang="zh-CN" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ câu trả lời…" style="width:100%;max-width:280px;box-sizing:border-box;margin-top:6px" onclick="event.stopPropagation()">`;
   const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div style="display:grid;gap:2px;justify-items:center">${famHTML(w)}</div>${exHTML(w)}<div class="muted" style="font-size:.8rem">${w.day?`Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}`:"Từ bạn tự thêm"}</div>`;
   const c=S.srs[h];
   const nxt=k=>{const b=k===0?0:k===1?c.b:Math.min(6,c.b+(k===2?1:2));const days=k===0?0:k===1?1:IV[b];return days===0?"ngay bây giờ":days+" ngày"};
@@ -3000,7 +3009,9 @@ function showCard(rb){
     <div class="fc" id="fc" tabindex="0" role="button" aria-label="Lật thẻ">${front}</div>
     <div id="gradeSlot"><button class="btn primary" id="flip" style="width:100%">Lật thẻ (Space)</button></div></div>`;
   const flip=()=>{if(flipped)return;flipped=true;const fi=$("#fcIn"),typed=fi?fi.value.trim():"";let verdict="";
-    if(typed){const ok=/\p{Script=Han}/u.test(typed)?hanOnly(typed)===hanOnly(w.h):pyBare(typed)===pyBare(w.p);verdict=`<div class="fb ${ok?"ok":"no"}" style="margin-bottom:8px"><b>${ok?"Bạn gõ đúng!":"Bạn gõ: "+esc(typed)}</b></div>`;fcTyped=ok}else fcTyped=null;
+    if(typed){const han=/\p{Script=Han}/u.test(typed);let ok=han?hanOnly(typed)===hanOnly(w.h):pyBare(typed.replace(/[0-9]/g,"").replace(/v|u:/gi,"u"))===pyBare(w.p),tc=null;
+      if(ok&&!han)tc=toneCheck(typed,w.p);if(tc&&!tc.ok)ok=false;
+      verdict=`<div class="fb ${ok?"ok":"no"}" style="margin-bottom:8px"><b>${tc&&!tc.ok?"Đúng âm, sai thanh":ok?(tc?"Đúng cả âm và thanh!":"Bạn gõ đúng!"):"Bạn gõ: "+esc(typed)}</b>${tc&&!tc.ok?`<span class="detail">Bạn gõ <b>${tc.you}</b>, đúng là <b>${tc.right}</b></span>`:ok&&!han&&!tc?`<span class="detail muted" style="font-size:.82rem">Mẹo: thêm số thanh (ni3hao3) để kiểm tra cả thanh điệu.</span>`:""}</div>`;fcTyped=ok}else fcTyped=null;
     $("#fc").innerHTML=verdict+back+`<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>`;speak(w.h);if($("#exAIslot"))exAI(w);
     $("#gradeSlot").innerHTML=`<div class="grade">${["Quên","Khó","Nhớ","Dễ"].map((l,k)=>`<button class="g${k}" data-g="${k}">${l}<small>${nxt(k)}</small></button>`).join("")}</div>
       <label class="note"><span class="row" style="justify-content:space-between"><span class="eyebrow">Mẹo nhớ của bạn</span>${aiNS&&!aiOff?`<button type="button" class="btn ghost" id="noteAI" style="padding:4px 10px;font-size:.84rem">✨ Nhờ AI gợi ý</button>`:""}</span><textarea id="noteIn" rows="2" maxlength="300" placeholder="Ví dụ: 好 = 女 + 子, có vợ có con là tốt">${esc(noteOf(w.h))}</textarea></label>`;
