@@ -1995,7 +1995,10 @@ function viewToday(){
       <div class="stat"><b>${Object.keys(S.done).length}</b><span>ngày đã hoàn thành / ${DAYS.length}</span></div>
       <div class="stat"><b>${S.stats.rev}</b><span>lượt ôn thẻ</span></div>
       <div class="stat"><b>${Object.keys(S.write||{}).length}</b><span>chữ đã tự viết đúng</span></div>
-      <div class="stat"><b>${Object.keys(S.speak||{}).length}</b><span>câu đã luyện nói</span></div></div>
+      <div class="stat"><b>${Object.keys(S.speak||{}).length}</b><span>câu đã luyện nói</span></div>
+      <div class="stat"><b>${(Array.isArray(S.bm)?S.bm:[]).length}</b><span>câu đã lưu</span></div>
+      <div class="stat"><b>${Object.values(S.rdSpeed||{}).length?Math.max(...Object.values(S.rdSpeed)):"–"}</b><span>chữ/phút đọc nhanh nhất</span></div>
+      <div class="stat"><b>${S.mock?Math.max(...Object.values(S.mock)):"–"}</b><span>điểm thi thử HSK cao nhất /200</span></div></div>
     <div class="muted" style="font-size:.84rem">${remote?"Tiến độ được lưu vào tài khoản của bạn, chỉ bạn xem được, mở trên máy khác vẫn còn.":"Tiến độ đang được lưu trên trình duyệt này."}</div>
     <details id="bkBox"><summary class="muted" style="cursor:pointer;font-size:.9rem">Sao lưu hoặc chuyển tiến độ sang máy khác</summary>
       <div style="display:grid;gap:8px;margin-top:10px"><div class="muted" style="font-size:.84rem">Bấm “Tạo mã” rồi sao chép, gửi cho chính bạn (Zalo, email…). Trên máy kia, dán mã vào ô bên dưới và bấm “Khôi phục”.</div>
