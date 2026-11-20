@@ -2466,7 +2466,7 @@ function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||errPool()).slice())
 
 function errPool(){return currentDay()>=20||Object.keys(S.done).length>=18?ERRS:ERRS.slice(0,20)}
 function qaPool(){const lv=Math.max(3,Math.ceil(currentDay()/3)+1);const L=QA.filter(x=>x[0]<=lv);return L.length>=8?L:QA}
-function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs],pair:[pairItems(),0,pairQs]},out=[];
+function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs],pair:[pairItems(),0,pairQs],cy:[CHENGYU,0,cyQs]},out=[];
   Object.keys(m).forEach(k=>{const i=k.indexOf(":"),t=k.slice(0,i),id=k.slice(i+1),d=by[t];if(!d)return;const it=d[0].find(x=>x[d[1]]===id);if(it)out.push(...d[2](1,[it]))});return shuffle(out).slice(0,10)}
 function mixQs(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);let qs=[...errQs(2),...trapQs(2),...shQs(1),...qaQs(2),...pairQs(1)];
   if(ws.length>=6){const t=["mean","hanzi"].concat(canSpeak()?["tf","listen"]:[]);const pref=[...new Set([...weakList().map(x=>x.w),...dueList().map(h=>BYH[h]).filter(Boolean)])];const two=pick(pref,2);if(two.length<2)two.push(...pick(ws.filter(w=>!two.includes(w)),2-two.length));two.forEach(w=>qs.push(makeQ(w,ALL,hvUseful(w)?t.concat("hv"):t)))}
@@ -2949,7 +2949,14 @@ function cyHTML(){const n=CHENGYU.length,i=((today()+cyOff)%n+n)%n,[zh,p,hv,m]=C
   return `<section class="card sect" id="cyBox"><div class="row"><div class="eyebrow">Thành ngữ ${cyOff?"":"hôm nay"}</div><span class="spacer"></span><button class="btn ghost" id="cyNext" style="padding:4px 10px;font-size:.82rem">Thành ngữ khác →</button></div>
   <div class="row" style="gap:10px;align-items:center;margin-top:6px;flex-wrap:nowrap"><button class="say" data-say="${zh}" aria-label="Nghe">${SPK}</button><div style="min-width:0;flex:1"><div class="han" style="font-size:1.7rem;line-height:1.3">${segHTML(zh)}</div><div class="py">${pyColor(p)}</div></div>${bmBtn(zh,p,m)}</div>
   <div class="hvs" style="font-size:.8rem;margin-top:4px">Hán Việt: ${esc(hv)}</div><div style="margin-top:2px">${esc(m)}</div>
-  <div class="muted" style="font-size:.8rem;margin-top:6px">Đọc âm Hán Việt trước, bạn sẽ thấy nhiều thành ngữ đã quen từ tiếng Việt. Bấm ☆ để lưu và ôn trong mục Câu đã lưu.</div></section>`}
+  <div class="muted" style="font-size:.8rem;margin-top:6px">Đọc âm Hán Việt trước, bạn sẽ thấy nhiều thành ngữ đã quen từ tiếng Việt. Bấm ☆ để lưu và ôn trong mục Câu đã lưu.</div>
+  <div class="row" style="margin-top:8px"><button class="btn" id="cyQuiz">Đố 5 thành ngữ</button>${S.cyBest!=null?`<span class="muted num" style="font-size:.82rem">Cao nhất ${S.cyBest}/5</span>`:""}</div><div id="cyWork"></div></section>`}
+function cyQs(n,L){return shuffle((L||CHENGYU).slice()).slice(0,n).map(([zh,p,hv,m])=>{const ds=pick(CHENGYU.filter(r=>r[0]!==zh),3).map(r=>r[3]);
+  return {type:"cy",key:"cy:"+zh,say:zh,autoSay:zh,prompt:`<span class="eyebrow">Thành ngữ này nghĩa là gì?</span><div class="han" style="font-size:1.8rem">${zh}</div><div class="hvs" style="font-size:.8rem">${esc(hv)}</div>`,
+    explain:`<span class="han">${zh}</span> <span class="py">${pyColor(p)}</span><div style="font-size:.9rem">${esc(m)}</div>`,
+    opts:shuffle([{html:esc(m),ok:true},...ds.map(d=>({html:esc(d),ok:false}))])}})}
+document.addEventListener("click",e=>{if(!e.target.closest("#cyQuiz"))return;const box=$("#cyWork");if(!box)return;
+  runQuiz(box,cyQs(5),(sc,tot)=>{S.cyBest=Math.max(S.cyBest||0,sc);touchStreak(2);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc===tot?"Tuyệt! Âm Hán Việt đúng là lợi thế của bạn.":"Đọc lại âm Hán Việt của câu sai, nghĩa thường hiện ra ngay."}</p><button class="btn" id="cyQuiz">Đố tiếp</button></div>`})});
 document.addEventListener("click",e=>{if(!e.target.closest("#cyNext"))return;cyOff++;const b=$("#cyBox");if(b){b.outerHTML=cyHTML();const z=CHENGYU[((today()+cyOff)%CHENGYU.length+CHENGYU.length)%CHENGYU.length][0];speak(z)}});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
