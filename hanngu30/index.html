@@ -2928,7 +2928,7 @@ function viewTones(){
     <div class="tbl card" style="padding:0"><table><thead><tr><th>Pinyin</th><th>Đọc gần giống</th><th>Ví dụ</th></tr></thead><tbody>${F.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td>${b}</td><td><button class="chip" data-say="${c.split(" ")[0]}"><span class="han">${c}</span></button></td></tr>`).join("")}</tbody></table></div></section>`;
   refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
-  toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));numDrill($("#ndBody"));minPairQuiz($("#mpBody"));
+  NOAUTO=true;toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));numDrill($("#ndBody"));minPairQuiz($("#mpBody"));setTimeout(()=>{NOAUTO=false},400);
 }
 /* cặp thanh trong từ hai âm tiết */
 const TNAME={1:"1",2:"2",3:"3",4:"4",5:"nhẹ"};
@@ -2954,7 +2954,7 @@ function tonePairQuiz(el){
     el.innerHTML=`<div class="tq"><div class="row"><span class="eyebrow num">Lượt ${round+1}/${N} · Đúng ${score}</span><span class="spacer"></span><span class="chip">${audio?"Nghe và chọn":"Nhớ thanh của từ"}</span></div>
       <div class="prompt">${audio?`<span class="eyebrow">Từ <span style="text-transform:none;font-size:1rem;color:var(--ink)">${base.join(" ")}</span> mang cặp thanh nào?</span><button class="btn primary" data-say="${w.h}">${SPK} Nghe</button>`:`<span class="eyebrow">Từ này mang cặp thanh nào?</span><div class="h">${w.h}</div><div class="muted">${esc(w.m)}</div>`}</div>
       <div class="opts" style="grid-template-columns:1fr 1fr">${sh.map((o,i)=>`<button class="opt" data-i="${i}" style="justify-content:center;font-size:1.25rem;font-weight:600">${o.map((t,j)=>`<span class="t${t}">${mark(base[j],t)}</span>`).join("")}<span class="muted" style="font-size:.78rem;font-weight:500;margin-left:8px">${o.map(t=>TNAME[t]).join(" + ")}</span></button>`).join("")}</div><div id="tpfb"></div></div>`;
-    if(audio)setTimeout(()=>speak(w.h),150);
+    if(audio)setTimeout(()=>{if(!NOAUTO)speak(w.h)},150);
     el.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{if(done)return;done=true;const ok=key(sh[+b.dataset.i])===key(pat);if(ok)score++;
       el.querySelectorAll("[data-i]").forEach(x=>{x.disabled=true;if(key(sh[+x.dataset.i])===key(pat))x.classList.add("ok");else if(x===b)x.classList.add("no")});
       $("#tpfb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Đúng":"Sai"}</b><span class="detail"><span class="han" style="font-size:1.2rem">${w.h}</span> · <span class="py">${pyHTML(w.p)}</span> · ${esc(w.m)}</span><span class="spacer"></span><button class="say" data-say="${w.h}" aria-label="Nghe">${SPK}</button><button class="btn primary" id="tpN">Tiếp</button></div>`;
@@ -3007,7 +3007,7 @@ function minPairQuiz(el){if(!el)return;
     el.innerHTML=`<div class="tq"><div class="row"><span class="eyebrow num">Lượt ${round+1}/${N} · Đúng ${score}</span><span class="spacer"></span><span class="chip">${row[0]}</span></div>
       <div class="prompt"><span class="eyebrow">Bạn nghe thấy âm nào?</span><button class="btn primary" data-say="${c}">${SPK} Nghe lại</button></div>
       <div class="opts" style="grid-template-columns:1fr 1fr">${pair.map(([cc,pp],i)=>`<button class="opt" data-mi="${i}" style="justify-content:center;font-size:1.3rem;font-weight:600"><span class="t${toneOf(pp)}">${pp}</span></button>`).join("")}</div><div id="mpfb"></div></div>`;
-    setTimeout(()=>speak(c),150);
+    setTimeout(()=>{if(!NOAUTO)speak(c)},150);
     el.querySelectorAll("[data-mi]").forEach(b=>b.onclick=()=>{if(done)return;done=true;const ok=+b.dataset.mi===k;if(ok)score++;
       el.querySelectorAll("[data-mi]").forEach(x=>{x.disabled=true;if(+x.dataset.mi===k)x.classList.add("ok");else if(x===b)x.classList.add("no")});
       $("#mpfb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><b>${ok?"Đúng":"Sai"}</b><span class="detail">${pair.map(([cc,pp])=>`<button class="chip" data-say="${cc}"><span class="han">${cc}</span> ${pp}</button>`).join(" ")} · ${esc(row[1])}</span><span class="spacer"></span><button class="btn primary" id="mpN">Tiếp</button></div>`;
@@ -3025,7 +3025,7 @@ function numDrill(el){
     el.innerHTML=`<div class="tq"><div class="row"><span class="eyebrow num">Lượt ${round+1}/${N} · Đúng ${score}</span><span class="spacer"></span>${audio?`<label class="row" style="gap:6px;font-size:.86rem"><input type="checkbox" id="ndShow" ${showZh?"checked":""}> Hiện chữ</label>`:""}</div>
       <div class="prompt">${audio?`<button class="btn primary" data-say="${q.zh}">${SPK} Nghe</button>`:""}<div class="h" id="ndZh" style="font-size:2.2rem" ${showZh?"":"hidden"}>${q.zh}</div></div>
       <form class="typein" id="ndF"><input id="ndIn" inputmode="decimal" autocomplete="off" placeholder="${esc(q.hint)}" aria-label="Đáp án"><button class="btn primary">Kiểm tra</button></form><div id="ndFb"></div></div>`;
-    if(audio){setTimeout(()=>speak(q.zh),150);$("#ndShow").onchange=e=>{showZh=e.target.checked;$("#ndZh").hidden=!showZh}}
+    if(audio){setTimeout(()=>{if(!NOAUTO)speak(q.zh)},150);$("#ndShow").onchange=e=>{showZh=e.target.checked;$("#ndZh").hidden=!showZh}}
     const inp=$("#ndIn");inp.focus();
     $("#ndF").onsubmit=e=>{e.preventDefault();if(done||!inp.value.trim())return;done=true;const ok=ndCheck(ndType,inp.value,q.ans);if(ok)score++;
       inp.disabled=true;inp.classList.add(ok?"ok":"no");$("#ndZh").hidden=false;
@@ -3034,6 +3034,7 @@ function numDrill(el){
   };
   next();
 }
+let NOAUTO=false;
 function toneQuiz(el){
   if(!canSpeak()){el.innerHTML=`<div class="card result"><b>Cần giọng đọc tiếng Trung</b><div class="muted">Trình duyệt này chưa có giọng 中文. Mở trang bằng Chrome hoặc Edge trên máy tính, hoặc cài giọng đọc tiếng Trung trong cài đặt của điện thoại rồi tải lại trang.</div><button class="btn" id="tqRetry">Thử lại</button></div>`;
     $("#tqRetry").onclick=()=>{loadVoices();toneQuiz(el)};return}
@@ -3045,7 +3046,7 @@ function toneQuiz(el){
     el.innerHTML=`<div class="tq"><div class="row"><span class="eyebrow num">Lượt ${round+1}/${N} · Đúng ${score}</span></div>
       <div class="prompt"><span class="eyebrow">Âm “${b}” này mang thanh mấy?</span><button class="btn primary" data-say="${ch}">${SPK} Nghe</button></div>
       <div class="opts">${[1,2,3,4].map(k=>`<button class="opt" data-t="${k}"><span class="t${k}">${mark(b,k)}</span></button>`).join("")}</div><div id="tqfb"></div></div>`;
-    setTimeout(()=>speak(ch),150);
+    setTimeout(()=>{if(!NOAUTO)speak(ch)},150);
     el.querySelectorAll("[data-t]").forEach(o=>o.onclick=()=>{if(done)return;done=true;const k=+o.dataset.t;if(k===t)score++;
       el.querySelectorAll("[data-t]").forEach(x=>{x.disabled=true;if(+x.dataset.t===t)x.classList.add("ok");else if(x===o)x.classList.add("no")});
       $("#tqfb").innerHTML=`<div class="fb ${k===t?"ok":"no"}"><b>${k===t?"Đúng":"Sai"}</b><span class="detail">${[...chars].map((c,i)=>`<button class="chip" data-say="${c}"><span class="han">${c}</span> <span class="t${i+1}">${mark(b,i+1)}</span></button>`).join(" ")}</span><span class="spacer"></span><button class="btn primary" id="tqN">Tiếp</button></div>`;
