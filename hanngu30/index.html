@@ -2909,7 +2909,8 @@ function toneCheck(typed,p){const sy=pySyl(p);if(!sy.length)return null;const ex
 
 /* chấm phát âm qua chữ mà micro bàn phím nhận ra */
 function hzPy(t){if(BYH[t])return BYH[t].p;const o=[];for(const c of t){const w=BYH[c];if(!w)return "";o.push(w.p)}return o.join(" ")}
-function spkVerdict(txt,w){const got=hanOnly(txt);if(!got)return txt.trim()?`<span class="muted">Hãy đọc bằng micro trên bàn phím tiếng Trung để máy chuyển thành chữ Hán.</span>`:"";
+function spcMark(tgt,got){if(!got)return;const g=homNorm(got,tgt,"").got;S.spc=S.spc||{};[...tgt].forEach(c=>{if(!g.includes(c))S.spc[c]=Math.min(9,(S.spc[c]||0)+1);else if(S.spc[c]&&--S.spc[c]<=0)delete S.spc[c]});save()}
+function spkVerdict(txt,w){const got=hanOnly(txt);spcMark(hanOnly(w.h),got);if(!got)return txt.trim()?`<span class="muted">Hãy đọc bằng micro trên bàn phím tiếng Trung để máy chuyển thành chữ Hán.</span>`:"";
   if(got!==hanOnly(w.h)&&homNorm(got,hanOnly(w.h),w.p).got===hanOnly(w.h))return `<span style="color:var(--good)">✓ Máy nghe thành từ đồng âm <b class="han">${esc(got)}</b>: phát âm đúng.</span>`;
   if(got===hanOnly(w.h)){S.spk=(S.spk||0)+1;return `<span style="color:var(--good)">✓ Máy nghe đúng: <b class="han">${esc(got)}</b>. Phát âm rõ ràng!</span>`}
   const gp=hzPy(got);if(gp&&pyBare(gp)===pyBare(w.p)){const tc=toneCheck(gp,w.p);return tc&&!tc.ok?`<span style="color:var(--seal)">≈ Máy nghe thành <b class="han">${esc(got)}</b> (${tc.you}): đúng âm, có thể sai thanh. Đúng là ${tc.right}.</span>`:`<span style="color:var(--good)">✓ Máy nghe thành từ đồng âm <b class="han">${esc(got)}</b>: phát âm đúng.</span>`}
