@@ -2148,7 +2148,9 @@ function wireReading(d){const b=$("#rdBox");if(!b)return;
 /* ===================== LUYỆN NÓI ===================== */
 let dictNS=null,dictZhOff=false,spCtx=null;
 const MIC=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`;
-function webDict(){const C=window.SpeechRecognition||window.webkitSpeechRecognition;if(!C)return null;let H={},rec=null,act=false;
+function micPolicy(){try{const fp=document.permissionsPolicy||document.featurePolicy;if(fp&&fp.allowsFeature)return fp.allowsFeature("microphone")}catch(e){}return null}
+if(micPolicy()===false)window.__recOff=true;
+function webDict(){const C=window.SpeechRecognition||window.webkitSpeechRecognition;if(!C||micPolicy()===false)return null;let H={},rec=null,act=false;
   return {web:true,onPartial:f=>{H.p=f},onFinal:f=>{H.f=f},onState:f=>{H.s=f},active:()=>act,
     start:()=>new Promise((res,rej)=>{rec=new C();rec.lang="zh-CN";rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;let err=null;
       rec.onstart=()=>{act=true;if(H.s)H.s({state:"listening"});res()};
@@ -2647,9 +2649,10 @@ async function micDiag(){const o=$("#micDiagO");if(!o)return;o.innerHTML=`<div c
   L.push(["Thiết bị",`${dev} · ${br}${app}`,null]);
   L.push(["Nhận giọng của Claude",DICT_RAW,DICT_RAW==="có"]);
   const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;L.push(["Nhận giọng của trình duyệt",SRC?"có":"không có",!!SRC]);
+  const pol=micPolicy();L.push(["Khung trang cho dùng micro",pol===null?"không rõ":pol?"có":"không",pol===null?null:pol]);
   let mic="không hỗ trợ",mok=false;if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop());mic="được phép";mok=true}catch(e){mic=e&&e.name==="NotAllowedError"?"bị chặn (khung trang hoặc quyền micro)":e&&e.name==="NotFoundError"?"không tìm thấy micro":"lỗi: "+(e&&e.name||"?")}}
   L.push(["Micro trong trang",mic,mok]);
-  const tip=DICT_RAW==="có"?"Nút Nói dùng nhận giọng của Claude, có chấm điểm.":mok&&SRC?"Nút Nói dùng nhận giọng của trình duyệt; Ghi âm và Chấm thanh điệu dùng được.":mok?"Dùng được Ghi âm và Chấm thanh điệu (đo cao độ); chưa có nhận ra chữ.":"Thiết bị này đang chặn micro trong trang. Cách chắc chắn nhất: mở link bằng Chrome hoặc Edge trên máy tính (hoặc app Claude trên máy tính), cho phép micro khi được hỏi.";
+  const tip=DICT_RAW==="có"?"Nút Nói dùng nhận giọng của Claude, có chấm điểm.":mok&&SRC?"Nút Nói dùng nhận giọng của trình duyệt; Ghi âm và Chấm thanh điệu dùng được.":mok?"Dùng được Ghi âm và Chấm thanh điệu (đo cao độ); chưa có nhận ra chữ.":"Micro trong trang bị chặn. Vẫn luyện được: nút Ghi âm sẽ mở máy ghi âm của điện thoại (chấm thanh điệu), ô 🎤 dùng micro bàn phím để chấm theo chữ. Muốn có đủ tính năng: mở link bằng Chrome/Edge trên máy tính.";
   o.innerHTML=`<div class="heard"><div style="display:grid;gap:4px">${L.map(([k,v,ok])=>`<div style="font-size:.88rem">${ok===null?"•":ok?"✅":"❌"} <b>${k}:</b> ${esc(v)}</div>`).join("")}</div><div style="margin-top:8px;font-size:.88rem">${tip}</div></div>`}
 document.addEventListener("click",e=>{if(e.target.closest("#micDiag"))micDiag()});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-sayslow]");if(!b)return;const o=rate;rate=Math.max(.5,o*.7);say(b.dataset.sayslow);rate=o});
