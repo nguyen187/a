@@ -1832,7 +1832,7 @@ function runQuiz(el,qs,onDone,resume){
   }
   function pickOpt(k){const q=qs[i];if(q.answered)return;const ok=q.opts[k].ok;
     el.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;if(q.opts[j].ok)b.classList.add("ok");else if(j===k)b.classList.add("no")});
-    feedback(ok,q.type==="sandhi"?q.explain:q.w?(q.type==="tf"&&q.shown&&q.shown.h!==q.w.h?`<div>Bạn nghe: ${wDetail(q.w)}</div><div style="font-size:.9rem">Trên màn hình: ${wDetail(q.shown)}</div>`:wDetail(q.w)):(q.explain||""),q.w?q.w.h:q.say)}
+    feedback(ok,q.type==="sandhi"?q.explain:q.w?(q.type==="tf"&&q.shown&&q.shown.h!==q.w.h?`<div>Bạn nghe: ${wDetail(q.w)}</div><div style="font-size:.9rem">Trên màn hình: ${wDetail(q.shown)}</div>`:wDetail(q.w)+(q.type==="pair"?`<div class="han" style="font-size:1.05rem;margin-top:4px">${segHTML(q.say)}</div>`:"")):(q.explain||""),q.w&&q.type!=="pair"?q.w.h:q.say)}
   function showType(q){
     el.innerHTML=`<div class="quiz">${head()}<div class="prompt"><span class="eyebrow">Gõ pinyin của từ này</span><div class="h">${q.w.h}</div><div class="muted">${esc(q.w.m)}</div></div>
       <form class="typein" id="tf"><input id="typ" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="vd: ni3hao3 hoặc nǐhǎo" aria-label="Pinyin"><button class="btn primary">Kiểm tra</button></form>
@@ -2466,9 +2466,9 @@ function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||errPool()).slice())
 
 function errPool(){return currentDay()>=20||Object.keys(S.done).length>=18?ERRS:ERRS.slice(0,20)}
 function qaPool(){const lv=Math.max(3,Math.ceil(currentDay()/3)+1);const L=QA.filter(x=>x[0]<=lv);return L.length>=8?L:QA}
-function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs]},out=[];
+function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs],pair:[pairItems(),0,pairQs]},out=[];
   Object.keys(m).forEach(k=>{const i=k.indexOf(":"),t=k.slice(0,i),id=k.slice(i+1),d=by[t];if(!d)return;const it=d[0].find(x=>x[d[1]]===id);if(it)out.push(...d[2](1,[it]))});return shuffle(out).slice(0,10)}
-function mixQs(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);let qs=[...errQs(2),...trapQs(2),...shQs(2),...qaQs(2)];
+function mixQs(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);let qs=[...errQs(2),...trapQs(2),...shQs(1),...qaQs(2),...pairQs(1)];
   if(ws.length>=6){const t=["mean","hanzi"].concat(canSpeak()?["tf","listen"]:[]);const pref=[...new Set([...weakList().map(x=>x.w),...dueList().map(h=>BYH[h]).filter(Boolean)])];const two=pick(pref,2);if(two.length<2)two.push(...pick(ws.filter(w=>!two.includes(w)),2-two.length));two.forEach(w=>qs.push(makeQ(w,ALL,hvUseful(w)?t.concat("hv"):t)))}
   return shuffle(qs)}
 function mixHTML(){const m=S.mix||{},done=m.day===today();return `<section class="card sect" id="mixBox"><div class="row"><div style="min-width:0;flex:1 1 220px"><div class="eyebrow">Thử thách trộn${done?" · đã làm hôm nay":""}</div><h3>10 câu, mỗi câu một kỹ năng</h3>
@@ -3483,10 +3483,13 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-rp]");if(t
       opts:shuffle([{html:`<span class="hz" style="font-size:1.2rem">${esc(r[1])}</span>`,ok:true},...ds.map(o=>({html:`<span class="hz" style="font-size:1.2rem">${esc(o[1])}</span>`,ok:false}))]),
       explain:`<span class="han">${esc(r[1])}</span> · <span class="muted">${esc(r[2])}</span> · ${esc(r[3])}${prev?`<div class="muted" style="font-size:.84rem">${x.you} nói: ${esc(prev[3])}</div>`:""}`,say:r[1]})});
   runQuiz(box,qs,(sc,tot)=>{touchStreak();save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><div>${sc===tot?"Bạn xử lý tình huống rất tự nhiên!":"Nghe lại đoạn hội thoại và thử lần nữa nhé."}</div><button class="btn" id="rpGo">Nhập vai lại</button></div>`})});
-function pairQuestions(){const out=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>{const ans=k?p.b:p.a,oth=k?p.a:p.b;
+function pairItems(){const o=[];PAIRS.forEach(p=>p.q.forEach(([sent,k])=>o.push([sent,k,p])));return o}
+function pairQs(n,L){return pairQuestions(L||pairItems()).slice(0,n)}
+function pairQuestions(L){const out=[];(L||pairItems()).forEach(([sent,k,p])=>{const ans=k?p.b:p.a,oth=k?p.a:p.b;
   const shown=esc(sent).replace("___",`<span style="display:inline-block;min-width:${[...ans[0]].length*1.1}em;border-bottom:2px solid var(--jade)">&nbsp;</span>`);
   out.push({type:"pair",w:{h:ans[0],p:ans[1],m:ans[2]+" — "+p.note},prompt:`<span class="eyebrow">Chọn từ đúng</span><div class="han" style="font-size:1.6rem;line-height:1.5">${shown}</div>`,
-    opts:shuffle([{html:`<span class="hz">${ans[0]}</span> <span class="muted" style="font-size:.85rem">${esc(ans[2])}</span>`,ok:true},{html:`<span class="hz">${oth[0]}</span> <span class="muted" style="font-size:.85rem">${esc(oth[2])}</span>`,ok:false}])})}));
+    key:"pair:"+sent,say:sent.replace("___",ans[0]),
+    opts:shuffle([{html:`<span class="hz">${ans[0]}</span> <span class="muted" style="font-size:.85rem">${esc(ans[2])}</span>`,ok:true},{html:`<span class="hz">${oth[0]}</span> <span class="muted" style="font-size:.85rem">${esc(oth[2])}</span>`,ok:false}])})});
   return shuffle(out).slice(0,10)}
 function trapsHTML(){return `<section class="sect" id="trapSec">
   ${askHTML()}
