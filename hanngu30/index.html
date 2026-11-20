@@ -2269,7 +2269,8 @@ function viewReview(){
   app.innerHTML=`<nav class="jump" id="rvJump" aria-label="Đi tới mục"></nav><section class="sect" id="sec-cards"><div><div class="eyebrow">Ôn tập ngắt quãng</div><h2>${due.length?`${due.length} thẻ đến hạn hôm nay`:"Bạn đã ôn xong hôm nay"}</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Nhìn mặt trước, tự nhớ nghĩa và cách đọc rồi mới lật thẻ. Chấm điểm thật lòng: thẻ “Quên” quay lại ngay trong phiên, thẻ “Nhớ” giãn dần tới 60 ngày.</p></div>
     <div class="row"><span class="eyebrow">Mặt trước</span>
-      <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div></div>
+      <div class="subtabs"><button aria-pressed="${revMode==="h2m"}" data-mode="h2m">Chữ Hán → Nghĩa</button><button aria-pressed="${revMode==="m2h"}" data-mode="m2h">Nghĩa → Chữ Hán</button><button aria-pressed="${revMode==="a2m"}" data-mode="a2m">Nghe → Nghĩa</button></div>
+      <label class="row" style="gap:6px;font-size:.86rem">Mỗi lượt <select id="revCap" class="btn" style="padding:4px 8px">${[[0,"tất cả"],[20,"20 thẻ"],[50,"50 thẻ"]].map(([v,l])=>`<option value="${v}" ${(S.revCap||0)===v?"selected":""}>${l}</option>`).join("")}</select></label>${S.revCap&&due.length>S.revCap?`<span class="muted" style="font-size:.84rem">Ưu tiên ${S.revCap} thẻ quá hạn lâu nhất, ${due.length-S.revCap} thẻ còn lại để lượt sau.</span>`:""}</div>
     <div id="revBody"></div>
     ${weakHTML()}
     ${randReadHTML()}
@@ -2287,12 +2288,13 @@ function viewReview(){
     ${forecastHTML()}
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
+  const rc=$("#revCap");if(rc)rc.onchange=()=>{S.revCap=+rc.value;save();revQueue=null;viewReview()};
   $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["dctBox","Nghe chép"],["qaBox","Hỏi đáp"],["chatBox","Trò chuyện AI"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
   if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}if(go==="dctBox"&&!DCT){const b=$("#dctGo");if(b&&!b.disabled)b.click()}if(go==="savedBox"&&!SVR){const b=$("#svRev");if(b)b.click()}},60)}
   if(CHAT)setTimeout(chatDraw,0);
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
-  if(!revQueue||!revQueue.length)revQueue=shuffle(due);
+  if(!revQueue||!revQueue.length){const cap=S.revCap||0,ord=due.slice().sort((a,b)=>(S.srs[a].d-S.srs[b].d)||(S.srs[a].b-S.srs[b].b));revQueue=shuffle(cap?ord.slice(0,cap):ord)}
   if(!revQueue.length){
     rb.innerHTML=`<div class="card result"><b>Không còn thẻ đến hạn.</b><div class="muted">Muốn luyện thêm? Làm 15 câu trắc nghiệm ngẫu nhiên từ những từ bạn đã học.</div><button class="btn primary" id="free">Luyện thêm 15 câu</button>${upcoming().length?`<button class="btn" id="early">Ôn trước ${Math.min(10,upcoming().length)} thẻ sắp đến hạn</button>`:""}</div>`;
     const eb=$("#early");if(eb)eb.onclick=()=>{revQueue=upcoming().slice(0,10);showCard(rb)};
