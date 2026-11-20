@@ -2181,8 +2181,9 @@ function mountSpeak(el,sents,dayN){
     el.innerHTML=`<div class="card sect">
       <div class="row"><span class="eyebrow num">Câu ${idx+1}/${sents.length}</span><span class="spacer"></span><span class="muted" style="font-size:.84rem">${canMic()?"Nghe mẫu, rồi bấm Nói và đọc cả câu":"Nghe mẫu, nói to theo, rồi tự chấm"}</span></div>
       <div class="tgt" id="tgt">${esc(zh)}</div>
-      <div class="muted">${esc(p)}</div><div>${esc(v)}</div>
-      <div class="row"><button class="btn" data-say="${esc(zh)}">${SPK} Nghe mẫu</button>
+      <div class="py" style="font-size:1.05rem">${pyHTML(p).replace(/<\/span><span/g,"</span> <span")}</div><div>${esc(v)}</div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><span class="muted" style="font-size:.8rem">Nghe từng cụm:</span>${seg(zh).filter(z=>/\p{Script=Han}/u.test(z.t)).map(z=>`<button class="chip" data-say="${esc(z.t)}" style="cursor:pointer;font-family:var(--f-han);font-size:1rem">${esc(z.t)}</button>`).join("")}</div>
+      <div class="row"><button class="btn" data-say="${esc(zh)}">${SPK} Nghe mẫu</button><button class="btn ghost" data-sayslow="${esc(zh)}">🐢 Chậm</button>
         ${canMic()?`<button class="btn primary mic" id="mic">${MIC} <span>Nói</span></button>`:""}${canRec()?`<button class="btn ${canMic()?"":"primary"}" id="recB">● Ghi âm</button>`:""}</div>
       <div id="recBox"></div><div id="heard"></div>
       ${canMic()?"":`<div class="row"><button class="btn" data-self="0">Còn vấp</button><button class="btn" data-self="1">Đọc trôi chảy</button></div>
@@ -2641,6 +2642,7 @@ async function micDiag(){const o=$("#micDiagO");if(!o)return;o.innerHTML=`<div c
   const tip=DICT_RAW==="có"?"Nút Nói dùng nhận giọng của Claude, có chấm điểm.":mok&&SRC?"Nút Nói dùng nhận giọng của trình duyệt; Ghi âm và Chấm thanh điệu dùng được.":mok?"Dùng được Ghi âm và Chấm thanh điệu (đo cao độ); chưa có nhận ra chữ.":"Thiết bị này đang chặn micro trong trang. Cách chắc chắn nhất: mở link bằng Chrome hoặc Edge trên máy tính (hoặc app Claude trên máy tính), cho phép micro khi được hỏi.";
   o.innerHTML=`<div class="heard"><div style="display:grid;gap:4px">${L.map(([k,v,ok])=>`<div style="font-size:.88rem">${ok===null?"•":ok?"✅":"❌"} <b>${k}:</b> ${esc(v)}</div>`).join("")}</div><div style="margin-top:8px;font-size:.88rem">${tip}</div></div>`}
 document.addEventListener("click",e=>{if(e.target.closest("#micDiag"))micDiag()});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-sayslow]");if(!b)return;const o=rate;rate=Math.max(.5,o*.7);say(b.dataset.sayslow);rate=o});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
