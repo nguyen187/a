@@ -2839,6 +2839,7 @@ async function gpRun(){const b=$("#gpGo"),inp=$("#gpIn"),o=$("#gpOut");if(!b||!a
   catch(e){o.textContent=e&&e.code==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa chấm được, thử lại."}b.disabled=false}
 document.addEventListener("click",e=>{if(e.target.closest("#gpGo"))gpRun()});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="gpIn"){e.preventDefault();gpRun()}});
+let fcTyped=null;
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2944,14 +2945,16 @@ function showCard(rb){
   const h=revQueue[0],w=BYH[h];let flipped=false;
   const audioMode=revMode==="a2m"&&canSpeak();
   if(revMode==="a2m"&&!canSpeak()&&!showCard.warned){showCard.warned=true;toast("Thiết bị chưa có giọng đọc tiếng Trung, nên thẻ hiện chữ Hán thay cho âm thanh.")}
-  const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết chữ Hán ra giấy rồi lật thẻ</div>`;
+  const front=audioMode?`<button class="btn primary" data-say="${esc(w.h)}" style="font-size:1.05rem;padding:14px 22px">${SPK} Nghe lại</button><div class="muted">Nghe, rồi nhớ chữ Hán và nghĩa trước khi lật</div>`:revMode!=="m2h"?`<div class="h">${w.h}</div><div class="muted">Nghĩa là gì? Đọc thế nào?</div>`:`<div class="m" style="font-size:1.5rem;font-weight:600">${esc(w.m)}</div><div class="muted">Viết ra giấy, hoặc gõ chữ Hán / pinyin không dấu vào ô (tuỳ chọn), rồi lật thẻ</div><input class="typein" id="fcIn" lang="zh-CN" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ câu trả lời…" style="width:100%;max-width:280px;box-sizing:border-box;margin-top:6px" onclick="event.stopPropagation()">`;
   const back=`<div class="h">${w.h}</div><div class="py">${pyHTML(w.p)}</div><div class="m">${esc(w.m)}</div>${w.v?`<div class="eyebrow">Hán Việt: ${esc(w.v)}</div>`:""}<div style="display:grid;gap:2px;justify-items:center">${famHTML(w)}</div>${exHTML(w)}<div class="muted" style="font-size:.8rem">${w.day?`Ngày ${w.day}: ${esc(DAYS[w.day-1].t)}`:"Từ bạn tự thêm"}</div>`;
   const c=S.srs[h];
   const nxt=k=>{const b=k===0?0:k===1?c.b:Math.min(6,c.b+(k===2?1:2));const days=k===0?0:k===1?1:IV[b];return days===0?"ngay bây giờ":days+" ngày"};
   rb.innerHTML=`<div class="flash"><div class="row"><span class="eyebrow num">Còn ${revQueue.length} thẻ</span></div>
     <div class="fc" id="fc" tabindex="0" role="button" aria-label="Lật thẻ">${front}</div>
     <div id="gradeSlot"><button class="btn primary" id="flip" style="width:100%">Lật thẻ (Space)</button></div></div>`;
-  const flip=()=>{if(flipped)return;flipped=true;$("#fc").innerHTML=back+`<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>`;speak(w.h);if($("#exAIslot"))exAI(w);
+  const flip=()=>{if(flipped)return;flipped=true;const fi=$("#fcIn"),typed=fi?fi.value.trim():"";let verdict="";
+    if(typed){const ok=/\p{Script=Han}/u.test(typed)?hanOnly(typed)===hanOnly(w.h):pyBare(typed)===pyBare(w.p);verdict=`<div class="fb ${ok?"ok":"no"}" style="margin-bottom:8px"><b>${ok?"Bạn gõ đúng!":"Bạn gõ: "+esc(typed)}</b></div>`;fcTyped=ok}else fcTyped=null;
+    $("#fc").innerHTML=verdict+back+`<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>`;speak(w.h);if($("#exAIslot"))exAI(w);
     $("#gradeSlot").innerHTML=`<div class="grade">${["Quên","Khó","Nhớ","Dễ"].map((l,k)=>`<button class="g${k}" data-g="${k}">${l}<small>${nxt(k)}</small></button>`).join("")}</div>
       <label class="note"><span class="row" style="justify-content:space-between"><span class="eyebrow">Mẹo nhớ của bạn</span>${aiNS&&!aiOff?`<button type="button" class="btn ghost" id="noteAI" style="padding:4px 10px;font-size:.84rem">✨ Nhờ AI gợi ý</button>`:""}</span><textarea id="noteIn" rows="2" maxlength="300" placeholder="Ví dụ: 好 = 女 + 子, có vợ có con là tốt">${esc(noteOf(w.h))}</textarea></label>`;
     rb.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>grade(+b.dataset.g));
@@ -2970,7 +2973,7 @@ function showCard(rb){
     if(revQueue.length)showCard(rb);else viewReview();
   };
   $("#fc").onclick=e=>{if(e.target.closest("[data-say]"))return;flip()};$("#flip").onclick=flip;if(audioMode)setTimeout(()=>speak(w.h),150);
-  document.onkeydown=e=>{if(!$("#fc"))return;if(e.target&&e.target.closest&&e.target.closest("input,textarea"))return;if(!flipped&&(e.key===" "||e.key==="Enter")){e.preventDefault();flip()}else if(flipped&&/^[1-4]$/.test(e.key))grade(+e.key-1)};
+  document.onkeydown=e=>{if(!$("#fc"))return;if(e.target&&e.target.closest&&e.target.closest("input,textarea"))return;if(!flipped&&(e.key===" "||e.key==="Enter")){e.preventDefault();flip()}else if(flipped&&/^[1-4]$/.test(e.key))grade(+e.key-1)};const fi0=$("#fcIn");if(fi0)fi0.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();flip()}};
 }
 
 /* ===================== VIEW: PHÁT ÂM ===================== */
