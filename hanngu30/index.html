@@ -2458,7 +2458,7 @@ function qaPool(){const lv=Math.max(3,Math.ceil(currentDay()/3)+1);const L=QA.fi
 function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs]},out=[];
   Object.keys(m).forEach(k=>{const i=k.indexOf(":"),t=k.slice(0,i),id=k.slice(i+1),d=by[t];if(!d)return;const it=d[0].find(x=>x[d[1]]===id);if(it)out.push(...d[2](1,[it]))});return shuffle(out).slice(0,10)}
 function mixQs(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);let qs=[...errQs(2),...trapQs(2),...shQs(2),...qaQs(2)];
-  if(ws.length>=6){const t=["mean","hanzi"].concat(canSpeak()?["tf","listen"]:[]);pick(ws,2).forEach(w=>qs.push(makeQ(w,ALL,hvUseful(w)?t.concat("hv"):t)))}
+  if(ws.length>=6){const t=["mean","hanzi"].concat(canSpeak()?["tf","listen"]:[]);const pref=[...new Set([...weakList().map(x=>x.w),...dueList().map(h=>BYH[h]).filter(Boolean)])];const two=pick(pref,2);if(two.length<2)two.push(...pick(ws.filter(w=>!two.includes(w)),2-two.length));two.forEach(w=>qs.push(makeQ(w,ALL,hvUseful(w)?t.concat("hv"):t)))}
   return shuffle(qs)}
 function mixHTML(){const m=S.mix||{},done=m.day===today();return `<section class="card sect" id="mixBox"><div class="row"><div style="min-width:0;flex:1 1 220px"><div class="eyebrow">Thử thách trộn${done?" · đã làm hôm nay":""}</div><h3>10 câu, mỗi câu một kỹ năng</h3>
   <div class="muted" style="font-size:.86rem">Trật tự câu, bẫy Hán Việt, biến điệu, phản xạ hỏi đáp và từ đã học. ${m.best!=null?`Điểm cao nhất: <b class="num">${m.best}/10</b>`:"Khoảng 3 phút."}</div></div>
