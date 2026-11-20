@@ -2572,19 +2572,24 @@ function speakHubHTML(){const n=speakPool().length,done=Object.keys(S.speak||{})
 document.addEventListener("click",e=>{if(!e.target.closest("#spHub"))return;const w=$("#spHubW");if(!w)return;mountSpeak(w,shuffle(speakPool().slice()).slice(0,10),"hub");w.scrollIntoView({behavior:"smooth",block:"nearest"})});
 
 let REC=null;
-function canRec(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)&&!window.__recOff}
+function canRec(){return true}
 function recStop(){if(REC&&REC.mr&&REC.mr.state==="recording")REC.mr.stop()}
+function recDone(blob,btn,box,zh,onBlob,py){btn.textContent="● Ghi lại";btn.classList.remove("on");if(!box.isConnected)return;const url=URL.createObjectURL(blob);
+  box.innerHTML=`<div class="heard"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-say="${esc(zh)}">${SPK} Mẫu</button><button class="btn primary" id="recPlay">▶ Giọng bạn</button><button class="btn ghost" id="recBoth">Nghe nối tiếp</button></div><div class="muted" style="font-size:.84rem;margin-top:6px">So sánh từng chữ: thanh lên xuống có giống mẫu không? Chữ nào lệch thì nghe lại mẫu và ghi lại.</div></div>`;
+  const au=new Audio(url);$("#recPlay").onclick=()=>{au.currentTime=0;au.play().catch(()=>{})};
+  $("#recBoth").onclick=async()=>{await speakWait(zh);au.currentTime=0;au.play().catch(()=>{})};touchStreak(1);save();updateChrome();
+  if(onBlob)onBlob(blob);else pitchTrack(blob).then(tr=>{const v=tr.filter(q=>q!=null);if(v.length>8&&box.isConnected)box.querySelector(".heard").insertAdjacentHTML("beforeend",`<div class="muted" style="font-size:.8rem;margin-top:6px">Đường cao độ giọng bạn (xanh) trên khuôn thanh mẫu (xám):</div>`+contourSVG(tr,expTones(zh,py||(BYH[zh]&&BYH[zh].p)||"")))}).catch(()=>{})}
+const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+function filePick(btn,box,zh,onBlob,py){const inp=document.createElement("input");inp.type="file";inp.accept=IOS?"video/*,audio/*":"audio/*";inp.setAttribute("capture","user");inp.style.display="none";document.body.appendChild(inp);
+  inp.onchange=()=>{const f=inp.files&&inp.files[0];inp.remove();if(!f)return;box.innerHTML=`<div class="heard muted">Đang xử lý bản ghi…</div>`;recDone(f,btn,box,zh,onBlob,py)};inp.click()}
 async function recToggle(btn,box,zh,onBlob,py){if(REC&&REC.mr&&REC.mr.state==="recording"){REC.mr.stop();return}
+  if(window.__recOff||!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){filePick(btn,box,zh,onBlob,py);return}
   let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
-  catch(e){window.__recOff=true;btn.remove();box.innerHTML=`<div class="heard muted">Trang chưa được dùng micro trên thiết bị này${e&&e.name==="NotAllowedError"?" (quyền micro bị từ chối)":""}. Bạn vẫn có thể nghe mẫu và nói to theo rồi tự chấm.</div>`;return}
+  catch(e){window.__recOff=true;box.innerHTML=`<div class="heard"><div style="font-size:.88rem">Trình duyệt chặn micro bên trong trang. Dùng <b>máy ghi âm của điện thoại</b> thay thế: bấm nút dưới, ghi âm câu đọc (${IOS?"iPhone sẽ mở camera quay video ngắn, app chỉ lấy phần âm thanh":"chọn Ghi âm / Máy ghi âm"}), xong bấm dùng bản ghi.</div><button class="btn primary" id="recFile" style="margin-top:8px">🎙 Mở máy ghi âm</button></div>`;
+    $("#recFile").onclick=()=>filePick(btn,box,zh,onBlob,py);btn.textContent="🎙 Ghi âm (máy ghi âm)";return}
   const chunks=[];const mr=new MediaRecorder(stream);REC={mr};
   mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
-  mr.onstop=()=>{stream.getTracks().forEach(t=>t.stop());btn.textContent="● Ghi lại";btn.classList.remove("on");clearTimeout(REC.t);
-    if(!box.isConnected)return;const blob=new Blob(chunks,{type:mr.mimeType||"audio/webm"});const url=URL.createObjectURL(blob);
-    box.innerHTML=`<div class="heard"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-say="${esc(zh)}">${SPK} Mẫu</button><button class="btn primary" id="recPlay">▶ Giọng bạn</button><button class="btn ghost" id="recBoth">Nghe nối tiếp</button></div><div class="muted" style="font-size:.84rem;margin-top:6px">So sánh từng chữ: thanh lên xuống có giống mẫu không? Chữ nào lệch thì nghe lại mẫu và ghi lại.</div></div>`;
-    const au=new Audio(url);$("#recPlay").onclick=()=>{au.currentTime=0;au.play().catch(()=>{})};
-    $("#recBoth").onclick=async()=>{await speakWait(zh);au.currentTime=0;au.play().catch(()=>{})};touchStreak(1);save();updateChrome();
-    if(onBlob)onBlob(blob);else pitchTrack(blob).then(tr=>{const v=tr.filter(q=>q!=null);if(v.length>8&&box.isConnected)box.querySelector(".heard").insertAdjacentHTML("beforeend",`<div class="muted" style="font-size:.8rem;margin-top:6px">Đường cao độ giọng bạn (xanh) trên khuôn thanh mẫu (xám):</div>`+contourSVG(tr,expTones(zh,py||(BYH[zh]&&BYH[zh].p)||"")))}).catch(()=>{})};
+  mr.onstop=()=>{stream.getTracks().forEach(t=>t.stop());clearTimeout(REC.t);recDone(new Blob(chunks,{type:mr.mimeType||"audio/webm"}),btn,box,zh,onBlob,py)};
   mr.start();btn.textContent="■ Dừng";btn.classList.add("on");box.innerHTML=`<div class="heard muted">Đang ghi âm… đọc cả câu rồi bấm Dừng (tự dừng sau 15 giây).</div>`;REC.t=setTimeout(()=>{if(mr.state==="recording")mr.stop()},15000)}
 
 /* ===== Phân tích cao độ (chấm thanh điệu từ bản ghi âm) ===== */
