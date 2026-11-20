@@ -2469,7 +2469,7 @@ function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||errPool()).slice())
 
 function errPool(){return currentDay()>=20||Object.keys(S.done).length>=18?ERRS:ERRS.slice(0,20)}
 function qaPool(){const lv=Math.max(3,Math.ceil(currentDay()/3)+1);const L=QA.filter(x=>x[0]<=lv);return L.length>=8?L:QA}
-function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs],pair:[pairItems(),0,pairQs],cy:[CHENGYU,0,cyQs]},out=[];
+function mqQs(){const m=S.mq||{},by={trap:[TRAPS,0,trapQs],sh:[SANDHI,0,shQs],qa:[QA,1,qaQs],err:[ERRS,0,errQs],pair:[pairItems(),0,pairQs],cy:[CHENGYU,0,cyQs],pyr:[PYRQ,0,pyrQs]},out=[];
   Object.keys(m).forEach(k=>{const i=k.indexOf(":"),t=k.slice(0,i),id=k.slice(i+1),d=by[t];if(!d)return;const it=d[0].find(x=>x[d[1]]===id);if(it)out.push(...d[2](1,[it]))});return shuffle(out).slice(0,10)}
 function mixQs(){const ws=Object.keys(S.srs).map(h=>BYH[h]).filter(Boolean);let qs=[...errQs(2),...trapQs(2),...shQs(1),...qaQs(2),...pairQs(1)];
   if(ws.length>=6){const t=["mean","hanzi"].concat(canSpeak()?["tf","listen"]:[]);const pref=[...new Set([...weakList().map(x=>x.w),...dueList().map(h=>BYH[h]).filter(Boolean)])];const two=pick(pref,2);if(two.length<2)two.push(...pick(ws.filter(w=>!two.includes(w)),2-two.length));two.forEach(w=>qs.push(makeQ(w,ALL,hvUseful(w)?t.concat("hv"):t)))}
@@ -2974,7 +2974,18 @@ const PYR=[["ü viết thành u sau j, q, x, y","Sau j, q, x, y, hai chấm củ
 ["ian đọc là “iên”","Chữ a trong ian, yan đọc gần “ê”, không đọc “an”.",[["天","tiān"],["钱","qián"],["见","jiàn"]]],
 ["Dấu thanh đặt ở đâu?","Ưu tiên a, rồi o hoặc e; với iu, ui thì đặt trên chữ đứng sau.",[["好","hǎo"],["多","duō"],["六","liù"],["对","duì"]]]];
 function pyRulesHTML(){return `<section class="sect" id="sec-pyr"><div><div class="eyebrow">Đọc đúng chữ viết</div><h2>Quy tắc viết pinyin</h2><p class="muted" style="margin:6px 0 0;max-width:64ch">Pinyin có vài chỗ viết khác cách đọc, người Việt hay đọc theo mặt chữ nên bị sai. Bấm từng ví dụ để nghe.</p></div>
-  <div style="display:grid;gap:10px">${PYR.map(([t,d,ex],i)=>`<div class="card" style="padding:14px 16px"><b>${i+1}. ${esc(t)}</b><div class="muted" style="font-size:.88rem;margin:4px 0 8px">${esc(d)}</div><div class="row" style="gap:6px">${ex.map(([h,p])=>`<button class="chip" data-say="${h}"><span class="han">${h}</span> <span class="py">${pyColor(p)}</span></button>`).join("")}</div></div>`).join("")}</div></section>`}
+  <div style="display:grid;gap:10px">${PYR.map(([t,d,ex],i)=>`<div class="card" style="padding:14px 16px"><b>${i+1}. ${esc(t)}</b><div class="muted" style="font-size:.88rem;margin:4px 0 8px">${esc(d)}</div><div class="row" style="gap:6px">${ex.map(([h,p])=>`<button class="chip" data-say="${h}"><span class="han">${h}</span> <span class="py">${pyColor(p)}</span></button>`).join("")}</div></div>`).join("")}</div>
+  <div class="row"><button class="btn primary" id="pyrGo">Luyện 8 câu: chọn cách viết đúng</button></div><div id="pyrWork"></div></section>`}
+const PYRQ=[["去","qù",["qǜ","cù"],0],["学","xué",["xüé","xuế"],0],["鱼","yú",["yǘ","ǘ"],0],["女","nǚ",["nǔ","nüǔ"],0],["绿","lǜ",["lù","lüù"],0],
+["六","liù",["liòu","lìu"],1],["九","jiǔ",["jiǒu","jǐu"],1],["对","duì",["duèi","dùi"],2],["贵","guì",["guèi","gùi"],2],["水","shuǐ",["shuěi","shǔi"],2],
+["春","chūn",["chuēn","chūen"],3],["云","yún",["yǘn","ǘn"],3],["一","yī",["ī","yīi"],4],["五","wǔ",["ǔ","wǔu"],4],["也","yě",["iě","yiě"],4],["我","wǒ",["uǒ","wuǒ"],4],
+["天","tiān",["tiēn","tēn"],6],["钱","qián",["qién","chián"],6],["好","hǎo",["haǒ","hǎó"],7],["多","duō",["dūo","dūō"],7]];
+function pyrQs(n,L){return shuffle((L||PYRQ).slice()).slice(0,n).map(([h,ok,bad,r])=>({type:"pyr",key:"pyr:"+h,say:h,autoSay:h,
+  prompt:`<span class="eyebrow">Nghe và chọn cách viết pinyin đúng</span><div class="han" style="font-size:2rem">${h}</div>`,
+  explain:`<b>${esc(ok)}</b> · ${esc(PYR[r][0])}<div class="muted" style="font-size:.86rem">${esc(PYR[r][1])}</div>`,
+  opts:shuffle([{html:`<span class="py" style="font-size:1.2rem">${esc(ok)}</span>`,ok:true},...bad.map(b=>({html:`<span class="py" style="font-size:1.2rem">${esc(b)}</span>`,ok:false}))])}))}
+document.addEventListener("click",e=>{if(!e.target.closest("#pyrGo"))return;const box=$("#pyrWork");if(!box)return;
+  runQuiz(box,pyrQs(8),(sc,tot)=>{touchStreak(2);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${sc}/${tot}</div><p class="muted">${sc>=7?"Bạn đã nắm quy tắc viết pinyin.":"Đọc lại các quy tắc phía trên rồi luyện lại."}</p><button class="btn" id="pyrGo">Luyện lại</button></div>`})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
