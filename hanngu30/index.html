@@ -143,6 +143,7 @@ main{padding-block:24px 64px;display:grid;gap:28px}
 .opt{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px;text-align:left;display:flex;gap:10px;align-items:center;min-height:58px}
 .opt:hover:not([disabled]){border-color:var(--jade)}
 .opt .k{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 6px;font-weight:600}
+.nopy .exl .p,.novi .exl .v{display:none}
 .opt .hz{font-family:var(--f-han);font-size:1.5rem}
 .opt.ok{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
 .opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
@@ -2144,8 +2145,8 @@ function readingHTML(d){if(!d.rds.length)return"";
   <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><button class="btn ghost" id="rdTime" data-n="${esc(String(d.n))}">⏱ Đọc tính giờ</button><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div id="rdTimeO" aria-live="polite"></div>
   <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
-  $("#rdPy").onchange=e=>b.querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
-  $("#rdVi").onchange=e=>b.querySelectorAll(".v").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
+  $("#rdPy").onchange=e=>b.classList.toggle("nopy",e.target.checked);
+  $("#rdVi").onchange=e=>b.classList.toggle("novi",e.target.checked);
   $("#playRd").onclick=async()=>{for(const [zh] of d.rds){if(!await speakWait(zh))break}}}
 /* ===================== LUYỆN NÓI ===================== */
 let dictNS=null,dictZhOff=false,spCtx=null;
