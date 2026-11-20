@@ -1677,6 +1677,9 @@ function say(text,wait){text=text.replace(/[—…]/g,"，");const e=engine();
   })}
 function speak(t){return say(t,false)}
 function speakWait(t){return say(t,true)}
+let AGEN=0;function hush(){AGEN++;try{speechSynthesis.cancel()}catch(e){}try{ttsNS&&ttsNS.stop&&ttsNS.stop()}catch(e){}}
+function playSeq(list){return async e=>{const btn=e&&e.currentTarget;if(btn&&btn._g&&btn._g===AGEN){hush();return}const g=++AGEN;if(btn){btn._g=g;btn.classList.add("on")}
+  for(const t of list){if(g!==AGEN)break;if(!await speakWait(t))break}if(btn){btn.classList.remove("on");if(btn._g===g)btn._g=0}}}
 function dayQuizDone(n){const d=DAYS[n-1],pass=d.final?80:70;return (sc,tot,wrong)=>{const body=$("#dayBody");if(!body)return;
         const pct=Math.round(sc/tot*100);S.best[n]=Math.max(S.best[n]||0,pct);
         const passed=pct>=pass;
@@ -2046,7 +2049,7 @@ function viewDay(n){
       <div class="row" style="font-size:.9rem"><span class="eyebrow">Tự kiểm tra</span><label class="row" style="gap:6px"><input type="checkbox" id="hidePyW" ${coverPref("py")?"checked":""}> Che pinyin</label><label class="row" style="gap:6px"><input type="checkbox" id="hideMW" ${coverPref("m")?"checked":""}> Che nghĩa</label></div>
       <div class="words ${coverPref("py")?"hide-py":""} ${coverPref("m")?"hide-m":""}" id="wordGrid">${d.words.map(w=>`<button class="word" data-say="${esc(w.h)}"><span class="spk">${SPK}</span><span class="h">${w.h}</span><span class="py">${pyHTML(w.p)}</span><span class="m">${esc(w.m)}</span>${noteHTML(w.h)}${w.v?`<span class="hv">${esc(w.v)}</span>`:""}</button>`).join("")}</div>
       ${readingHTML(d)}${cultureHTML(d.n)}${mkHTML(d)}<div class="row"><button class="btn primary" data-go="gram">Tiếp: Ngữ pháp →</button></div>`;
-      $("#playAll").onclick=async()=>{for(const w of d.words){const ok=await speakWait(w.h);if(!ok)break}};wireReading(d);
+      $("#playAll").onclick=playSeq(d.words.map(w=>w.h));wireReading(d);
       const wg=$("#wordGrid");const setC=(k,cls,el)=>{wg.classList.toggle(cls,el.checked);wg.querySelectorAll(".word.shown").forEach(x=>x.classList.remove("shown"));try{localStorage.setItem("hanngu30.cover."+k,el.checked?"1":"")}catch(x){}};
       $("#hidePyW").onchange=e=>setC("py","hide-py",e.target);$("#hideMW").onchange=e=>setC("m","hide-m",e.target);
       wg.addEventListener("click",e=>{const w=e.target.closest(".word");if(w)w.classList.add("shown")});
@@ -2057,7 +2060,7 @@ function viewDay(n){
       ${rcHTML(29)}
       <div class="row"><button class="btn primary" data-go="quiz">Làm bài tổng ôn →</button></div>`;
       $("#hidePy").onchange=e=>$("#dlg").querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
-      $("#playDl").onclick=async()=>{for(const l of DIALOG.split("\n")){const ok=await speakWait(l.split("|")[1]);if(!ok)break}};
+      $("#playDl").onclick=playSeq(DIALOG.split("\n").map(l=>l.split("|")[1]));
     }else{
       body.innerHTML=`<div class="card gram"><h3>${esc(d.g)}</h3>${d.gh}</div><div class="row"><button class="btn primary" data-go="quiz">Bắt đầu kiểm tra →</button></div>`;
     }
@@ -2147,7 +2150,7 @@ function readingHTML(d){if(!d.rds.length)return"";
 function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.classList.toggle("nopy",e.target.checked);
   $("#rdVi").onchange=e=>b.classList.toggle("novi",e.target.checked);
-  $("#playRd").onclick=async()=>{for(const [zh] of d.rds){if(!await speakWait(zh))break}};
+  $("#playRd").onclick=playSeq(d.rds.map(x=>x[0]));
   const sh=$("#shadowRd");if(sh)sh.onclick=async()=>{if(sh._run){sh._run=0;sh.textContent="🎧 Nhại theo";return}const run=sh._run=Date.now();sh.textContent="■ Dừng nhại";toast("Nghe câu mẫu, khi khung chuyển viền đỏ nét đứt thì đến lượt bạn nói to theo. Mỗi câu 2 lần.");const rows=[...b.querySelectorAll(".exl")];
     for(let i=0;i<d.rds.length&&sh._run===run;i++){const zh=d.rds[i][0];rows.forEach(r=>r.style.outline="");const r=rows[i];if(r){r.style.outline="2px solid var(--jade)";r.style.outlineOffset="4px";r.scrollIntoView({block:"nearest",behavior:"smooth"})}
       for(let rep=0;rep<2&&sh._run===run;rep++){if(!await speakWait(zh))break;if(sh._run!==run)break;if(r)r.style.outline="2px dashed var(--seal)";await new Promise(z=>setTimeout(z,900+[...hanOnly(zh)].length*420));if(r)r.style.outline="2px solid var(--jade)"}}
@@ -3392,7 +3395,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày${(S.streak.fz==null?1:S.streak.fz)>0?" · 🧊"+(S.streak.fz==null?1:S.streak.fz):""}`;$("#streakChip").title="🧊 = ngày nghỉ: bỏ lỡ một ngày mà vẫn giữ chuỗi. Cứ 7 ngày liên tục được thêm 1 (tối đa 2).";const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
-  document.onkeydown=null;if(MOCKT){clearInterval(MOCKT.iv);MOCKT=null}SHRUN=0;QZ=null;TR=null;IME=null;DCT=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
+  hush();document.onkeydown=null;if(MOCKT){clearInterval(MOCKT.iv);MOCKT=null}SHRUN=0;QZ=null;TR=null;IME=null;DCT=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
   const h=(location.hash||"#today").slice(1);
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
