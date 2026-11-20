@@ -2771,8 +2771,15 @@ let EXIDX=null;
 function exampleFor(h){if(!EXIDX){EXIDX=[];DAYS.forEach(d=>(d.exs||[]).concat(d.rds||[]).forEach(x=>{if(x&&x[0])EXIDX.push([x[0],x[1],x[2],d.n])}))}
   const w=BYH[h],c=EXIDX.filter(x=>x[0].includes(h)&&[...hanOnly(x[0])].length<=16);if(!c.length)return null;
   return c.sort((a,b)=>(a[3]===(w&&w.day)?0:1)-(b[3]===(w&&w.day)?0:1)||a[0].length-b[0].length)[0]}
-function exHTML(w){const x=exampleFor(w.h);if(!x)return"";const [zh,p,v]=x;
+function exHTML(w){const x=exampleFor(w.h)||(S.exAI&&S.exAI[w.h]);if(!x)return aiNS&&!aiOff?`<div id="exAIslot"></div>`:"";const [zh,p,v]=x;
   return `<div style="margin-top:6px;text-align:left;max-width:100%;border-top:1px dashed var(--line);padding-top:8px"><div class="han" style="font-size:1.1rem">${esc(zh).split(esc(w.h)).join(`<b style="color:var(--jade)">${esc(w.h)}</b>`)} <button class="say" data-say="${esc(zh)}" aria-label="Nghe câu" style="vertical-align:middle">${SPK}</button></div><div style="font-size:.85rem">${pyColor(p)}</div><div class="muted" style="font-size:.85rem">${esc(v)}</div></div>`}
+
+async function exAI(w){const slot=$("#exAIslot");if(!slot||!aiNS)return;slot.innerHTML=`<div class="muted" style="font-size:.8rem;margin-top:6px">AI đang đặt câu ví dụ…</div>`;
+  const known=Object.keys(S.srs).filter(h=>BYH[h]).slice(-80).join("、");
+  try{const r=await aiNS.json(`Đặt 1 câu ví dụ tiếng Trung ngắn (dưới 12 chữ Hán), tự nhiên, trình độ ${chatLevel()}, có dùng từ "${w.h}" (${w.p}, nghĩa: ${w.m}). Ưu tiên các từ người học đã biết: ${known||"(ít)"}. Trả về JSON {"zh":"câu chữ Hán","py":"pinyin có dấu","vi":"nghĩa tiếng Việt"}.`,{modelTier:"quick"});
+    const zh=String(r.zh||"").replace(/[<>&"]/g,""),p=String(r.py||"").replace(/[<>&"]/g,""),v=String(r.vi||"").replace(/[<>&"]/g,"");
+    if(!zh.includes(w.h))throw {code:"bad"};S.exAI=S.exAI||{};S.exAI[w.h]=[zh,p,v];save();const sl=$("#exAIslot");if(sl)sl.outerHTML=exHTML(w).replace('<div style="margin-top:6px','<div title="Câu ví dụ do AI tạo" style="margin-top:6px')}
+  catch(e){const sl=$("#exAIslot");if(sl)sl.innerHTML="";if(e&&e.code==="not_granted")aiOff=true}}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2885,7 +2892,7 @@ function showCard(rb){
   rb.innerHTML=`<div class="flash"><div class="row"><span class="eyebrow num">Còn ${revQueue.length} thẻ</span></div>
     <div class="fc" id="fc" tabindex="0" role="button" aria-label="Lật thẻ">${front}</div>
     <div id="gradeSlot"><button class="btn primary" id="flip" style="width:100%">Lật thẻ (Space)</button></div></div>`;
-  const flip=()=>{if(flipped)return;flipped=true;$("#fc").innerHTML=back+`<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>`;speak(w.h);
+  const flip=()=>{if(flipped)return;flipped=true;$("#fc").innerHTML=back+`<button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>`;speak(w.h);if($("#exAIslot"))exAI(w);
     $("#gradeSlot").innerHTML=`<div class="grade">${["Quên","Khó","Nhớ","Dễ"].map((l,k)=>`<button class="g${k}" data-g="${k}">${l}<small>${nxt(k)}</small></button>`).join("")}</div>
       <label class="note"><span class="row" style="justify-content:space-between"><span class="eyebrow">Mẹo nhớ của bạn</span>${aiNS&&!aiOff?`<button type="button" class="btn ghost" id="noteAI" style="padding:4px 10px;font-size:.84rem">✨ Nhờ AI gợi ý</button>`:""}</span><textarea id="noteIn" rows="2" maxlength="300" placeholder="Ví dụ: 好 = 女 + 子, có vợ có con là tốt">${esc(noteOf(w.h))}</textarea></label>`;
     rb.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>grade(+b.dataset.g));
