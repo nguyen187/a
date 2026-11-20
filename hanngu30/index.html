@@ -26,7 +26,7 @@
   --good:#5FCB8A; --bad:#F07A6E; --warn:#E9B35A;
   --t1:#F2797D; --t2:#F0AA4C; --t3:#62CC8C; --t4:#7DA6F3; --t5:#9AA9A3; --grid:#6B3C3A; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-ui);font-size:.9375rem;line-height:1.55;-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
 .wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -53,7 +53,7 @@ nav.tabs a{padding:9px 12px;text-decoration:none;color:var(--muted);font-weight:
 nav.tabs a[aria-current="page"]{color:var(--jade);border-bottom-color:var(--jade)}
 .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;width:34px;height:34px;display:grid;place-items:center}
 
-main{padding-block:24px 64px;display:grid;gap:28px}
+main{padding-block:24px 64px;display:grid;gap:28px;grid-template-columns:minmax(0,1fr)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:8px;font-weight:600;text-decoration:none;color:var(--ink);font-size:.92rem}
 .btn:hover{border-color:var(--jade)}
@@ -174,8 +174,8 @@ main{padding-block:24px 64px;display:grid;gap:28px}
 .boxes small{font-size:.72rem;color:var(--muted)}
 
 /* tones */
-.tones{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.tone{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:14px;display:grid;gap:6px}
+.tones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tone{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:14px;display:grid;gap:6px;min-width:0}
 .tone svg{width:100%;height:auto;max-width:100%}
 .tone .big{font-size:1.6rem;font-weight:700}
 .tone p{margin:0;font-size:.86rem}
@@ -184,8 +184,8 @@ table{border-collapse:collapse;width:100%;font-size:.9rem}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 th{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 td b{font-size:1.05rem}
-.tq{display:grid;gap:14px;max-width:560px}
-.tq .opts{grid-template-columns:repeat(4,1fr)}
+.tq{display:grid;gap:14px;max-width:560px;grid-template-columns:minmax(0,1fr)}
+.tq .opts{grid-template-columns:repeat(4,minmax(0,1fr))}
 .tq .opt{justify-content:center;font-size:1.3rem;font-weight:600}
 
 /* write */
@@ -220,7 +220,7 @@ td b{font-size:1.05rem}
 .dl .p{color:var(--muted);font-size:.86rem}
 .dl .v{font-size:.86rem}
 .dl > button{grid-row:1 / span 3;grid-column:3}
-.sect{display:grid;gap:14px}
+.sect{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
 
 .slots{min-height:64px;border:2px dashed var(--line);border-radius:var(--r);padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface)}
 .slots.ok{border-color:var(--good);border-style:solid}.slots.no{border-color:var(--bad);border-style:solid}
@@ -228,7 +228,7 @@ td b{font-size:1.05rem}
 .chunk{font-family:var(--f-han);font-size:1.3rem;padding:8px 12px;border-radius:8px;border:1px solid var(--line);border-bottom-width:3px;background:var(--surface)}
 .chunk:hover:not([disabled]){border-color:var(--jade)}
 .chunk[disabled]{opacity:.25;cursor:default}
-.typein{display:flex;gap:8px;flex-wrap:wrap}
+.typein{display:flex;gap:8px;flex-wrap:wrap}form.typein input{min-width:0;flex:1 1 150px;max-width:100%}
 .typein input,.search{flex:1;min-width:0;font:inherit;font-size:1.1rem;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .search{font-size:1rem;flex-basis:240px}
 .typein input.ok{border-color:var(--good);border-width:2px}.typein input.no{border-color:var(--bad);border-width:2px}
@@ -314,11 +314,12 @@ details.card summary::marker{color:var(--jade)}
   .hero,.two{grid-template-columns:1fr}
   .stats{grid-template-columns:repeat(2,1fr)}
   .method{grid-template-columns:1fr 1fr}
-  .tones{grid-template-columns:1fr 1fr}
+  .tones{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .writer{grid-template-columns:1fr}
   .daybig b{font-size:3.3rem}
 }
-@media (max-width:420px){.opts{grid-template-columns:1fr}.tq .opts{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:420px){.opts{grid-template-columns:1fr}.tq .opts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#streakChip{min-width:0;flex-shrink:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.brand{min-width:0;flex-shrink:1;overflow:hidden;white-space:nowrap}.bar .icon-btn{flex:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -328,6 +329,7 @@ details.card summary::marker{color:var(--jade)}
       <a class="brand" href="#today"><span class="seal">汉</span><span>Hán Ngữ 30</span></a>
       <span class="spacer"></span>
       <span class="chip seal-c" id="streakChip" title="Chuỗi ngày học liên tiếp">Chuỗi 0 ngày</span>
+      <button class="icon-btn" id="fzBtn" aria-label="Đổi cỡ chữ" title="Đổi cỡ chữ" style="font-weight:700;font-size:.9rem;width:auto;padding:0 8px">Aa</button>
       <button class="icon-btn" id="themeBtn" aria-label="Đổi giao diện sáng/tối" title="Đổi giao diện sáng/tối">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
       </button>
@@ -1736,8 +1738,9 @@ let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;
 const app=$("#app");
 
 /* theme */
-function applyTheme(){try{const th=localStorage.getItem("hanngu30.theme");if(th)document.documentElement.dataset.theme=th}catch(e){}}
+function applyTheme(){try{const th=localStorage.getItem("hanngu30.theme");if(th)document.documentElement.dataset.theme=th}catch(e){}try{const fz=+localStorage.getItem("hanngu30.fz");if(fz)document.documentElement.style.fontSize=fz+"%"}catch(e){}}
 applyTheme();
+$("#fzBtn").onclick=()=>{const L=[100,112,125];let cur=100;try{cur=+localStorage.getItem("hanngu30.fz")||100}catch(e){}const nx=L[(L.indexOf(cur)+1)%L.length];document.documentElement.style.fontSize=nx===100?"":nx+"%";try{localStorage.setItem("hanngu30.fz",nx)}catch(e){}toast(`Cỡ chữ ${nx}%${nx===125?" (lớn nhất). Bấm Aa lần nữa để về cỡ thường.":"."}`)};
 $("#themeBtn").onclick=()=>{const cur=document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");const nx=cur==="dark"?"light":"dark";document.documentElement.dataset.theme=nx;try{localStorage.setItem("hanngu30.theme",nx)}catch(e){}};
 
 /* ===================== TRẮC NGHIỆM ===================== */
