@@ -2148,12 +2148,23 @@ function wireReading(d){const b=$("#rdBox");if(!b)return;
 /* ===================== LUYỆN NÓI ===================== */
 let dictNS=null,dictZhOff=false,spCtx=null;
 const MIC=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`;
-if(window.claude&&window.claude.use){window.claude.use("dictation").then(d=>{if(!d)return;dictNS=d;
+function webDict(){const C=window.SpeechRecognition||window.webkitSpeechRecognition;if(!C)return null;let H={},rec=null,act=false;
+  return {web:true,onPartial:f=>{H.p=f},onFinal:f=>{H.f=f},onState:f=>{H.s=f},active:()=>act,
+    start:()=>new Promise((res,rej)=>{rec=new C();rec.lang="zh-CN";rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;let err=null;
+      rec.onstart=()=>{act=true;if(H.s)H.s({state:"listening"});res()};
+      rec.onresult=e=>{let it="";for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal){if(H.f)H.f({text:r[0].transcript})}else it+=r[0].transcript}if(H.p)H.p({text:it})};
+      rec.onerror=e=>{err=e.error;if(!act)rej({code:/not-allowed|service-not-allowed/.test(e.error)?"not_granted":"unavailable"})};
+      rec.onend=()=>{const was=act;act=false;if(was&&H.s)H.s({state:"idle",reason:err==="not-allowed"?"not_granted":/network|service-not-allowed|language-not-supported|audio-capture/.test(err||"")?"unavailable":"stopped"})};
+      const to=setTimeout(()=>{if(!act){try{rec.abort()}catch(x){}rej({code:"unavailable"})}},6000);rec.addEventListener&&rec.addEventListener("start",()=>clearTimeout(to));
+      try{rec.start()}catch(x){clearTimeout(to);rej({code:"unavailable"})}}),
+    stop:async()=>{if(rec&&act)rec.stop()}}}
+function wireDict(d){dictNS=d;
   d.onPartial(e=>{if(spCtx&&spCtx.onPartial)spCtx.onPartial(e.text)});
   d.onFinal(e=>{if(spCtx){spCtx.text+=e.text;if(spCtx.onPartial)spCtx.onPartial("");d.stop().catch(()=>{})}});
   d.onState(e=>{if(spCtx&&spCtx.onState)spCtx.onState(e.state,e.reason)});
-  if(location.hash.startsWith("#day-")&&dayTab==="speak")route();
-}).catch(()=>{})}
+  if(location.hash.startsWith("#day-")&&dayTab==="speak"&&!QZ||location.hash==="#tones"&&!($("#spHubW")&&$("#spHubW").innerHTML))route();
+}
+if(window.claude&&window.claude.use){window.claude.use("dictation").then(d=>{d=d||webDict();if(d)wireDict(d)}).catch(()=>{const d=webDict();if(d)wireDict(d)})}else{const d=webDict();if(d)setTimeout(()=>wireDict(d),0)}
 const ZD="零一二三四五六七八九";
 function num2zh(n){n=+n;if(n>=1000)return String(n).split("").map(x=>ZD[x]).join("");if(n<10)return ZD[n];
   if(n<100){const t=Math.floor(n/10),u=n%10;return (t>1?ZD[t]:"")+"十"+(u?ZD[u]:"")}
@@ -2172,13 +2183,14 @@ function mountSpeak(el,sents,dayN){
       <div class="tgt" id="tgt">${esc(zh)}</div>
       <div class="muted">${esc(p)}</div><div>${esc(v)}</div>
       <div class="row"><button class="btn" data-say="${esc(zh)}">${SPK} Nghe mẫu</button>
-        ${canMic()?`<button class="btn primary mic" id="mic">${MIC} <span>Nói</span></button>`:""}</div>
-      <div id="heard"></div>
+        ${canMic()?`<button class="btn primary mic" id="mic">${MIC} <span>Nói</span></button>`:""}${canRec()?`<button class="btn ${canMic()?"":"primary"}" id="recB">● Ghi âm</button>`:""}</div>
+      <div id="recBox"></div><div id="heard"></div>
       ${canMic()?"":`<div class="row"><button class="btn" data-self="0">Còn vấp</button><button class="btn" data-self="1">Đọc trôi chảy</button></div>
-        <div class="muted" style="font-size:.84rem;max-width:62ch">${dictZhOff?"Nhận giọng nói tiếng Trung chưa dùng được cho tài khoản này, nên app chuyển sang kiểu nhại theo.":"Chấm điểm phát âm tự động cần Chrome hoặc Edge trên máy tính và tài khoản trong tổ chức của trang này. Kiểu nhại theo (shadowing) vẫn rất hiệu quả: nghe, nói to cùng lúc, lặp lại 3 lần."}</div>`}
+        <div class="muted" style="font-size:.84rem;max-width:62ch">${dictZhOff?"Nhận giọng nói tiếng Trung chưa dùng được cho tài khoản này, nên app chuyển sang kiểu nhại theo.":(canRec()?"Bấm <b>Ghi âm</b>, đọc câu, rồi nghe lại giọng mình so với giọng mẫu: tự nghe ra chỗ sai thanh là cách sửa nhanh nhất. ":"")+"Máy tự chấm điểm phát âm chỉ có trên Chrome hoặc Edge máy tính, với tài khoản trong tổ chức của trang này; điện thoại, Safari và app di động chưa hỗ trợ."}</div>`}
       <div class="row"><button class="btn ghost" id="sPrev" ${idx?"":"disabled"}>← Câu trước</button><button class="btn ghost" id="sNext">${idx+1<sents.length?"Câu sau →":"Về đầu"}</button></div></div>`;
-    $("#sPrev").onclick=()=>{idx--;render()};
-    $("#sNext").onclick=()=>{idx=(idx+1)%sents.length;render()};
+    const rb=$("#recB");if(rb)rb.onclick=()=>recToggle(rb,$("#recBox"),zh);
+    $("#sPrev").onclick=()=>{recStop();idx--;render()};
+    $("#sNext").onclick=()=>{recStop();idx=(idx+1)%sents.length;render()};
     el.querySelectorAll("[data-self]").forEach(b=>b.onclick=()=>{if(typeof dayN==="number")markStep(dayN,"speak");touchStreak();save();updateChrome();toast(b.dataset.self==="1"?"Tốt lắm! Sang câu tiếp theo.":"Nghe lại mẫu và thử chậm hơn một chút.");if(b.dataset.self==="1"){idx=(idx+1)%sents.length;render()}});
     const mic=$("#mic");if(!mic)return;
     const heard=$("#heard");
@@ -2195,14 +2207,14 @@ function mountSpeak(el,sents,dayN){
     spCtx={text:"",onPartial:t=>{if(t)heard.innerHTML=`<div class="heard"><span class="muted">Đang nghe…</span><span class="han">${esc(t)}</span></div>`},
       onState:(st,reason)=>{setBtn(st!=="idle");if(st==="idle"){
         if(reason==="unavailable"){dictZhOff=true;render();return}
-        if(reason==="not_granted"){heard.innerHTML=`<div class="heard">Micro chưa được cho phép. Bạn có thể bật lại trong menu Permissions của trang.</div>`;return}
+        if(reason==="not_granted"){dictZhOff=true;render();$("#heard").innerHTML=`<div class="heard">Micro chưa được cho phép, nên app chuyển sang tự chấm. Bạn có thể bật lại quyền micro trong cài đặt trình duyệt.</div>`;return}
         if(reason==="rate_limited"){heard.innerHTML=`<div class="heard">Đang có quá nhiều lượt nhận giọng nói, đợi vài giây rồi thử lại.</div>`;return}
         if(spCtx&&spCtx.armed){spCtx.armed=false;grade()}}}};
     mic.onclick=()=>{if(dictNS.active()){dictNS.stop().catch(()=>{});return}
       spCtx.text="";spCtx.armed=true;$("#tgt").textContent=zh;heard.innerHTML=`<div class="heard muted">Đang mở micro…</div>`;
       dictNS.start({language:"zh"}).catch(err=>{spCtx.armed=false;setBtn(false);const c=err&&err.code;
         if(c==="unavailable"){dictZhOff=true;render()}
-        else if(c==="not_granted")heard.innerHTML=`<div class="heard">Bạn chưa cho phép dùng micro, nên app chuyển sang tự chấm.</div>`;
+        else if(c==="not_granted"){dictZhOff=true;render();$("#heard").innerHTML=`<div class="heard">Bạn chưa cho phép dùng micro, nên app chuyển sang tự chấm.</div>`}
         else if(c==="dismissed")heard.innerHTML=`<div class="heard">Bấm Nói lần nữa để cho phép micro.</div>`;
         else if(c!=="stopped")heard.innerHTML=`<div class="heard">Không mở được micro. Thử lại sau giây lát.</div>`})};
   };
@@ -2552,6 +2564,21 @@ function speakHubHTML(){const n=speakPool().length,done=Object.keys(S.speak||{})
   <div class="muted" style="font-size:.88rem">${dictNS&&!dictZhOff?"Bấm <b>Nói</b> và đọc cả câu, máy chấm phần trăm và tô đỏ chữ đọc chưa chuẩn.":"Nghe mẫu rồi nói to theo (shadowing), lặp lại 3 lần, rồi tự chấm."} ${n} câu từ các ngày bạn đã học${done?` · đã luyện <b class="num">${done}</b> lượt`:""}. Mỗi ngày học cũng có tab <b>Luyện nói</b> riêng.</div></div>
   <button class="btn primary" id="spHub">Luyện 10 câu</button></div><div id="spHubW"></div></section>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#spHub"))return;const w=$("#spHubW");if(!w)return;mountSpeak(w,shuffle(speakPool().slice()).slice(0,10),"hub");w.scrollIntoView({behavior:"smooth",block:"nearest"})});
+
+let REC=null;
+function canRec(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)&&!window.__recOff}
+function recStop(){if(REC&&REC.mr&&REC.mr.state==="recording")REC.mr.stop()}
+async function recToggle(btn,box,zh){if(REC&&REC.mr&&REC.mr.state==="recording"){REC.mr.stop();return}
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+  catch(e){window.__recOff=true;btn.remove();box.innerHTML=`<div class="heard muted">Trang chưa được dùng micro trên thiết bị này${e&&e.name==="NotAllowedError"?" (quyền micro bị từ chối)":""}. Bạn vẫn có thể nghe mẫu và nói to theo rồi tự chấm.</div>`;return}
+  const chunks=[];const mr=new MediaRecorder(stream);REC={mr};
+  mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  mr.onstop=()=>{stream.getTracks().forEach(t=>t.stop());btn.textContent="● Ghi lại";btn.classList.remove("on");clearTimeout(REC.t);
+    if(!box.isConnected)return;const url=URL.createObjectURL(new Blob(chunks,{type:mr.mimeType||"audio/webm"}));
+    box.innerHTML=`<div class="heard"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-say="${esc(zh)}">${SPK} Mẫu</button><button class="btn primary" id="recPlay">▶ Giọng bạn</button><button class="btn ghost" id="recBoth">Nghe nối tiếp</button></div><div class="muted" style="font-size:.84rem;margin-top:6px">So sánh từng chữ: thanh lên xuống có giống mẫu không? Chữ nào lệch thì nghe lại mẫu và ghi lại.</div></div>`;
+    const au=new Audio(url);$("#recPlay").onclick=()=>{au.currentTime=0;au.play().catch(()=>{})};
+    $("#recBoth").onclick=async()=>{await speakWait(zh);au.currentTime=0;au.play().catch(()=>{})};touchStreak(1);save();updateChrome()};
+  mr.start();btn.textContent="■ Dừng";btn.classList.add("on");box.innerHTML=`<div class="heard muted">Đang ghi âm… đọc cả câu rồi bấm Dừng (tự dừng sau 15 giây).</div>`;REC.t=setTimeout(()=>{if(mr.state==="recording")mr.stop()},15000)}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
