@@ -2243,6 +2243,7 @@ function viewReview(){
     ${weakHTML()}
     ${randReadHTML()}
     ${transHTML()}
+    ${dctHTML()}
     ${qaHTML()}
     ${chatHTML()}
     ${savedHTML()}
@@ -2255,7 +2256,7 @@ function viewReview(){
     ${forecastHTML()}
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
-  $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["qaBox","Hỏi đáp"],["chatBox","Trò chuyện AI"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
+  $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["dctBox","Nghe chép"],["qaBox","Hỏi đáp"],["chatBox","Trò chuyện AI"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
   if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}},60)}
   if(CHAT)setTimeout(chatDraw,0);
   const rb=$("#revBody");
@@ -2656,6 +2657,30 @@ async function micDiag(){const o=$("#micDiagO");if(!o)return;o.innerHTML=`<div c
   o.innerHTML=`<div class="heard"><div style="display:grid;gap:4px">${L.map(([k,v,ok])=>`<div style="font-size:.88rem">${ok===null?"•":ok?"✅":"❌"} <b>${k}:</b> ${esc(v)}</div>`).join("")}</div><div style="margin-top:8px;font-size:.88rem">${tip}</div></div>`}
 document.addEventListener("click",e=>{if(e.target.closest("#micDiag"))micDiag()});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-sayslow]");if(!b)return;const o=rate;rate=Math.max(.5,o*.7);say(b.dataset.sayslow);rate=o});
+
+let DCT=null;
+function dctHTML(){if(transPool().length<4)return"";return `<div class="card sect" id="dctBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Nghe chép</div><h3>Nghe câu, gõ lại điều bạn nghe</h3>
+  <div class="muted" style="font-size:.86rem">Gõ chữ Hán (bộ gõ pinyin) hoặc pinyin không dấu. Luyện tai bắt từng âm tiết thay vì chỉ đoán ý. ${canSpeak()?"":"<b>Cần giọng đọc tiếng Trung trên thiết bị.</b>"}</div></div>
+  <div class="row"><button class="btn primary" id="dctGo" ${canSpeak()?"":"disabled"}>Nghe 8 câu</button></div></div><div id="dctW" aria-live="polite"></div></div>`}
+function dctShow(){const w=$("#dctW");if(!w||!DCT)return;
+  if(DCT.i>=DCT.q.length){touchStreak(3);save();updateChrome();w.innerHTML=`<div class="result"><div class="score num">${Math.round(DCT.sum/DCT.q.length)}%</div><p class="muted">độ khớp trung bình. ${DCT.sum/DCT.q.length>=80?"Tai bạn bắt âm rất tốt!":"Nghe chậm (🐢) và chép từng cụm sẽ tiến bộ nhanh."}</p><button class="btn" id="dctGo">Nghe 8 câu khác</button></div>`;DCT=null;return}
+  const [zh,p,v]=DCT.q[DCT.i];
+  w.innerHTML=`<div class="quiz" style="margin-top:12px"><div class="row"><span class="eyebrow num">Câu ${DCT.i+1}/${DCT.q.length}</span><span class="spacer"></span><span class="eyebrow num">${[...hanOnly(zh)].length} chữ</span></div>
+    <div class="row" style="margin:10px 0"><button class="btn primary" data-say="${esc(zh)}">${SPK} Nghe</button><button class="btn" data-sayslow="${esc(zh)}">🐢 Chậm</button></div>
+    <input class="typein" id="dctIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ chữ Hán hoặc pinyin không dấu" style="width:100%;box-sizing:border-box">
+    <div class="row" style="margin-top:10px"><button class="btn ghost" id="dctHint">Xem nghĩa</button><span class="spacer"></span><button class="btn primary" id="dctChk">Kiểm tra</button></div><div id="dctA"></div></div>`;
+  setTimeout(()=>say(zh),150);const inp=$("#dctIn");inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();const c=$("#dctChk");if(c)c.click();else{const n=$("#dctNext");if(n)n.click()}}};
+  $("#dctHint").onclick=e=>{e.currentTarget.outerHTML=`<span class="muted" style="font-size:.88rem">${esc(v)}</span>`};
+  $("#dctChk").onclick=()=>{const t=inp.value.trim();let pct=0,mark="";
+    if(/\p{Script=Han}/u.test(t)){const lm=lcsMarks(zhOnly(zh),zhOnly(t));pct=Math.round(lm.score*100);let k=0;mark=[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span style="color:${lm.hit[k++]?"var(--good)":"var(--bad)"}">${esc(c)}</span>`:esc(c)).join("")}
+    else if(t){const sy=pySyl(p).map(pyBare),got=t.toLowerCase().split(/[^a-zü]+/).filter(Boolean).flatMap(w=>pySyl(w).length?pySyl(w).map(pyBare):[w]);const lm=lcsMarks(sy,got);pct=Math.round(lm.score*100);mark=sy.map((x,i)=>`<span style="color:${lm.hit[i]?"var(--good)":"var(--bad)"}">${esc(x)}</span>`).join(" ")}
+    DCT.sum+=pct;inp.disabled=true;$("#dctChk").remove();
+    $("#dctA").innerHTML=`<div class="heard" style="margin-top:10px"><div class="row"><b class="num" style="color:${pct>=85?"var(--good)":pct>=60?"var(--warn)":"var(--bad)"}">${pct}%</b>${mark?`<span class="zh">${mark}</span>`:""}</div>
+      <div class="ex" style="margin-top:6px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div></div>
+      <div class="row" style="margin-top:8px"><span class="spacer"></span><button class="btn primary" id="dctNext">Tiếp</button></div></div>`;
+    S.stats.ans++;if(pct>=85)S.stats.ok++;tySkill({type:"listen"},pct>=85);$("#dctNext").onclick=()=>{DCT.i++;dctShow()};$("#dctNext").focus()};
+  inp.focus({preventScroll:true})}
+document.addEventListener("click",e=>{if(!e.target.closest("#dctGo"))return;const L=transPool();if(!L.length)return;DCT={q:shuffle(L.slice()).slice(0,8),i:0,sum:0};dctShow()});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -3295,7 +3320,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày${(S.streak.fz==null?1:S.streak.fz)>0?" · 🧊"+(S.streak.fz==null?1:S.streak.fz):""}`;$("#streakChip").title="🧊 = ngày nghỉ: bỏ lỡ một ngày mà vẫn giữ chuỗi. Cứ 7 ngày liên tục được thêm 1 (tối đa 2).";const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
-  document.onkeydown=null;QZ=null;TR=null;IME=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
+  document.onkeydown=null;QZ=null;TR=null;IME=null;DCT=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
   const h=(location.hash||"#today").slice(1);
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
