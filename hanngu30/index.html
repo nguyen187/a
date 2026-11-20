@@ -1898,7 +1898,8 @@ function nextHTML(){const items=[],due=dueList().length,cd=currentDay(),d=DAYS[c
   else if(d&&!S.done[cd])items.push([`#day-${cd}`,"quiz",d.final?`Làm bài kiểm tra Ngày ${cd}`:`Tổng ôn Ngày ${cd}`,esc(d.t)]);
   const wk=weakList().length;if(wk>=3)items.push(["#review","",`Luyện ${wk} từ hay sai`,"Những từ bạn trả lời sai nhiều nhất"]);
   if(learned()>=15&&S.trDay!==today()&&transPool().length>=8)items.push(["#review","","Dịch 8 câu Việt → Trung","Tự nói ra câu từ những gì đã học","trBox"]);
-  else if(learned()>=15&&canSpeak()&&S.dctDay!==today()&&transPool().length>=8)items.push(["#review","","Nghe chép 8 câu","Luyện tai bắt từng âm tiết","dctBox"]);
+  if(svDue().length>=3)items.push(["#review","",`Ôn ${svDue().length} câu đã lưu`,"Nhớ lại câu tiếng Trung từ nghĩa tiếng Việt","savedBox"]);
+  if(items.length<3&&learned()>=15&&canSpeak()&&S.dctDay!==today()&&transPool().length>=8)items.push(["#review","","Nghe chép 8 câu","Luyện tai bắt từng âm tiết","dctBox"]);
   if(items.length<3&&(S.log[today()]||0)<(S.goal||20)&&learned()>=6)items.push(["#review","","Chơi ghép cặp 6 từ","Cách nhẹ nhàng để đủ điểm hôm nay"]);
   if(!items.length)return"";
   return `<section class="card sect"><div class="eyebrow">Việc nên làm tiếp</div><div class="dlist">${items.slice(0,3).map(([h,tab,t,sub,go],i)=>`<a class="drow" href="${h}" ${tab?`data-tabgo="${tab}" data-day="${cd}"`:""} ${go?`data-go="${go}"`:""} style="grid-template-columns:32px 1fr auto;text-decoration:none;color:var(--ink)"><span class="chip num" style="justify-content:center">${i+1}</span><div style="min-width:0"><b style="font-size:.95rem">${t}</b><div class="muted" style="font-size:.82rem">${sub}</div></div><span class="muted">→</span></a>`).join("")}</div></section>`}
@@ -2258,7 +2259,7 @@ function viewReview(){
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
   $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["dctBox","Nghe chép"],["qaBox","Hỏi đáp"],["chatBox","Trò chuyện AI"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
-  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}if(go==="dctBox"&&!DCT){const b=$("#dctGo");if(b&&!b.disabled)b.click()}},60)}
+  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}if(go==="dctBox"&&!DCT){const b=$("#dctGo");if(b&&!b.disabled)b.click()}if(go==="savedBox"&&!SVR){const b=$("#svRev");if(b)b.click()}},60)}
   if(CHAT)setTimeout(chatDraw,0);
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
@@ -2682,10 +2683,23 @@ function dctShow(){const w=$("#dctW");if(!w||!DCT)return;
     S.stats.ans++;if(pct>=85)S.stats.ok++;tySkill({type:"listen"},pct>=85);$("#dctNext").onclick=()=>{DCT.i++;dctShow()};$("#dctNext").focus()};
   inp.focus({preventScroll:true})}
 document.addEventListener("click",e=>{if(!e.target.closest("#dctGo"))return;const L=transPool();if(!L.length)return;DCT={q:shuffle(L.slice()).slice(0,8),i:0,sum:0};dctShow()});
+
+function svDue(){const t=today(),m=S.bmS||{};return savedList().filter(([zh])=>!m[zh]||m[zh].d<=t)}
+let SVR=null;
+function svShow(){const box=$("#svWork");if(!box||!SVR)return;
+  if(SVR.i>=SVR.q.length){touchStreak(2);save();updateChrome();box.innerHTML=`<div class="result"><div class="score num">${SVR.ok}/${SVR.q.length}</div><p class="muted">câu nhớ được. Câu quên sẽ quay lại vào ngày mai.</p></div>`;SVR=null;const b=$("#svRev");if(b&&!svDue().length)b.remove();return}
+  const [zh,p,v]=SVR.q[SVR.i];
+  box.innerHTML=`<div class="card" style="margin-top:12px"><div class="row"><span class="eyebrow num">Câu ${SVR.i+1}/${SVR.q.length}</span></div>
+    <p style="font-size:1.1rem;margin:8px 0">${esc(v)}</p><div class="muted" style="font-size:.84rem">Nói to câu tiếng Trung trong đầu (hoặc thành tiếng), rồi lật.</div>
+    <div id="svBack"><button class="btn primary" id="svFlip" style="margin-top:10px">Lật xem</button></div></div>`;
+  $("#svFlip").onclick=()=>{say(zh);$("#svBack").innerHTML=`<div class="ex" style="margin-top:10px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe">${SPK}</button><span class="zh">${segHTML(zh)}</span><span class="p">${esc(p)}</span></div></div>
+    <div class="row" style="margin-top:10px"><button class="btn" data-svg="0">Quên</button><button class="btn" data-svg="1">Nhớ một phần</button><button class="btn primary" data-svg="2">Nhớ rõ</button></div>`;
+    document.querySelectorAll("[data-svg]").forEach(b=>b.onclick=()=>{const g=+b.dataset.svg;S.bmS=S.bmS||{};const c=S.bmS[zh]||{b:0,d:0};c.b=g===0?0:g===1?Math.max(1,c.b):Math.min(6,c.b+1);c.d=today()+(g===0?1:IV[c.b]||1);S.bmS[zh]=c;if(g)SVR.ok++;S.stats.rev++;SVR.i++;save();svShow()})}}
+document.addEventListener("click",e=>{if(!e.target.closest("#svRev"))return;const q=svDue().slice(0,12);if(!q.length)return;SVR={q:shuffle(q.slice()),i:0,ok:0};svShow();$("#svWork").scrollIntoView({behavior:"smooth",block:"nearest"})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
-  ${L.length?`<div class="row"><button class="btn primary" id="svSpeak">Luyện nói</button>${L.length>=2?`<button class="btn" id="svOrder">Sắp xếp câu</button>`:""}</div>`:""}</div>
+  ${L.length?`<div class="row">${svDue().length?`<button class="btn primary" id="svRev">Ôn ${svDue().length} câu đến hạn</button>`:""}<button class="btn ${svDue().length?"":"primary"}" id="svSpeak">Luyện nói</button>${L.length>=2?`<button class="btn" id="svOrder">Sắp xếp câu</button>`:""}</div>`:""}</div>
   ${L.length?`<details><summary class="muted" style="cursor:pointer">Xem danh sách</summary><div class="ex" style="margin-top:10px">${L.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${esc(p)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div></details>`:""}
   <div id="svWork"></div></div>`}
 document.addEventListener("click",e=>{
