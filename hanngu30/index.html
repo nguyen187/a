@@ -2142,12 +2142,16 @@ const CULTURE={
 function cultureHTML(n){const c=CULTURE[n];return c?`<details class="card" style="border-color:var(--seal)"><summary><b>Góc văn hóa</b> <span class="muted">· ${esc(c[0])}</span></summary><p style="margin:10px 0 0;max-width:68ch">${segHTML(c[1])}</p></details>`:""}
 function readingHTML(d){if(!d.rds.length)return"";
   return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc · Chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
-  <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><button class="btn ghost" id="rdTime" data-n="${esc(String(d.n))}">⏱ Đọc tính giờ</button><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div id="rdTimeO" aria-live="polite"></div>
+  <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><button class="btn" id="shadowRd" ${canSpeak()?"":"disabled"}>🎧 Nhại theo</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><button class="btn ghost" id="rdTime" data-n="${esc(String(d.n))}">⏱ Đọc tính giờ</button><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div id="rdTimeO" aria-live="polite"></div>
   <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.classList.toggle("nopy",e.target.checked);
   $("#rdVi").onchange=e=>b.classList.toggle("novi",e.target.checked);
-  $("#playRd").onclick=async()=>{for(const [zh] of d.rds){if(!await speakWait(zh))break}}}
+  $("#playRd").onclick=async()=>{for(const [zh] of d.rds){if(!await speakWait(zh))break}};
+  const sh=$("#shadowRd");if(sh)sh.onclick=async()=>{if(sh._run){sh._run=0;sh.textContent="🎧 Nhại theo";return}const run=sh._run=Date.now();sh.textContent="■ Dừng nhại";toast("Nghe câu mẫu, khi khung chuyển viền đỏ nét đứt thì đến lượt bạn nói to theo. Mỗi câu 2 lần.");const rows=[...b.querySelectorAll(".exl")];
+    for(let i=0;i<d.rds.length&&sh._run===run;i++){const zh=d.rds[i][0];rows.forEach(r=>r.style.outline="");const r=rows[i];if(r){r.style.outline="2px solid var(--jade)";r.style.outlineOffset="4px";r.scrollIntoView({block:"nearest",behavior:"smooth"})}
+      for(let rep=0;rep<2&&sh._run===run;rep++){if(!await speakWait(zh))break;if(sh._run!==run)break;if(r)r.style.outline="2px dashed var(--seal)";await new Promise(z=>setTimeout(z,900+[...hanOnly(zh)].length*420));if(r)r.style.outline="2px solid var(--jade)"}}
+    rows.forEach(r=>r.style.outline="");if(sh._run===run){sh._run=0;sh.textContent="🎧 Nhại theo";touchStreak(2);save();updateChrome();toast("Xong! Nhại theo (shadowing) mỗi ngày giúp nói trôi và đúng thanh hơn.")}}}
 /* ===================== LUYỆN NÓI ===================== */
 let dictNS=null,dictZhOff=false,spCtx=null;
 const MIC=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`;
