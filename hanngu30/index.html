@@ -2339,7 +2339,7 @@ function trShow(){const box=$("#trWork");if(!box||!TR)return;
   box.innerHTML=`<div class="quiz" style="margin-top:12px"><div class="row"><span class="eyebrow num">Câu ${TR.i+1}/${TR.q.length} · ngày ${dn}</span><span class="spacer"></span><span class="eyebrow num">Đúng ${TR.ok}</span></div>
    <p class="prompt" style="font-size:1.15rem;margin:10px 0">${esc(v)}</p>
    <div class="muted" style="font-size:.84rem;margin-bottom:8px" id="trHint">${n} chữ Hán</div>
-   <input class="typein" id="trIn" autocomplete="off" autocapitalize="off" spellcheck="false" lang="zh-CN" placeholder="Gõ chữ Hán, pinyin, hoặc 🎤 bàn phím (tuỳ chọn)" style="width:100%;max-width:100%;box-sizing:border-box">
+   <input class="typein" id="trIn" autocomplete="off" autocapitalize="off" spellcheck="false" lang="zh-CN" placeholder="Gõ chữ Hán, pinyin, hoặc 🎤 bàn phím (tuỳ chọn)" style="width:100%;max-width:100%;box-sizing:border-box">${dictNS&&!dictZhOff?"":kbGuide()}
    <div class="row" style="margin-top:10px"><button class="btn ghost" id="trHintB">Gợi ý</button><span class="spacer"></span>${dictNS&&!dictZhOff?`<button class="btn mic" id="trMic">${MIC} <span>Nói</span></button>`:""}<button class="btn primary" id="trShow">Xem đáp án</button></div><div id="trAns"></div></div>`;
   const inp=$("#trIn");const tm=$("#trMic");
   if(tm){const setB=on=>{tm.classList.toggle("on",on);tm.querySelector("span").textContent=on?"Dừng":"Nói"};
@@ -2352,11 +2352,11 @@ function trShow(){const box=$("#trWork");if(!box||!TR)return;
   $("#trShow").onclick=()=>{const t=inp.value.trim();let auto=null;
     if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});
     const isH=/\p{Script=Han}|\d/u.test(t);let lm=null;
-    if(t){if(isH){lm=lcsMarks(zhOnly(zh),zhOnly(t));auto=lm.score>=.999&&zhOnly(t).length===zhOnly(zh).length}else auto=pyBare(t)===pyBare(p)}
+    let hn=null;if(t){if(isH){hn=homNorm(zhOnly(t),zhOnly(zh),p);lm=lcsMarks(zhOnly(zh),hn.got);auto=lm.score>=.999&&hn.got.length===zhOnly(zh).length}else auto=pyBare(t)===pyBare(p)}
     let k=0;const mark=lm?[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span style="color:${lm.hit[k++]?"var(--good)":"var(--bad)"}">${esc(c)}</span>`:esc(c)).join(""):"";
     inp.disabled=true;$("#trShow").remove();$("#trHintB").remove();
     $("#trAns").innerHTML=`<div class="ex" style="margin-top:12px"><div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span></div></div>
-     ${mark?`<div class="muted" style="font-size:.84rem;margin-top:6px">Khớp ${Math.round(lm.score*100)}%: <span class="zh">${mark}</span></div>`:""}
+     ${mark?`<div class="muted" style="font-size:.84rem;margin-top:6px">Khớp ${Math.round(lm.score*100)}%: <span class="zh">${mark}</span>${hn&&hn.sw.length?` · tính đúng vì đồng âm: ${hn.sw.map(([a,b])=>`<span class="zh">${a}</span>→<span class="zh">${b}</span>`).join(", ")}`:""}</div>`:""}
      ${auto===true?`<p style="margin:10px 0 0"><b>Chính xác!</b></p>`:""}
      ${auto!==true&&t&&aiNS&&!aiOff?`<div style="margin-top:8px"><button class="btn ghost" id="trAI">Câu của mình có đúng không? Nhờ gia sư chấm</button><div id="trAIo" aria-live="polite" style="white-space:pre-wrap;font-size:.92rem;line-height:1.55;margin-top:6px"></div></div>`:""}
      <div class="row" style="margin-top:12px">${auto===true?`<button class="btn primary" data-tr="1">Tiếp</button>`:`<button class="btn" data-tr="0">Chưa đúng</button><button class="btn primary" data-tr="1">Đúng ý</button>`}</div>`;
