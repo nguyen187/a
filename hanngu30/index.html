@@ -2076,7 +2076,9 @@ function viewDay(n){
   }else if(dayTab==="gram"){
     body.innerHTML=`<div class="card gram"><div class="eyebrow">Ngữ pháp</div><h3>${esc(d.g)}</h3>${d.gh}</div>
       <div class="row" style="align-items:baseline"><h3>Câu ví dụ</h3><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div class="ex">${d.exs.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>
-      ${aiNS&&!aiOff?`<div class="row"><button class="btn" id="gramMore" data-n="${n}">✨ Thêm 3 ví dụ mới (AI)</button></div><div id="gramMoreO"></div>`:""}
+      ${aiNS&&!aiOff?`<div class="row"><button class="btn" id="gramMore" data-n="${n}">✨ Thêm 3 ví dụ mới (AI)</button></div><div id="gramMoreO"></div>
+      <div class="card" style="margin-top:12px"><div class="eyebrow">Tự đặt câu theo mẫu</div><div class="muted" style="font-size:.86rem">Dùng cấu trúc “${esc(d.g)}” để nói về bản thân bạn. Gia sư AI sẽ sửa và gợi ý câu tự nhiên hơn.</div>
+        <div class="row" style="margin-top:8px;gap:8px"><input class="typein" id="gpIn" lang="zh-CN" autocomplete="off" placeholder="Câu của bạn (gõ hoặc 🎤 bàn phím)…" style="flex:1 1 200px;min-width:0"><button class="btn primary" id="gpGo" data-n="${n}">Chấm</button></div><div id="gpOut" aria-live="polite" style="white-space:pre-wrap;font-size:.92rem;line-height:1.55;margin-top:8px"></div></div>`:""}
       <div class="row"><button class="btn primary" data-go="speak">Tiếp: Luyện nói →</button></div>`;
   }else if(dayTab==="speak"){
     mountSpeak(body,d.words.length?d.exs.concat(d.rds):DIALOG.split("\n").map(l=>l.split("|").slice(1)),n);
@@ -2831,6 +2833,12 @@ document.addEventListener("click",async e=>{const b=e.target.closest("#gramMore"
     o.innerHTML=L.length?`<div class="ex">${L.map(([zh,p,v,note])=>`<div class="exl"><button class="say" data-say="${zh}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}${note?` <i class="muted">· ${note}</i>`:""}</span></div>`).join("")}</div><div class="muted" style="font-size:.8rem">Câu do AI tạo. Bấm ☆ để lưu câu muốn ôn.</div>`:`<p class="muted">Chưa tạo được câu, thử lại nhé.</p>`;b.textContent="✨ 3 ví dụ khác";touchStreak(1);save()}
   catch(err){o.innerHTML=`<p class="muted">${err&&err.code==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau.":"Chưa tạo được câu, thử lại nhé."}</p>`}
   b.disabled=false});
+
+async function gpRun(){const b=$("#gpGo"),inp=$("#gpIn"),o=$("#gpOut");if(!b||!aiNS)return;const t=inp.value.trim();if(!t)return;const d=DAYS[+b.dataset.n-1];b.disabled=true;o.textContent="Gia sư đang đọc câu của bạn…";
+  try{const r=await aiNS(`Người học tiếng Trung (người Việt, ${chatLevel()}) đang luyện điểm ngữ pháp "${d.g}" và viết câu: "${t}". Nhận xét bằng tiếng Việt, tối đa 80 từ: dòng đầu ghi "ĐÚNG", "GẦN ĐÚNG" hoặc "SAI"; cho biết câu đã dùng đúng cấu trúc chưa; nếu có lỗi viết câu sửa; gợi ý 1 câu khác cùng cấu trúc. Chữ Hán kèm pinyin. Không markdown.`,{modelTier:"quick",onText:({text})=>{o.textContent=text}});o.textContent=r.text;touchStreak(2);save();updateChrome()}
+  catch(e){o.textContent=e&&e.code==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa chấm được, thử lại."}b.disabled=false}
+document.addEventListener("click",e=>{if(e.target.closest("#gpGo"))gpRun()});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="gpIn"){e.preventDefault();gpRun()}});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
