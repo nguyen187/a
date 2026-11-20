@@ -2305,7 +2305,7 @@ function trShow(){const box=$("#trWork");if(!box||!TR)return;
   box.innerHTML=`<div class="quiz" style="margin-top:12px"><div class="row"><span class="eyebrow num">Câu ${TR.i+1}/${TR.q.length} · ngày ${dn}</span><span class="spacer"></span><span class="eyebrow num">Đúng ${TR.ok}</span></div>
    <p class="prompt" style="font-size:1.15rem;margin:10px 0">${esc(v)}</p>
    <div class="muted" style="font-size:.84rem;margin-bottom:8px" id="trHint">${n} chữ Hán</div>
-   <input class="typein" id="trIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Gõ chữ Hán hoặc pinyin (không bắt buộc)" style="width:100%;max-width:100%;box-sizing:border-box">
+   <input class="typein" id="trIn" autocomplete="off" autocapitalize="off" spellcheck="false" lang="zh-CN" placeholder="Gõ chữ Hán, pinyin, hoặc 🎤 bàn phím (tuỳ chọn)" style="width:100%;max-width:100%;box-sizing:border-box">
    <div class="row" style="margin-top:10px"><button class="btn ghost" id="trHintB">Gợi ý</button><span class="spacer"></span>${dictNS&&!dictZhOff?`<button class="btn mic" id="trMic">${MIC} <span>Nói</span></button>`:""}<button class="btn primary" id="trShow">Xem đáp án</button></div><div id="trAns"></div></div>`;
   const inp=$("#trIn");const tm=$("#trMic");
   if(tm){const setB=on=>{tm.classList.toggle("on",on);tm.querySelector("span").textContent=on?"Dừng":"Nói"};
@@ -2425,7 +2425,7 @@ function shQs(n,L){const ls=canSpeak();const L0=shuffle((L||SANDHI).slice()).sli
     return {type:"sandhi",w:BYH[h],autoSay:canSpeak()?h:null,prompt:`<span class="eyebrow">Chữ tô màu đọc thật là?</span><div class="h">${hl}</div>${canSpeak()?`<button class="btn" data-say="${esc(h)}">${SPK} Nghe</button>`:""}`,explain:esc(sandhiWhy(h,i)).replace(/[不一]/g,c=>`<span class="han">${c}</span>`),say:h,
       opts:shuffle([{html:`<span class="py">${pyHTML(ok)}</span>`,ok:true},...bad.map(x=>({html:`<span class="py">${pyHTML(x)}</span>`,ok:false}))])}}).map((q,k)=>(q.key="sh:"+L0[k][0],q))}
 function qaQs(n,L){const ls=canSpeak();const L0=shuffle((L||qaPool()).slice()).slice(0,n);return L0.map(([lv,q,p,v,a,av])=>{const oth=pick(QA.filter(x=>x[4]!==a),3);
-    return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}${dictNS&&!dictZhOff?`<div style="margin-top:8px"><button class="btn mic" data-qamic>${MIC} <span>Nói câu trả lời</span></button><div class="muted" data-qaheard style="font-size:.84rem;min-height:1.2em"></div></div>`:""}`,
+    return {type:"qa",autoSay:ls?q:null,say:q,prompt:`<span class="eyebrow">${ls?"Nghe câu hỏi":"Đọc câu hỏi"}</span>${ls?`<button class="btn primary" data-say="${esc(q)}">${SPK} Nghe lại</button><details style="margin-top:6px"><summary class="muted" style="cursor:pointer;font-size:.84rem">Xem chữ</summary><div class="han" style="font-size:1.3rem">${esc(q)}</div><div class="muted">${esc(p)}</div></details>`:`<div class="han" style="font-size:1.5rem">${esc(q)}</div><div class="muted">${esc(p)}</div>`}${dictNS&&!dictZhOff?`<div style="margin-top:8px"><button class="btn mic" data-qamic>${MIC} <span>Nói câu trả lời</span></button><div class="muted" data-qaheard style="font-size:.84rem;min-height:1.2em"></div></div>`:`<div style="margin-top:8px"><input class="typein" data-qakb lang="zh-CN" autocomplete="off" placeholder="🎤 Trả lời bằng micro bàn phím (tuỳ chọn)" style="width:100%;box-sizing:border-box"><div class="muted" data-qaheard style="font-size:.84rem;min-height:1.2em"></div></div>`}`,
       explain:`<span class="han">${segHTML(q)}</span> <span class="muted">${esc(v)}</span><br><span class="han">${segHTML(a)}</span> <span class="muted">${esc(av)}</span>`,
       opts:shuffle([{html:`<span class="han">${esc(a)}</span>`,ok:true},...oth.map(x=>({html:`<span class="han">${esc(x[4])}</span>`,ok:false}))])}}).map((q,k)=>(q.key="qa:"+L0[k][1],q))}
 function errQs(n,L){const ls=canSpeak();const L0=shuffle((L||errPool()).slice()).slice(0,n);return L0.map(([ok,bad,v,why])=>({type:"err",say:ok,prompt:`<span class="eyebrow">Câu nào đúng?</span><div class="m">${esc(v)}</div>`,
@@ -2456,11 +2456,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-qamic]");i
   const setB=on=>{b.classList.toggle("on",on);b.querySelector("span").textContent=on?"Dừng":"Nói câu trả lời"};
   spCtx={text:"",armed:true,onPartial:t=>{if(t&&hd)hd.textContent="Đang nghe: "+t},onState:(st,reason)=>{setB(st!=="idle");if(st!=="idle"||!spCtx||!spCtx.armed)return;spCtx.armed=false;
     if(reason==="unavailable"){dictZhOff=true;b.remove();return}
-    const got=zhOnly(spCtx.text);if(!got){if(hd)hd.textContent="Chưa nghe rõ, thử nói to hơn.";return}
-    const opts=[...box.querySelectorAll(".opt:not([disabled])")];let best=null,bs=0;
-    opts.forEach(o=>{const t=zhOnly(o.textContent);if(!t)return;const sc=lcsMarks(t,got).score*Math.min(1,got.length/t.length+.3);if(sc>bs){bs=sc;best=o}});
-    if(hd)hd.textContent="Máy nghe được: "+spCtx.text.trim();
-    if(best&&bs>=.5)best.click();else if(hd)hd.textContent+=" — chưa khớp câu nào, thử lại hoặc chọn bằng tay."}};
+    qaPick(box,spCtx.text,hd)}};
   dictNS.start({language:"zh"}).catch(err=>{spCtx.armed=false;setB(false);if(err&&err.code==="unavailable"){dictZhOff=true;b.remove()}})});
 
 let IME=null;
@@ -2700,6 +2696,14 @@ function svShow(){const box=$("#svWork");if(!box||!SVR)return;
     <div class="row" style="margin-top:10px"><button class="btn" data-svg="0">Quên</button><button class="btn" data-svg="1">Nhớ một phần</button><button class="btn primary" data-svg="2">Nhớ rõ</button></div>`;
     document.querySelectorAll("[data-svg]").forEach(b=>b.onclick=()=>{const g=+b.dataset.svg;S.bmS=S.bmS||{};const c=S.bmS[zh]||{b:0,d:0};c.b=g===0?0:g===1?Math.max(1,c.b):Math.min(6,c.b+1);c.d=today()+(g===0?1:IV[c.b]||1);S.bmS[zh]=c;if(g)SVR.ok++;S.stats.rev++;SVR.i++;save();svShow()})}}
 document.addEventListener("click",e=>{if(!e.target.closest("#svRev"))return;const q=svDue().slice(0,12);if(!q.length)return;SVR={q:shuffle(q.slice()),i:0,ok:0};svShow();$("#svWork").scrollIntoView({behavior:"smooth",block:"nearest"})});
+
+function qaPick(box,text,hd){const got=zhOnly(text||"");if(!got){if(hd)hd.textContent="Chưa nghe rõ, thử nói to hơn.";return false}
+  const opts=[...box.querySelectorAll(".opt:not([disabled])")];let best=null,bs=0;
+  opts.forEach(o=>{const t=zhOnly(o.textContent);if(!t)return;const sc=lcsMarks(t,got).score*Math.min(1,got.length/t.length+.3);if(sc>bs){bs=sc;best=o}});
+  if(hd)hd.textContent="Máy nhận được: "+text.trim();
+  if(best&&bs>=.5){best.click();return true}if(hd)hd.textContent+=" — chưa khớp câu nào, thử lại hoặc chọn bằng tay.";return false}
+document.addEventListener("keydown",e=>{const i=e.target&&e.target.closest&&e.target.closest("[data-qakb]");if(!i||e.key!=="Enter")return;e.preventDefault();const box=i.closest(".quiz");if(box&&i.value.trim()){if(qaPick(box,i.value,box.querySelector("[data-qaheard]")))i.disabled=true;else i.select()}});
+document.addEventListener("input",e=>{const i=e.target&&e.target.closest&&e.target.closest("[data-qakb]");if(!i)return;clearTimeout(i._t);if(zhOnly(i.value).length>=2)i._t=setTimeout(()=>{const box=i.closest(".quiz");if(box&&i.isConnected&&!i.disabled){if(qaPick(box,i.value,box.querySelector("[data-qaheard]")))i.disabled=true}},1300)});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
