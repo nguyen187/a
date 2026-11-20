@@ -1635,10 +1635,13 @@ async function initRemote(){
 }
 function touchStreak(pts){
   const t=today();S.log[t]=(S.log[t]||0)+(pts||1);
-  if(S.streak.last===t)return;
-  S.streak.count=(S.streak.last===t-1)?S.streak.count+1:1;S.streak.last=t;S.streak.best=Math.max(S.streak.best||0,S.streak.count);
+  if(S.streak.last===t)return;const st=S.streak,fz=st.fz==null?1:st.fz,gap=t-(st.last||0);
+  if(st.last&&gap>=2&&gap-1<=fz&&st.count>0){st.fz=fz-(gap-1);st.count++;setTimeout(()=>toast(`Đã dùng ${gap-1} ngày nghỉ 🧊 để giữ chuỗi ${st.count} ngày.`),300)}
+  else{st.count=(st.last===t-1)?st.count+1:1;if(st.fz==null)st.fz=1}
+  st.last=t;st.best=Math.max(st.best||0,st.count);
+  if(st.count%7===0&&(st.fz||0)<2){st.fz=(st.fz||0)+1;setTimeout(()=>toast(`Chuỗi ${st.count} ngày! Bạn nhận thêm 1 ngày nghỉ 🧊 (tối đa 2).`),900)}
 }
-function streakNow(){const t=today();return (S.streak.last===t||S.streak.last===t-1)?S.streak.count:0}
+function streakNow(){const t=today(),st=S.streak,fz=st.fz==null?1:st.fz;if(st.last===t||st.last===t-1)return st.count;return st.last&&t-st.last-1<=fz?st.count:0}
 function currentDay(){for(const d of DAYS){if(!S.done[d.n])return d.n}return DAYS.length}
 function learned(){return Object.keys(S.srs).filter(h=>BYH[h]).length}
 function dueList(){const t=today();return Object.entries(S.srs).filter(([h,c])=>BYH[h]&&c.d<=t).map(([h])=>h)}
@@ -3178,7 +3181,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 });
 
 /* ===================== ĐIỀU HƯỚNG ===================== */
-function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày`;const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
+function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày${(S.streak.fz==null?1:S.streak.fz)>0?" · 🧊"+(S.streak.fz==null?1:S.streak.fz):""}`;$("#streakChip").title="🧊 = ngày nghỉ: bỏ lỡ một ngày mà vẫn giữ chuỗi. Cứ 7 ngày liên tục được thêm 1 (tối đa 2).";const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
   document.onkeydown=null;QZ=null;TR=null;IME=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
