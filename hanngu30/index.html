@@ -1912,6 +1912,7 @@ function nextHTML(){const items=[],due=dueList().length,cd=currentDay(),d=DAYS[c
   const wk=weakList().length;if(wk>=3)items.push(["#review","",`Luyện ${wk} từ hay sai`,"Những từ bạn trả lời sai nhiều nhất"]);
   if(learned()>=15&&S.trDay!==today()&&transPool().length>=8)items.push(["#review","","Dịch 8 câu Việt → Trung","Tự nói ra câu từ những gì đã học","trBox"]);
   if(svDue().length>=3)items.push(["#review","",`Ôn ${svDue().length} câu đã lưu`,"Nhớ lại câu tiếng Trung từ nghĩa tiếng Việt","savedBox"]);
+  if(items.length<3&&learned()>=10&&S.spDay!==today()&&speakPool().length>=5)items.push(["#tones","","Luyện nói 10 câu","Đọc to, máy chấm % (trên điện thoại dùng 🎤 micro bàn phím)","sec-speak"]);
   if(items.length<3&&learned()>=15&&canSpeak()&&S.dctDay!==today()&&transPool().length>=8)items.push(["#review","","Nghe chép 8 câu","Luyện tai bắt từng âm tiết","dctBox"]);
   if(items.length<3&&(S.log[today()]||0)<(S.goal||20)&&learned()>=6)items.push(["#review","","Chơi ghép cặp 6 từ","Cách nhẹ nhàng để đủ điểm hôm nay"]);
   if(!items.length)return"";
@@ -2241,7 +2242,7 @@ function mountSpeak(el,sents,dayN){
       const col=pct>=85?"var(--good)":pct>=60?"var(--warn)":"var(--bad)";
       heard.innerHTML=`<div class="heard"><div class="row"><b style="color:${col}" class="num">${pct}%</b><span>${pct>=85?"Rất tốt, máy nghe đúng gần hết câu.":pct>=60?"Khá rồi. Chữ gạch đỏ là chữ máy chưa nghe ra.":"Nghe lại mẫu, chú ý thanh điệu của chữ gạch đỏ."}</span></div>
         <div class="meter"><i style="width:${pct}%;background:${col}"></i></div><div class="muted" style="font-size:.84rem">Máy nghe được: <span class="han">${esc(spCtx.text.trim())}</span></div>${hn.sw.length?`<div class="muted" style="font-size:.8rem">Tính đúng vì đồng âm: ${hn.sw.map(([a,b])=>`<span class="han">${a}</span>→<span class="han">${b}</span>`).join(", ")}</div>`:""}</div>`;
-      if(typeof dayN==="number")markStep(dayN,"speak");S.speak=S.speak||{};const key=dayN+":"+idx;S.speak[key]=Math.max(S.speak[key]||0,pct);touchStreak();save();updateChrome();
+      if(typeof dayN==="number")markStep(dayN,"speak");S.speak=S.speak||{};const key=dayN+":"+idx;S.speak[key]=Math.max(S.speak[key]||0,pct);S.spDay=today();touchStreak();save();updateChrome();
     };
     const kb=$("#kbIn");if(kb){const go=()=>{const v=kb.value.trim();if(!v)return;spCtx={text:v};grade();kb.value=""};kb.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();go()}};$("#kbGo").onclick=go;
       kb.oninput=()=>{clearTimeout(kb._t);const v=kb.value.trim();if(zhOnly(v).length>=Math.max(1,zhOnly(zh).length-1))kb._t=setTimeout(go,1200)}}
@@ -2604,7 +2605,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.i
 
 function speakPool(){const ds=gramDays();const L=(ds.length?ds:DAYS.slice(0,2)).flatMap(d=>(d.exs||[]).concat(d.rds||[])).filter(x=>x&&x[0]&&!x[0].includes("—"));return L}
 function speakHubHTML(){const n=speakPool().length,done=Object.keys(S.speak||{}).length;return `<section class="card sect" id="sec-speak"><div class="row"><div style="min-width:0;flex:1 1 220px"><div class="eyebrow">Luyện nói</div><h2 style="margin:2px 0">Đọc to câu đã học</h2>
-  <div class="muted" style="font-size:.88rem">${dictNS&&!dictZhOff?"Bấm <b>Nói</b> và đọc cả câu, máy chấm phần trăm và tô đỏ chữ đọc chưa chuẩn.":"Nghe mẫu rồi nói to theo (shadowing), lặp lại 3 lần, rồi tự chấm."} ${n} câu từ các ngày bạn đã học${done?` · đã luyện <b class="num">${done}</b> lượt`:""}. Mỗi ngày học cũng có tab <b>Luyện nói</b> riêng.</div></div>
+  <div class="muted" style="font-size:.88rem">${dictNS&&!dictZhOff?"Bấm <b>Nói</b> và đọc cả câu, máy chấm phần trăm và tô đỏ chữ đọc chưa chuẩn.":"Nghe mẫu rồi đọc to. Trên điện thoại: chạm ô 🎤, đọc bằng micro bàn phím tiếng Trung, app tự chấm phần trăm. Không có micro thì nhại theo 3 lần rồi tự chấm."} ${n} câu từ các ngày bạn đã học${done?` · đã luyện <b class="num">${done}</b> lượt`:""}. Mỗi ngày học cũng có tab <b>Luyện nói</b> riêng.</div></div>
   <div class="row"><button class="btn primary" id="spHub">Luyện 10 câu</button><button class="btn" id="shHub" ${canSpeak()?"":"disabled"}>🎧 Nhại theo tự động</button><button class="btn ghost" id="micDiag">Kiểm tra micro</button></div></div><div id="micDiagO"></div><div id="spHubW"></div></section>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#spHub"))return;const w=$("#spHubW");if(!w)return;mountSpeak(w,shuffle(speakPool().slice()).slice(0,10),"hub");w.scrollIntoView({behavior:"smooth",block:"nearest"})});
 
@@ -3186,6 +3187,7 @@ function viewTones(){
   refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
   NOAUTO=true;toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));numDrill($("#ndBody"));minPairQuiz($("#mpBody"));setTimeout(()=>{NOAUTO=false},400);
+  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="sec-speak"){const b=$("#spHub");if(b)b.click()}},450)}
 }
 /* cặp thanh trong từ hai âm tiết */
 const TNAME={1:"1",2:"2",3:"3",4:"4",5:"nhẹ"};
