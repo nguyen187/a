@@ -144,6 +144,7 @@ main{padding-block:24px 64px;display:grid;gap:28px}
 .opt:hover:not([disabled]){border-color:var(--jade)}
 .opt .k{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 6px;font-weight:600}
 .nopy .exl .p,.novi .exl .v{display:none}
+.seg-unk{border-bottom:1px dotted var(--muted)}
 .opt .hz{font-family:var(--f-han);font-size:1.5rem}
 .opt.ok{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
 .opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
@@ -1571,7 +1572,8 @@ function seg(text){if(SEGC.has(text))return SEGC.get(text);const ch=[...text],n=
     const one=ch[i],c=han?(BYH[one]?1:1.6):0.01;if(best[i]+c<best[i+1]){best[i+1]=best[i]+c;prev[i+1]=[i,one,han&&!!BYH[one]]}}
   const out=[];let j=n;while(j>0){const [i,t,isW]=prev[j];out.unshift(isW?{t,w:BYH[t]}:{t});j=i}
   SEGC.set(text,out);return out}
-function segHTML(t){return seg(t).map(x=>x.w?`<span class="seg" data-lk="${x.t}">${x.t}</span>`:x.t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))).join("")}
+function segHTML(t){let h=segHTML0(t),k;do{k=h;h=h.replace(/<span class="seg seg-unk" data-lk="(\p{Script=Han}+)">\1<\/span><span class="seg seg-unk" data-lk="(\p{Script=Han}+)">\2<\/span>/gu,(a,x,y)=>`<span class="seg seg-unk" data-lk="${x+y}">${x+y}</span>`)}while(h!==k);return h}
+function segHTML0(t){return seg(t).map(x=>x.w?`<span class="seg" data-lk="${x.t}">${x.t}</span>`:x.t.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])).replace(/\p{Script=Han}+/gu,m=>`<span class="seg seg-unk" data-lk="${m}">${m}</span>`)).join("").replace(/<span class="seg seg-unk" data-lk="(\p{Script=Han}+)">\1<\/span><span class="seg seg-unk" data-lk="(\p{Script=Han}+)">\2<\/span>/gu,(a,x,y)=>`<span class="seg seg-unk" data-lk="${x+y}">${x+y}</span>`)}
 function orderChunks(zh){const out=[];seg(zh.replace(/[。！？，、：；—\s!?,.]/g,"")).forEach(x=>{if(!x.w&&out.length&&!out[out.length-1].w)out[out.length-1].t+=x.t;else out.push({t:x.t,w:x.w})});return out.map(x=>x.t)}
 function nrm(s){return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/\s+/g,"")}
 
@@ -2804,6 +2806,13 @@ function cwHTML(){const L=Object.entries(S.cw||{});if(!L.length)return"";return 
   <div class="dlist" style="margin-top:10px">${L.map(([h,[p,m,v]])=>`<div class="drow" style="grid-template-columns:minmax(48px,auto) 1fr auto"><span class="han dh">${esc(h)}</span><div style="min-width:0"><div class="py">${pyColor(p)}</div><div>${esc(m)}${v?` <span class="muted">· ${esc(v)}</span>`:""}</div></div><div class="row" style="gap:4px"><button class="say" data-say="${esc(h)}" aria-label="Nghe">${SPK}</button><button class="btn ghost" data-delcw="${esc(h)}" style="padding:4px 8px" aria-label="Xóa ${esc(h)}">✕</button></div></div>`).join("")}</div></details>`}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-delcw]");if(!b)return;const h=b.dataset.delcw;if(S.cw)delete S.cw[h];delete S.srs[h];if(BYH[h]&&BYH[h].cw)delete BYH[h];save();updateChrome();
   const box=$("#cwBox");if(box){const n=Object.keys(S.cw||{}).length;if(!n)box.remove();else{box.outerHTML=cwHTML();const nb=$("#cwBox");if(nb)nb.open=true}}toast(`Đã xóa ${h} khỏi thẻ ôn.`)});
+
+function lkUnknown(bar,t){bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${esc(t)}</span><div style="min-width:0;flex:1" id="lkU"><div class="muted" style="font-size:.88rem">Từ này chưa có trong từ điển của khóa.</div>${aiNS&&!aiOff?`<button class="btn" id="lkAI" style="margin-top:6px;padding:4px 10px">Tra bằng AI</button>`:""}</div><button class="say" data-say="${esc(t)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
+  bar.hidden=false;speak(t);const b=$("#lkAI");if(b)b.onclick=async()=>{b.disabled=true;b.textContent="Đang tra…";
+    try{const r=await aiNS.json(`Giải nghĩa từ tiếng Trung "${t}" cho người Việt. Trả về JSON {"p":"pinyin có dấu","m":"nghĩa tiếng Việt ngắn","v":"âm Hán Việt"}.`,{modelTier:"quick"});
+      const cl=x=>String(x||"").replace(/[<>&"]/g,"");const p=cl(r.p),m=cl(r.m),v=cl(r.v);const u=$("#lkU");if(!u)return;
+      u.innerHTML=`<div class="py">${pyColor(p)}</div><div>${m}${v?` · <span class="hvs" style="font-size:.74rem">${v}</span>`:""} <span class="muted" style="font-size:.72rem">AI</span></div><button class="btn" data-addcw="${encodeURIComponent(JSON.stringify([t,p,m,v]))}" style="margin-top:6px;padding:4px 10px;font-size:.82rem">+ Thêm vào thẻ ôn</button>`}
+    catch(e){b.disabled=false;b.textContent="Thử lại"}}}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -3436,9 +3445,10 @@ function viewDict(){
   draw();
 }
 document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.closest("[data-lk]");
-  if(sp){const w=BYH[sp.dataset.lk];if(!w)return;
+  if(sp){const w=BYH[sp.dataset.lk];if(!w){lkUnknown(bar,sp.dataset.lk);return}
     bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${noteHTML(w.h)}${famHTML(w)}${w.extra?`<span class="muted" style="font-size:.8rem">Từ bổ sung, ngoài 40 ngày học</span>`:`${w.day?`<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a>`:`<span class="muted" style="font-size:.8rem">Từ bạn tự thêm</span>`}`}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
     bar.hidden=false;speak(w.h);return}
+  if(!e.target.isConnected)return;
   if(!e.target.closest("#lk")||e.target.closest("#lkx")||e.target.closest("#lk a"))bar.hidden=true;
 });
 
