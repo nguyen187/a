@@ -1898,6 +1898,7 @@ function nextHTML(){const items=[],due=dueList().length,cd=currentDay(),d=DAYS[c
   else if(d&&!S.done[cd])items.push([`#day-${cd}`,"quiz",d.final?`Làm bài kiểm tra Ngày ${cd}`:`Tổng ôn Ngày ${cd}`,esc(d.t)]);
   const wk=weakList().length;if(wk>=3)items.push(["#review","",`Luyện ${wk} từ hay sai`,"Những từ bạn trả lời sai nhiều nhất"]);
   if(learned()>=15&&S.trDay!==today()&&transPool().length>=8)items.push(["#review","","Dịch 8 câu Việt → Trung","Tự nói ra câu từ những gì đã học","trBox"]);
+  else if(learned()>=15&&canSpeak()&&S.dctDay!==today()&&transPool().length>=8)items.push(["#review","","Nghe chép 8 câu","Luyện tai bắt từng âm tiết","dctBox"]);
   if(items.length<3&&(S.log[today()]||0)<(S.goal||20)&&learned()>=6)items.push(["#review","","Chơi ghép cặp 6 từ","Cách nhẹ nhàng để đủ điểm hôm nay"]);
   if(!items.length)return"";
   return `<section class="card sect"><div class="eyebrow">Việc nên làm tiếp</div><div class="dlist">${items.slice(0,3).map(([h,tab,t,sub,go],i)=>`<a class="drow" href="${h}" ${tab?`data-tabgo="${tab}" data-day="${cd}"`:""} ${go?`data-go="${go}"`:""} style="grid-template-columns:32px 1fr auto;text-decoration:none;color:var(--ink)"><span class="chip num" style="justify-content:center">${i+1}</span><div style="min-width:0"><b style="font-size:.95rem">${t}</b><div class="muted" style="font-size:.82rem">${sub}</div></div><span class="muted">→</span></a>`).join("")}</div></section>`}
@@ -2257,7 +2258,7 @@ function viewReview(){
   </section>`;
   app.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{revMode=b.dataset.mode;viewReview()});
   $("#rvJump").innerHTML=[["sec-cards","Thẻ ôn"],["weak","Từ hay sai"],["rrCard","Đọc ngẫu nhiên"],["trBox","Dịch câu"],["dctBox","Nghe chép"],["qaBox","Hỏi đáp"],["chatBox","Trò chuyện AI"],["savedBox","Câu đã lưu"],["psvBox","Nghe thụ động"],["mtBox","Ghép cặp"],["spdBox","60 giây"],["gramBox","Ngữ pháp"]].filter(([i])=>document.getElementById(i)).map(([i,l])=>`<button data-jump="${i}">${l}</button>`).join("");
-  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}},60)}
+  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="trBox"&&!TR){const b=$("#trGo");if(b)b.click()}if(go==="dctBox"&&!DCT){const b=$("#dctGo");if(b&&!b.disabled)b.click()}},60)}
   if(CHAT)setTimeout(chatDraw,0);
   const rb=$("#revBody");
   if(!learned()){rb.innerHTML=`<div class="card result"><b>Bộ thẻ đang trống</b><div class="muted">Hoàn thành bài kiểm tra Ngày 1 (đạt 70%) để có 11 thẻ đầu tiên.</div><a class="btn primary" href="#day-1">Đến Ngày 1</a></div>`;return}
@@ -2663,7 +2664,7 @@ function dctHTML(){if(transPool().length<4)return"";return `<div class="card sec
   <div class="muted" style="font-size:.86rem">Gõ chữ Hán (bộ gõ pinyin) hoặc pinyin không dấu. Luyện tai bắt từng âm tiết thay vì chỉ đoán ý. ${canSpeak()?"":"<b>Cần giọng đọc tiếng Trung trên thiết bị.</b>"}</div></div>
   <div class="row"><button class="btn primary" id="dctGo" ${canSpeak()?"":"disabled"}>Nghe 8 câu</button></div></div><div id="dctW" aria-live="polite"></div></div>`}
 function dctShow(){const w=$("#dctW");if(!w||!DCT)return;
-  if(DCT.i>=DCT.q.length){touchStreak(3);save();updateChrome();w.innerHTML=`<div class="result"><div class="score num">${Math.round(DCT.sum/DCT.q.length)}%</div><p class="muted">độ khớp trung bình. ${DCT.sum/DCT.q.length>=80?"Tai bạn bắt âm rất tốt!":"Nghe chậm (🐢) và chép từng cụm sẽ tiến bộ nhanh."}</p><button class="btn" id="dctGo">Nghe 8 câu khác</button></div>`;DCT=null;return}
+  if(DCT.i>=DCT.q.length){S.dctDay=today();touchStreak(3);save();updateChrome();w.innerHTML=`<div class="result"><div class="score num">${Math.round(DCT.sum/DCT.q.length)}%</div><p class="muted">độ khớp trung bình. ${DCT.sum/DCT.q.length>=80?"Tai bạn bắt âm rất tốt!":"Nghe chậm (🐢) và chép từng cụm sẽ tiến bộ nhanh."}</p><button class="btn" id="dctGo">Nghe 8 câu khác</button></div>`;DCT=null;return}
   const [zh,p,v]=DCT.q[DCT.i];
   w.innerHTML=`<div class="quiz" style="margin-top:12px"><div class="row"><span class="eyebrow num">Câu ${DCT.i+1}/${DCT.q.length}</span><span class="spacer"></span><span class="eyebrow num">${[...hanOnly(zh)].length} chữ</span></div>
     <div class="row" style="margin:10px 0"><button class="btn primary" data-say="${esc(zh)}">${SPK} Nghe</button><button class="btn" data-sayslow="${esc(zh)}">🐢 Chậm</button></div>
