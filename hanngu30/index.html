@@ -2141,7 +2141,7 @@ const CULTURE={
 function cultureHTML(n){const c=CULTURE[n];return c?`<details class="card" style="border-color:var(--seal)"><summary><b>Góc văn hóa</b> <span class="muted">· ${esc(c[0])}</span></summary><p style="margin:10px 0 0;max-width:68ch">${segHTML(c[1])}</p></details>`:""}
 function readingHTML(d){if(!d.rds.length)return"";
   return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc · Chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
-  <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div>
+  <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><button class="btn ghost" id="rdTime" data-n="${esc(String(d.n))}">⏱ Đọc tính giờ</button><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div id="rdTimeO" aria-live="polite"></div>
   <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.querySelectorAll(".p").forEach(x=>x.style.visibility=e.target.checked?"hidden":"visible");
@@ -2728,6 +2728,13 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-mock]");if
     (wrong||[]).forEach(w=>{if(S.srs[w.h])S.srs[w.h]={b:0,d:today()}});save()};
   MOCKT={end:Date.now()+15*60000,finish:t=>fin(QZ&&QZ.qs===qs?QZ.score:0,qs.length,t)};MOCKT.iv=setInterval(mockTick,1000);
   runQuiz($("#mockQ"),qs,(sc,tot,wrong)=>fin(sc,tot,false,wrong));w.scrollIntoView({behavior:"smooth",block:"start"})});
+
+document.addEventListener("click",e=>{const b=e.target.closest("#rdTime");if(!b)return;const box=$("#rdBox"),o=$("#rdTimeO");if(!box)return;
+  if(!b._t0){b._t0=Date.now();b.textContent="■ Đọc xong";const c=$("#rdPy");if(c&&!c.checked){c.checked=true;c.dispatchEvent(new Event("change"))}const v=$("#rdVi");if(v&&!v.checked){v.checked=true;v.dispatchEvent(new Event("change"))}
+    o.innerHTML=`<div class="heard muted">Đọc thầm (hoặc thành tiếng) cả bài, hiểu nghĩa, rồi bấm “Đọc xong”. Pinyin và nghĩa đã được ẩn.</div>`;return}
+  const sec=(Date.now()-b._t0)/1000;b._t0=0;b.textContent="⏱ Đọc lại tính giờ";const n=[...box.querySelectorAll(".exl .zh")].reduce((a,x)=>a+[...hanOnly(x.textContent)].length,0);
+  const cpm=Math.round(n/sec*60),k=b.dataset.n;S.rdSpeed=S.rdSpeed||{};const best=S.rdSpeed[k]||0;if(cpm>best&&sec>3)S.rdSpeed[k]=cpm;save();
+  o.innerHTML=`<div class="heard" style="display:block"><div><b class="num" style="font-size:1.3rem">${cpm}</b> chữ/phút · ${n} chữ trong ${Math.round(sec)} giây ${best?`· kỷ lục bài này: <b class="num">${Math.max(best,cpm)}</b>`:""}</div><div class="muted" style="font-size:.84rem;margin-top:4px">Tham khảo: người mới HSK 1–2 khoảng 60–100 chữ/phút, HSK 3 khoảng 120–150, người bản xứ 300–500. Đọc lại bài cũ nhanh hơn là dấu hiệu bạn đã nhận mặt chữ tự động.</div>${RQ[k]||RQ[+k]?`<div class="muted" style="font-size:.84rem">Giờ hãy làm câu hỏi đọc hiểu bên dưới để chắc là bạn hiểu, không chỉ lướt.</div>`:""}</div>`});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
