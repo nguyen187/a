@@ -2191,7 +2191,13 @@ function lcsMarks(tgt,got){const a=[...tgt],b=[...got],m=a.length,n=b.length;con
   const hit=new Array(m).fill(false);let i=0,j=0;while(i<m&&j<n){if(a[i]===b[j]){hit[i]=true;i++;j++}else if(D[i+1][j]>=D[i][j+1])i++;else j++}
   return {hit,score:m?D[0][0]/m:0}}
 function mountSpeak(el,sents,dayN){
-  let idx=0;
+  let idx=0;const RES={};
+  const finish=()=>{recStop();const vals=Object.values(RES),n=vals.length,weak=sents.filter((x,i)=>RES[i]!=null&&RES[i]<70);const avg=n?Math.round(vals.reduce((a,b)=>a+b,0)/n):0;
+    if(typeof dayN==="number")markStep(dayN,"speak");touchStreak(2);save();updateChrome();
+    el.innerHTML=`<div class="card sect result"><div class="eyebrow">Xong lượt luyện nói</div><div class="score num">${n?avg+"%":"✓"}</div>
+      <p>${n?`Đã luyện ${n}/${sents.length} câu.`:`Đã đi hết ${sents.length} câu.`} ${weak.length?`${weak.length} câu nên luyện lại.`:n?"Rất tốt!":""}</p>
+      <div class="row" style="justify-content:center">${weak.length?`<button class="btn primary" id="spWeak">Luyện lại ${weak.length} câu yếu</button>`:""}<button class="btn ${weak.length?"":"primary"}" id="spAgain">Luyện lại từ đầu</button></div></div>`;
+    const w=$("#spWeak");if(w)w.onclick=()=>mountSpeak(el,weak,dayN);$("#spAgain").onclick=()=>mountSpeak(el,dayN==="hub"?shuffle(speakPool().slice()).slice(0,10):sents,dayN)};
   const canMic=()=>!!dictNS&&!dictZhOff;
   const render=()=>{const [zh,p,v]=sents[idx];
     el.innerHTML=`<div class="card sect">
@@ -2206,17 +2212,17 @@ function mountSpeak(el,sents,dayN){
       <div id="recBox"></div><div id="heard"></div>
       ${canMic()?"":`<div class="row"><button class="btn" data-self="0">Còn vấp</button><button class="btn" data-self="1">Đọc trôi chảy</button></div>
         <div class="muted" style="font-size:.84rem;max-width:62ch">${dictZhOff?"Nhận giọng nói tiếng Trung chưa dùng được cho tài khoản này, nên app chuyển sang kiểu nhại theo.":(canRec()?"Bấm <b>Ghi âm</b>, đọc câu, rồi nghe lại giọng mình so với giọng mẫu: tự nghe ra chỗ sai thanh là cách sửa nhanh nhất. ":"")+"Trên điện thoại: chạm vào ô 🎤 ở trên, bật bàn phím tiếng Trung và bấm micro của bàn phím rồi đọc câu, app sẽ chấm như máy nghe được."}</div>`}
-      <div class="row"><button class="btn ghost" id="sPrev" ${idx?"":"disabled"}>← Câu trước</button><button class="btn ghost" id="sNext">${idx+1<sents.length?"Câu sau →":"Về đầu"}</button></div></div>`;
+      <div class="row"><button class="btn ghost" id="sPrev" ${idx?"":"disabled"}>← Câu trước</button><button class="btn ghost" id="sNext">${idx+1<sents.length?"Câu sau →":"Hoàn thành ✓"}</button></div></div>`;
     const rb=$("#recB");if(rb)rb.onclick=()=>recToggle(rb,$("#recBox"),zh,null,p);
     $("#sPrev").onclick=()=>{recStop();idx--;render()};
-    $("#sNext").onclick=()=>{recStop();idx=(idx+1)%sents.length;render()};
-    el.querySelectorAll("[data-self]").forEach(b=>b.onclick=()=>{if(typeof dayN==="number")markStep(dayN,"speak");touchStreak();save();updateChrome();toast(b.dataset.self==="1"?"Tốt lắm! Sang câu tiếp theo.":"Nghe lại mẫu và thử chậm hơn một chút.");if(b.dataset.self==="1"){idx=(idx+1)%sents.length;render()}});
+    $("#sNext").onclick=()=>{recStop();if(idx+1>=sents.length){finish();return}idx++;render()};
+    el.querySelectorAll("[data-self]").forEach(b=>b.onclick=()=>{if(typeof dayN==="number")markStep(dayN,"speak");touchStreak();save();updateChrome();toast(b.dataset.self==="1"?"Tốt lắm! Sang câu tiếp theo.":"Nghe lại mẫu và thử chậm hơn một chút.");RES[idx]=b.dataset.self==="1"?100:40;if(b.dataset.self==="1"){if(idx+1>=sents.length){finish();return}idx++;render()}});
     const mic=$("#mic");
     const heard=$("#heard");
     const setBtn=on=>{if(!mic)return;mic.classList.toggle("on",on);mic.querySelector("span").textContent=on?"Dừng":"Nói"};
     const grade=()=>{const got=zhOnly(spCtx.text),tgt=zhOnly(zh);
       if(!got){heard.innerHTML=`<div class="heard"><b>Chưa nghe rõ.</b><span class="muted">Nói to và gần micro hơn, rồi thử lại.</span></div>`;return}
-      const {hit,score}=lcsMarks(tgt,got);const pct=Math.round(score*100);
+      const {hit,score}=lcsMarks(tgt,got);const pct=Math.round(score*100);RES[idx]=Math.max(RES[idx]||0,pct);
       let k=0;$("#tgt").innerHTML=[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span class="${hit[k++]?"hit":"miss"}">${c}</span>`:esc(c)).join("");
       const col=pct>=85?"var(--good)":pct>=60?"var(--warn)":"var(--bad)";
       heard.innerHTML=`<div class="heard"><div class="row"><b style="color:${col}" class="num">${pct}%</b><span>${pct>=85?"Rất tốt, máy nghe đúng gần hết câu.":pct>=60?"Khá rồi. Chữ gạch đỏ là chữ máy chưa nghe ra.":"Nghe lại mẫu, chú ý thanh điệu của chữ gạch đỏ."}</span></div>
