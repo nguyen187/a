@@ -1948,6 +1948,7 @@ function viewToday(){
     </div>
     <div class="strip" aria-label="Tiến độ">${(ext?DAYS:DAYS.slice(0,30)).map(x=>`<a href="#day-${x.n}" class="${S.done[x.n]?"done":x.n===cd&&!allDone?"cur":""}" title="Ngày ${x.n}: ${esc(x.t)}">${x.n}</a>`).join("")}</div>
   </section>
+  ${guideHTML()}
   ${nextHTML()}
   ${goalHTML()}
   <section class="two">
@@ -2840,6 +2841,16 @@ async function gpRun(){const b=$("#gpGo"),inp=$("#gpIn"),o=$("#gpOut");if(!b||!a
 document.addEventListener("click",e=>{if(e.target.closest("#gpGo"))gpRun()});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="gpIn"){e.preventDefault();gpRun()}});
 let fcTyped=null;
+
+function guideHTML(){if(S.guideOff||Object.keys(S.done).length>=3)return"";return `<section class="card sect" id="guideBox"><div class="row"><div class="eyebrow">Bắt đầu thế nào?</div><span class="spacer"></span><button class="btn ghost" id="guideX" style="padding:4px 10px;font-size:.82rem">Ẩn</button></div>
+  <ol style="margin:6px 0 0;padding-left:22px;display:grid;gap:8px;line-height:1.5">
+    <li><b>Tab Phát âm</b> (thanh dưới cùng): 10 phút làm quen 4 thanh điệu và các âm dễ nhầm trước khi học từ.</li>
+    <li><b>Mỗi ngày một bài</b> ở <a href="#day-${currentDay()}" style="color:var(--jade);font-weight:600">Ngày ${currentDay()}</a>: Từ vựng → Ngữ pháp → Luyện nói → Kiểm tra → Viết chữ. Đạt 70% bài kiểm tra là xong ngày.</li>
+    <li><b>Tab Ôn tập</b> mỗi sáng: ôn thẻ đến hạn (chỉ vài phút), rồi chọn thêm một bài như Dịch câu, Nghe chép, Hỏi đáp.</li>
+    <li><b>Chạm vào bất kỳ chữ Hán nào</b> để xem pinyin, nghĩa, âm Hán Việt. Bấm ☆ để lưu câu hay.</li>
+  </ol>
+  <div class="muted" style="font-size:.84rem;margin-top:8px">Mẹo: âm Hán Việt là lợi thế lớn của người Việt, hãy để ý nó ở mỗi từ, nhưng nhớ đọc mục “Bẫy Hán Việt” trong tab Từ điển.</div></section>`}
+document.addEventListener("click",e=>{if(!e.target.closest("#guideX"))return;S.guideOff=true;save();const g=$("#guideBox");if(g)g.remove()});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
