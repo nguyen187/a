@@ -1912,7 +1912,7 @@ function nextHTML(){const items=[],due=dueList().length,cd=currentDay(),d=DAYS[c
   const wk=weakList().length;if(wk>=3)items.push(["#review","",`Luyện ${wk} từ hay sai`,"Những từ bạn trả lời sai nhiều nhất"]);
   if(learned()>=15&&S.trDay!==today()&&transPool().length>=8)items.push(["#review","","Dịch 8 câu Việt → Trung","Tự nói ra câu từ những gì đã học","trBox"]);
   if(svDue().length>=3)items.push(["#review","",`Ôn ${svDue().length} câu đã lưu`,"Nhớ lại câu tiếng Trung từ nghĩa tiếng Việt","savedBox"]);
-  if(items.length<3&&learned()>=10&&S.spDay!==today()&&speakPool().length>=5)items.push(["#tones","","Luyện nói 10 câu","Đọc to, máy chấm % (trên điện thoại dùng 🎤 micro bàn phím)","sec-speak"]);
+  if(items.length<3&&learned()>=10&&S.spDay!==today()&&speakPool().length>=5)items.push(spcPool().length>=3?["#tones","",`Luyện câu có chữ hay đọc sai`,`${Object.keys(S.spc||{}).filter(c=>S.spc[c]>=2).slice(0,5).join(" ")} · đọc đúng vài lần sẽ hết`,"sec-speak-weak"]:["#tones","","Luyện nói 10 câu","Đọc to, máy chấm % (trên điện thoại dùng 🎤 micro bàn phím)","sec-speak"]);
   if(items.length<3&&learned()>=15&&canSpeak()&&S.dctDay!==today()&&transPool().length>=8)items.push(["#review","","Nghe chép 8 câu","Luyện tai bắt từng âm tiết","dctBox"]);
   if(items.length<3&&(S.log[today()]||0)<(S.goal||20)&&learned()>=6)items.push(["#review","","Chơi ghép cặp 6 từ","Cách nhẹ nhàng để đủ điểm hôm nay"]);
   if(!items.length)return"";
@@ -3197,7 +3197,7 @@ function viewTones(){
   refreshVoicePicker();$("#voiceSel").onchange=e=>{voicePref=e.target.value;try{localStorage.setItem("hanngu30.voice",voicePref)}catch(x){}refreshVoicePicker();refreshAudioHints();speak("你好，认识你很高兴。")};
   $("#rateR").oninput=e=>{rate=+e.target.value;$("#rateV").textContent=rate.toFixed(1)+"×";try{localStorage.setItem("hanngu30.rate",rate)}catch(x){}};
   NOAUTO=true;toneQuiz($("#tqBody"));tonePairQuiz($("#tpBody"));numDrill($("#ndBody"));minPairQuiz($("#mpBody"));setTimeout(()=>{NOAUTO=false},400);
-  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const t=document.getElementById(go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="sec-speak"){const b=$("#spHub");if(b)b.click()}},450)}
+  if(pendingGo){const go=pendingGo;pendingGo=null;setTimeout(()=>{const weak=go==="sec-speak-weak",t=document.getElementById(weak?"sec-speak":go);if(!t)return;t.scrollIntoView({block:"start"});if(go==="sec-speak"||weak){const b=$(weak?"#spcGo":"#spHub")||$("#spHub");if(b)b.click()}},450)}
 }
 /* cặp thanh trong từ hai âm tiết */
 const TNAME={1:"1",2:"2",3:"3",4:"4",5:"nhẹ"};
