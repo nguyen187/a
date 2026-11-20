@@ -2151,7 +2151,7 @@ const CULTURE={
 function cultureHTML(n){const c=CULTURE[n];return c?`<details class="card" style="border-color:var(--seal)"><summary><b>Góc văn hóa</b> <span class="muted">· ${esc(c[0])}</span></summary><p style="margin:10px 0 0;max-width:68ch">${segHTML(c[1])}</p></details>`:""}
 function readingHTML(d){if(!d.rds.length)return"";
   return `<div class="sect" id="rdBox"><div><div class="eyebrow">Bài đọc · Chặng ${d.week}</div><h3>${esc(d.rdt)}</h3></div>
-  <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><button class="btn" id="shadowRd" ${canSpeak()?"":"disabled"}>🎧 Nhại theo</button><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><button class="btn ghost" id="rdTime" data-n="${esc(String(d.n))}">⏱ Đọc tính giờ</button><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div id="rdTimeO" aria-live="polite"></div>
+  <div class="row"><button class="btn" id="playRd">${SPK} Nghe cả bài</button><button class="btn" id="shadowRd" ${canSpeak()?"":"disabled"}>🎧 Nhại theo</button>${canSpeak()?`<button class="btn" id="blindRd">👂 Nghe trước, đọc sau</button>`:""}<label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdPy"> Ẩn pinyin</label><label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="rdVi"> Ẩn nghĩa</label><button class="btn ghost" id="rdTime" data-n="${esc(String(d.n))}">⏱ Đọc tính giờ</button><span class="muted" style="font-size:.84rem">Chạm vào một từ để tra nghĩa.</span></div><div id="rdTimeO" aria-live="polite"></div>
   <div class="ex">${d.rds.map(([zh,p,v])=>`<div class="exl"><button class="say" data-say="${esc(zh)}" aria-label="Nghe câu">${SPK}</button><span class="zh">${segHTML(zh)}${bmBtn(zh,p,v)}</span><span class="p">${pyColor(p)}</span><span class="v">${v}</span></div>`).join("")}</div>${rcHTML(d.n)}</div>`}
 function wireReading(d){const b=$("#rdBox");if(!b)return;
   $("#rdPy").onchange=e=>b.classList.toggle("nopy",e.target.checked);
@@ -2566,10 +2566,7 @@ async function aiReading(){const box=$("#rrBox"),btn=$("#rrAI");if(!box||!aiNS)r
   const prompt=`Viết một bài đọc tiếng Trung ngắn cho người Việt trình độ ${chatLevel()}: 5-7 câu, mỗi câu dưới 18 chữ Hán, nội dung đời thường, có cốt truyện nhỏ. CHỈ dùng các từ sau (cùng số đếm, đại từ, trợ từ 的 了 吗 呢 吧): ${known}. Cố gắng dùng các từ người học hay sai: ${weak.join("、")||"(không có)"}. Thêm 3 câu hỏi đọc hiểu bằng tiếng Việt, mỗi câu có 1 đáp án đúng và 2 đáp án sai hợp lý (tiếng Việt, ngắn). Trả về JSON: {"title":"tiêu đề tiếng Việt ngắn","lines":[["câu chữ Hán","pinyin có dấu","nghĩa tiếng Việt"]],"qs":[["câu hỏi","đáp án đúng","sai 1","sai 2"]]}`;
   try{const r=await aiNS.json(prompt,{cache:false});const lines=(r.lines||[]).filter(l=>Array.isArray(l)&&l[0]).map(l=>[String(l[0]).replace(/[<>&"]/g,""),String(l[1]||"").replace(/[<>&"]/g,""),String(l[2]||"").replace(/[<>&"]/g,"")]).slice(0,10);
     if(!lines.length)throw {code:"empty"};RQ.ai=(r.qs||[]).filter(q=>Array.isArray(q)&&q.length>=4).map(q=>q.slice(0,4).map(String)).slice(0,4);if(!RQ.ai.length)delete RQ.ai;
-    const d={n:"ai",rds:lines,rdt:String(r.title||"Bài đọc mới"),week:"AI"};box.innerHTML=readingHTML(d).replace("Bài đọc · Chặng AI","Bài đọc do AI viết riêng cho bạn");wireReading(d);
-    if(canSpeak()){const rw=box.querySelector("#rdBox .row");rw.insertAdjacentHTML("afterbegin",'<button class="btn primary" id="aiListen">🎧 Nghe trước, đọc sau</button>');
-      $("#aiListen").onclick=e=>{const b=e.currentTarget;if(box.classList.contains("blind")){box.classList.remove("blind");b.textContent="🎧 Nghe trước, đọc sau";return}
-        box.classList.add("blind");b.textContent="Hiện chữ";const pr=$("#playRd");if(pr&&!pr._g)pr.click();toast("Nghe cả bài rồi trả lời câu hỏi đọc hiểu trước khi bấm “Hiện chữ”.")}}touchStreak(2);save();updateChrome()}
+    const d={n:"ai",rds:lines,rdt:String(r.title||"Bài đọc mới"),week:"AI"};box.innerHTML=readingHTML(d).replace("Bài đọc · Chặng AI","Bài đọc do AI viết riêng cho bạn");wireReading(d);touchStreak(2);save();updateChrome()}
   catch(err){const c=err&&err.code;if(c==="not_granted"){aiOff=true;btn.remove();box.innerHTML="";return}box.innerHTML=`<p class="muted">${c==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau ít phút.":"Chưa tạo được bài đọc, thử lại nhé."}</p>`}
   if(btn.isConnected){btn.disabled=false;btn.textContent="Viết bài khác"}}
 document.addEventListener("click",e=>{if(e.target.closest("#rrAI"))aiReading()});
@@ -2816,6 +2813,10 @@ function lkUnknown(bar,t){bar.innerHTML=`<span class="han" style="font-size:2rem
       const cl=x=>String(x||"").replace(/[<>&"]/g,"");const p=cl(r.p),m=cl(r.m),v=cl(r.v);const u=$("#lkU");if(!u)return;
       u.innerHTML=`<div class="py">${pyColor(p)}</div><div>${m}${v?` · <span class="hvs" style="font-size:.74rem">${v}</span>`:""} <span class="muted" style="font-size:.72rem">AI</span></div><button class="btn" data-addcw="${encodeURIComponent(JSON.stringify([t,p,m,v]))}" style="margin-top:6px;padding:4px 10px;font-size:.82rem">+ Thêm vào thẻ ôn</button>`}
     catch(e){b.disabled=false;b.textContent="Thử lại"}}}
+
+document.addEventListener("click",e=>{const b=e.target.closest("#blindRd");if(!b)return;const box=$("#rdBox");if(!box)return;
+  if(box.classList.contains("blind")){box.classList.remove("blind");b.textContent="👂 Nghe trước, đọc sau";hush();return}
+  box.classList.add("blind");b.textContent="👁 Hiện chữ";const pr=$("#playRd");if(pr&&!pr._g)pr.click();toast("Nghe cả bài, thử hiểu ý chính (và làm câu hỏi đọc hiểu nếu có) rồi mới bấm “Hiện chữ”.")});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
