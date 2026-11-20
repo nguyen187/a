@@ -2783,6 +2783,12 @@ async function exAI(w){const slot=$("#exAIslot");if(!slot||!aiNS)return;slot.inn
     const zh=String(r.zh||"").replace(/[<>&"]/g,""),p=String(r.py||"").replace(/[<>&"]/g,""),v=String(r.vi||"").replace(/[<>&"]/g,"");
     if(!zh.includes(w.h))throw {code:"bad"};S.exAI=S.exAI||{};S.exAI[w.h]=[zh,p,v];save();const sl=$("#exAIslot");if(sl)sl.outerHTML=exHTML(w).replace('<div style="margin-top:6px','<div title="Câu ví dụ do AI tạo" style="margin-top:6px')}
   catch(e){const sl=$("#exAIslot");if(sl)sl.innerHTML="";if(e&&e.code==="not_granted")aiOff=true}}
+
+document.addEventListener("click",async e=>{const b=e.target.closest("#dqAI");if(!b||!aiNS)return;const q=dictQ.trim(),o=$("#dqAIo");b.disabled=true;o.innerHTML=`<div class="muted" style="padding:8px">Gia sư đang tra…</div>`;
+  try{const r=await aiNS.json(`Người Việt học tiếng Trung hỏi về: "${q}" (có thể là chữ Hán, pinyin hoặc tiếng Việt). Trả về JSON {"items":[{"h":"từ chữ Hán giản thể","p":"pinyin có dấu","m":"nghĩa tiếng Việt ngắn","v":"âm Hán Việt","ex":"câu ví dụ ngắn chữ Hán","exp":"pinyin câu ví dụ","exv":"nghĩa câu ví dụ"}]} với 1-3 từ phù hợp nhất, phổ biến nhất.`,{modelTier:"quick"});
+    const cl=x=>String(x||"").replace(/[<>&"]/g,"");const it=(Array.isArray(r.items)?r.items:[]).slice(0,3).map(x=>({h:cl(x.h),p:cl(x.p),m:cl(x.m),v:cl(x.v),ex:cl(x.ex),exp:cl(x.exp),exv:cl(x.exv)})).filter(x=>x.h);
+    o.innerHTML=it.length?it.map(x=>`<div class="drow"><span class="han dh">${x.h}</span><div style="min-width:0"><div class="py">${pyColor(x.p)}</div><div>${x.m}</div>${x.ex?`<div style="font-size:.88rem;margin-top:4px"><span class="han">${x.ex}</span> <span class="muted">${x.exv}</span></div>`:""}</div><div class="dmeta"><span class="hvs">${x.v}</span><span class="muted" style="font-size:.75rem">AI</span></div><button class="say" data-say="${x.h}" aria-label="Nghe">${SPK}</button></div>`).join(""):`<div class="muted" style="padding:8px">Gia sư không tìm được từ phù hợp.</div>`}
+  catch(err){o.innerHTML=`<div class="muted" style="padding:8px">${err&&err.code==="rate_limited"?"Đang có nhiều yêu cầu, thử lại sau.":"Chưa tra được, thử lại."}</div>`;b.disabled=false}});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -3405,6 +3411,8 @@ function viewDict(){
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
     const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(dictDay==="0"||w.day==+dictDay)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
     $("#dcount").textContent=res.length+" từ";
+    const tail=raw&&res.length<3&&aiNS&&!aiOff?`<div class="drow" style="grid-template-columns:1fr auto"><div class="muted" style="font-size:.88rem">${res.length?"Chưa thấy từ bạn cần?":"Không có trong khóa học."} Hỏi gia sư AI về “${esc(raw)}”.</div><button class="btn" id="dqAI">Tra bằng AI</button></div><div id="dqAIo"></div>`:"";
+    setTimeout(()=>{const l=$("#dlist");if(l&&tail&&!$("#dqAI"))l.insertAdjacentHTML("beforeend",tail)},0);
     $("#dlist").innerHTML=res.map(w=>{const c=S.srs[w.h];return `<div class="drow"><span class="han dh">${w.h}</span><div style="min-width:0"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}</div>${noteHTML(w.h)}</div><div class="dmeta"><span class="hvs">${esc(w.v||"")}</span><a href="#day-${w.day}">Ngày ${w.day}</a>${c?`<span class="chip">Ôn: ${BOXL[Math.min(6,c.b)]}</span>`:""}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button></div>`}).join("")||`<div class="card muted">Không tìm thấy từ nào. Thử gõ không dấu hoặc bỏ bớt bộ lọc.</div>`};
   $("#dq").oninput=e=>{dictQ=e.target.value;draw()};
   $("#dw").onchange=e=>{dictWk=e.target.value;dictDay="0";$("#dd").value="0";draw()};
