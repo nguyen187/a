@@ -2568,17 +2568,64 @@ document.addEventListener("click",e=>{if(!e.target.closest("#spHub"))return;cons
 let REC=null;
 function canRec(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)&&!window.__recOff}
 function recStop(){if(REC&&REC.mr&&REC.mr.state==="recording")REC.mr.stop()}
-async function recToggle(btn,box,zh){if(REC&&REC.mr&&REC.mr.state==="recording"){REC.mr.stop();return}
+async function recToggle(btn,box,zh,onBlob){if(REC&&REC.mr&&REC.mr.state==="recording"){REC.mr.stop();return}
   let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
   catch(e){window.__recOff=true;btn.remove();box.innerHTML=`<div class="heard muted">Trang chưa được dùng micro trên thiết bị này${e&&e.name==="NotAllowedError"?" (quyền micro bị từ chối)":""}. Bạn vẫn có thể nghe mẫu và nói to theo rồi tự chấm.</div>`;return}
   const chunks=[];const mr=new MediaRecorder(stream);REC={mr};
   mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
   mr.onstop=()=>{stream.getTracks().forEach(t=>t.stop());btn.textContent="● Ghi lại";btn.classList.remove("on");clearTimeout(REC.t);
-    if(!box.isConnected)return;const url=URL.createObjectURL(new Blob(chunks,{type:mr.mimeType||"audio/webm"}));
+    if(!box.isConnected)return;const blob=new Blob(chunks,{type:mr.mimeType||"audio/webm"});const url=URL.createObjectURL(blob);
     box.innerHTML=`<div class="heard"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-say="${esc(zh)}">${SPK} Mẫu</button><button class="btn primary" id="recPlay">▶ Giọng bạn</button><button class="btn ghost" id="recBoth">Nghe nối tiếp</button></div><div class="muted" style="font-size:.84rem;margin-top:6px">So sánh từng chữ: thanh lên xuống có giống mẫu không? Chữ nào lệch thì nghe lại mẫu và ghi lại.</div></div>`;
     const au=new Audio(url);$("#recPlay").onclick=()=>{au.currentTime=0;au.play().catch(()=>{})};
-    $("#recBoth").onclick=async()=>{await speakWait(zh);au.currentTime=0;au.play().catch(()=>{})};touchStreak(1);save();updateChrome()};
+    $("#recBoth").onclick=async()=>{await speakWait(zh);au.currentTime=0;au.play().catch(()=>{})};touchStreak(1);save();updateChrome();
+    if(onBlob)onBlob(blob);else pitchTrack(blob).then(tr=>{const v=tr.filter(q=>q!=null);if(v.length>8&&box.isConnected)box.querySelector(".heard").insertAdjacentHTML("beforeend",`<div class="muted" style="font-size:.8rem;margin-top:6px">Đường cao độ giọng bạn (xanh) trên khuôn thanh mẫu (xám):</div>`+contourSVG(tr,sylTones(BYH[zh]?BYH[zh].p:"").length?sylTones(BYH[zh].p):[...zhOnly(zh)].map(()=>5)))}).catch(()=>{})};
   mr.start();btn.textContent="■ Dừng";btn.classList.add("on");box.innerHTML=`<div class="heard muted">Đang ghi âm… đọc cả câu rồi bấm Dừng (tự dừng sau 15 giây).</div>`;REC.t=setTimeout(()=>{if(mr.state==="recording")mr.stop()},15000)}
+
+/* ===== Phân tích cao độ (chấm thanh điệu từ bản ghi âm) ===== */
+async function pitchTrack(blob){const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();
+  const buf=await ac.decodeAudioData(await blob.arrayBuffer());ac.close&&ac.close();const x=buf.getChannelData(0),sr=buf.sampleRate;
+  const N=Math.round(sr*.04),hop=Math.round(sr*.01),minL=Math.floor(sr/420),maxL=Math.floor(sr/70);let peak=0;for(let i=0;i<x.length;i+=7)peak=Math.max(peak,Math.abs(x[i]));
+  const out=[];for(let s0=0;s0+N+maxL<x.length;s0+=hop){let e=0;for(let i=0;i<N;i++)e+=x[s0+i]*x[s0+i];const rms=Math.sqrt(e/N);
+    if(rms<peak*.06){out.push(null);continue}let best=0;const R=[];
+    for(let L=minL;L<=maxL;L++){let c=0,e2=0;for(let i=0;i<N;i+=2){c+=x[s0+i]*x[s0+i+L];e2+=x[s0+i+L]*x[s0+i+L]}const r=c/Math.sqrt(e*e2/2+1e-9);R.push(r);if(r>best)best=r}
+    let bl=0;for(let j=1;j<R.length-1;j++){if(R[j]>=best*.9&&R[j]>=R[j-1]&&R[j]>=R[j+1]){bl=j+minL;break}}
+    out.push(best>.55&&bl?12*Math.log2(sr/bl/100):null)}
+  {const vv=out.filter(q=>q!=null).sort((a,b)=>a-b),md=vv[vv.length>>1];if(md!=null)for(let i=0;i<out.length;i++){const q=out[i];if(q==null)continue;if(q-md>9)out[i]=q-12;else if(md-q>9)out[i]=q+12}}
+  // làm mượt & bỏ điểm lẻ
+  const v=out.map((p,i)=>{if(p==null)return null;const w=out.slice(Math.max(0,i-2),i+3).filter(q=>q!=null).sort((a,b)=>a-b);return w[w.length>>1]});
+  let a=v.findIndex(p=>p!=null),b=v.length-1;while(b>=0&&v[b]==null)b--;return a<0?[]:v.slice(a,b+1)}
+function toneClass(seg,ref){const p=seg.filter(q=>q!=null);if(p.length<4)return 0;const k=Math.max(1,Math.round(p.length*.3)),m=a=>a.reduce((s,q)=>s+q,0)/a.length;
+  const st=m(p.slice(0,k)),en=m(p.slice(-k)),mid=Math.min(...p.slice(k,-k).length?p.slice(k,-k):p),avg=m(p),d=en-st;
+  if(d<=-2.2)return 4;if(d>=1.8&&mid>st-1.2)return 2;if(mid<Math.min(st,en)-1||avg<ref-1.8)return 3;if(Math.abs(d)<1.8)return 1;return d>0?2:4}
+function toneScore(track,tones){const vo=track.filter(q=>q!=null);if(vo.length<6*tones.length)return null;const ref=[...vo].sort((a,b)=>a-b)[vo.length>>1];
+  const n=tones.length,res=[];for(let i=0;i<n;i++){const seg=track.slice(Math.floor(i*track.length/n),Math.floor((i+1)*track.length/n));res.push(toneClass(seg,ref))}return res}
+const TSHAPE={1:[5,5],2:[3,5],3:[2,1,4],4:[5,1],5:[3,3]};
+function contourSVG(track,tones){const W=300,H=90,v=track.filter(q=>q!=null);if(!v.length)return"";const lo=Math.min(...v)-1,hi=Math.max(...v)+1;
+  const pts=[];track.forEach((q,i)=>{if(q!=null)pts.push(`${(i/(track.length-1||1)*W).toFixed(1)},${(H-(q-lo)/(hi-lo)*H).toFixed(1)}`)});
+  const n=tones.length;const exp=tones.map((t,i)=>{const sh=TSHAPE[t]||TSHAPE[5];return sh.map((y,j)=>`${((i+(j/(sh.length-1))*.9+.05)/n*W).toFixed(1)},${(H-(y-.5)/5*H).toFixed(1)}`).join(" ")});
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:420px;height:auto;display:block;margin-top:8px;background:var(--sunk);border-radius:8px" role="img" aria-label="Đường cao độ giọng bạn so với mẫu">
+    ${exp.map(p=>`<polyline points="${p}" fill="none" stroke="var(--line)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`).join("")}
+    ${[...Array(n-1)].map((_,i)=>`<line x1="${(i+1)/n*W}" x2="${(i+1)/n*W}" y1="0" y2="${H}" stroke="var(--line)" stroke-dasharray="3 3"/>`).join("")}
+    <polyline points="${pts.join(" ")}" fill="none" stroke="var(--jade)" stroke-width="2.5" stroke-linejoin="round"/></svg>`}
+function sylTones(p){return p.trim().split(/[\s,，.。!！?？]+/).filter(Boolean).map(toneOf)}
+const TONEN=["","ngang","sắc (lên)","hỏi (xuống-lên)","huyền mạnh (xuống)"];
+let TREC=null;
+function toneRecHTML(){return `<section class="card sect" id="sec-trec"><div class="eyebrow">Chấm thanh điệu</div><h2 style="margin:2px 0">Đọc từ, máy vẽ đường giọng của bạn</h2>
+  <div class="muted" style="font-size:.88rem">Ghi âm một từ 1–2 âm tiết. App đo cao độ giọng, vẽ đường của bạn (xanh) trên khuôn mẫu (xám) và chấm từng thanh. Nói rõ, đều, không quá nhỏ.</div>
+  ${canRec()?`<div class="row" style="margin-top:10px"><button class="btn primary" id="trecGo">Bắt đầu</button></div>`:`<p class="muted">Trình duyệt này không cho ghi âm trong trang.</p>`}<div id="trecW"></div></section>`}
+function trecPool(){const ds=gramDays();const ws=(ds.length?ds:DAYS.slice(0,3)).flatMap(d=>d.words);return ws.filter(w=>{const t=sylTones(w.p);return t.length===[...w.h].length&&t.length<=2&&!t.includes(5)&&!(t[0]===3&&t[1]===3)&&!/[不一]/.test(w.h)})}
+function trecShow(){const w=$("#trecW");if(!w||!TREC)return;const x=TREC.q[TREC.i],tones=sylTones(x.p);
+  w.innerHTML=`<div class="quiz" style="margin-top:12px"><div class="row"><span class="eyebrow num">Từ ${TREC.i+1}/${TREC.q.length}</span><span class="spacer"></span><span class="eyebrow num">Đúng ${TREC.ok} thanh</span></div>
+    <div class="row" style="align-items:baseline;gap:12px;margin:8px 0"><span class="han" style="font-size:2.2rem">${x.h}</span><span class="py" style="font-size:1.2rem">${pyHTML(x.p)}</span><span class="muted">${esc(x.m)}</span></div>
+    <div class="muted" style="font-size:.84rem">Thanh: ${tones.map(t=>t+" · "+TONEN[t]).join(" + ")}</div>
+    <div class="row" style="margin-top:10px"><button class="btn" data-say="${esc(x.h)}">${SPK} Nghe mẫu</button><button class="btn primary" id="trecRec">● Ghi âm</button><button class="btn ghost" id="trecNext">Bỏ qua →</button></div><div id="trecOut" aria-live="polite"></div></div>`;
+  $("#trecNext").onclick=()=>{recStop();TREC.i++;if(TREC.i>=TREC.q.length){w.innerHTML=`<div class="result"><div class="score num">${TREC.ok}/${TREC.tot}</div><p class="muted">thanh được máy nhận đúng. Chấm bằng cao độ chỉ mang tính tham khảo: hãy so đường xanh với khuôn xám.</p><button class="btn" id="trecGo">Luyện tiếp</button></div>`;TREC=null;return}trecShow()};
+  const rb=$("#trecRec");rb.onclick=()=>recToggle(rb,$("#trecOut"),x.h,async blob=>{const o=$("#trecOut");try{const tr=await pitchTrack(blob);const got=toneScore(tr,tones);
+    if(!got){o.insertAdjacentHTML("afterbegin",`<div class="heard">Máy chưa bắt được giọng rõ. Nói to và dài hơn một chút rồi ghi lại.</div>`);return}
+    const okN=got.filter((g,i)=>g===tones[i]).length;const nb=$("#trecNext");if(nb){nb.textContent="Tiếp →";nb.classList.remove("ghost")}TREC.ok+=okN;TREC.tot+=tones.length;S.ty=S.ty||{};tySkill({type:"py"},okN===tones.length);save();
+    o.insertAdjacentHTML("afterbegin",`<div class="heard"><div class="row" style="gap:8px">${tones.map((t,i)=>`<span class="chip" style="color:${got[i]===t?"var(--good)":"var(--bad)"}">${[...x.h][i]}: ${got[i]===t?"✓ thanh "+t:"nghe như thanh "+(got[i]||"?")}</span>`).join("")}</div>${contourSVG(tr,tones)}</div>`)}
+    catch(e){o.insertAdjacentHTML("afterbegin",`<div class="heard muted">Không phân tích được bản ghi trên trình duyệt này.</div>`)}})}
+document.addEventListener("click",e=>{if(!e.target.closest("#trecGo"))return;const L=trecPool();if(!L.length)return;TREC={q:pick(L,8),i:0,ok:0,tot:0};trecShow()});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -2731,7 +2778,7 @@ function viewTones(){
    ["j","ch, mặt lưỡi chạm ngạc","家 jiā"],["q","ch bật hơi mạnh","七 qī"],["x","x, môi dẹt, mặt lưỡi","谢 xiè"],["zh","tr uốn lưỡi, không bật hơi","中 zhōng"],["ch","tr uốn lưỡi + bật hơi","茶 chá"],["sh","s uốn lưỡi","是 shì"],["r","r uốn lưỡi, gần “gi” nhẹ","人 rén"],
    ["z","ch đầu lưỡi (ts)","在 zài"],["c","ts bật hơi mạnh","菜 cài"],["s","x đầu lưỡi","三 sān"],["y / w","như i / u đầu âm","有 yǒu · 我 wǒ"]];
   const F=[["a","a","八"],["o","ô (miệng tròn)","我"],["e","ưa / ơ (âm sau)","喝"],["i","i; sau zh ch sh r z c s đọc gần “ư”","是"],["u","u","五"],["ü","uy tròn môi (j q x y viết thành u)","女 · 去"],["ai","ai","买"],["ei","ây","没"],["ao","ao","好"],["ou","âu","口"],["an","an","三"],["en","ân","人"],["ang","ang","忙"],["eng","âng","冷"],["ong","ung","中"],["ie","iê","谢"],["ian","iên","天"],["uan","oan","玩"],["üan","uyên","远"],["in","in","今"],["ing","inh","听"],["iu","iêu","九"],["ui","uây","对"]];
-  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-speak">Luyện nói</button><button data-jump="sec-tones">4 thanh</button><button data-jump="sec-ear">Nghe thanh</button><button data-jump="sec-pairs">Cặp thanh</button><button data-jump="sec-sandhi">Biến điệu</button><button data-jump="sec-mp">Âm dễ nhầm</button><button data-jump="sec-num">Con số</button><button data-jump="sec-ini">Phụ âm đầu</button><button data-jump="sec-fin">Vần</button></nav>${speakHubHTML()}<section class="sect" id="sec-tones"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
+  app.innerHTML=`<nav class="jump" aria-label="Đi tới mục"><button data-jump="sec-speak">Luyện nói</button><button data-jump="sec-tones">4 thanh</button><button data-jump="sec-ear">Nghe thanh</button><button data-jump="sec-pairs">Cặp thanh</button><button data-jump="sec-trec">Chấm thanh</button><button data-jump="sec-sandhi">Biến điệu</button><button data-jump="sec-mp">Âm dễ nhầm</button><button data-jump="sec-num">Con số</button><button data-jump="sec-ini">Phụ âm đầu</button><button data-jump="sec-fin">Vần</button></nav>${speakHubHTML()}<section class="sect" id="sec-tones"><div><div class="eyebrow">Phát âm</div><h2>Bốn thanh điệu qua thang độ cao 5 bậc</h2>
     <p class="muted" style="margin:6px 0 0;max-width:64ch">Số 1–5 là độ cao giọng của bạn, 5 là cao nhất. Thanh 1 là 55, thanh 2 là 35, thanh 3 là 214, thanh 4 là 51. Bấm vào từng thẻ để nghe.</p></div>
     <div class="card" style="display:grid;gap:12px"><div class="rate"><label for="voiceSel"><b>Giọng đọc</b></label><select id="voiceSel" class="btn" style="max-width:100%;min-width:0;flex:1 1 220px"></select></div><div class="rate"><label for="rateR"><b>Tốc độ đọc</b></label><input type="range" id="rateR" min="0.6" max="1.2" step="0.1" value="${rate}"><span class="num" id="rateV">${rate.toFixed(1)}×</span><button class="btn" data-say="你好，认识你很高兴。我们一起学习汉语吧！">Nghe thử</button></div>
       <div class="muted" style="font-size:.84rem;max-width:68ch"><span id="voiceNow"></span>. Giọng tự nhiên nhất thường là giọng “Natural” của Microsoft Edge (Xiaoxiao, Yunxi) hoặc giọng Claude. Trên iPhone/Mac: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Trung, tải bản “Nâng cao”. Trên Android: cài Google Text-to-speech và tải giọng tiếng Trung.</div></div>
@@ -2744,6 +2791,7 @@ function viewTones(){
   </section>
   <section class="sect" id="sec-ear"><div><div class="eyebrow">Luyện tai</div><h2>Nghe và đoán thanh</h2></div><div id="tqBody"></div></section>
   ${tonePairsHTML()}
+  ${toneRecHTML()}
   ${sandhiHTML()}
   ${minPairHTML()}
   ${numDrillHTML()}
