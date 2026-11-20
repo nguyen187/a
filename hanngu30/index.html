@@ -2241,7 +2241,7 @@ function mountSpeak(el,sents,dayN){
       let k=0;$("#tgt").innerHTML=[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span class="${hit[k++]?"hit":"miss"}">${c}</span>`:esc(c)).join("");
       const col=pct>=85?"var(--good)":pct>=60?"var(--warn)":"var(--bad)";
       heard.innerHTML=`<div class="heard"><div class="row"><b style="color:${col}" class="num">${pct}%</b><span>${pct>=85?"Rất tốt, máy nghe đúng gần hết câu.":pct>=60?"Khá rồi. Chữ gạch đỏ là chữ máy chưa nghe ra.":"Nghe lại mẫu, chú ý thanh điệu của chữ gạch đỏ."}</span></div>
-        <div class="meter"><i style="width:${pct}%;background:${col}"></i></div><div class="muted" style="font-size:.84rem">Máy nghe được: <span class="han">${esc(spCtx.text.trim())}</span></div>${hn.sw.length?`<div class="muted" style="font-size:.8rem">Tính đúng vì đồng âm: ${hn.sw.map(([a,b])=>`<span class="han">${a}</span>→<span class="han">${b}</span>`).join(", ")}</div>`:""}</div>`;
+        <div class="meter"><i style="width:${pct}%;background:${col}"></i></div><div class="muted" style="font-size:.84rem">Máy nghe được: <span class="han">${esc(spCtx.text.trim())}</span></div>${missHTML(tgt,hit,p)}${hn.sw.length?`<div class="muted" style="font-size:.8rem">Tính đúng vì đồng âm: ${hn.sw.map(([a,b])=>`<span class="han">${a}</span>→<span class="han">${b}</span>`).join(", ")}</div>`:""}</div>`;
       if(typeof dayN==="number")markStep(dayN,"speak");S.speak=S.speak||{};const key=dayN==="hub"?"z:"+zh:dayN+":"+idx;S.speak[key]=Math.max(S.speak[key]||0,pct);S.spz=S.spz||{};S.spz[zh]=pct;S.spDay=today();touchStreak();save();updateChrome();
     };
     const kb=$("#kbIn");if(kb){const go=()=>{const v=kb.value.trim();if(!v)return;spCtx={text:v};grade();kb.value=""};kb.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();go()}};$("#kbGo").onclick=go;
@@ -3007,6 +3007,10 @@ async function jrSave(){const ta=$("#jrIn"),b=$("#jrGo"),o=$("#jrOut");if(!ta)re
     catch(err){o.textContent="";if(err&&err.code==="not_granted")aiOff=true}}
   const box=$("#jrBox");if(box)box.outerHTML=jrHTML()}
 document.addEventListener("click",e=>{if(e.target.closest("#jrGo"))jrSave();if(e.target.closest("#jrRedo")){const t=today(),old=(S.jr||[]).find(x=>x.d===t);S.jr=(S.jr||[]).filter(x=>x.d!==t);save();const b=$("#jrBox");if(b){b.outerHTML=jrHTML();const ta=$("#jrIn");if(ta&&old){ta.value=old.t;ta.focus()}}}});
+
+function missHTML(tgt,hit,p){const T=[...tgt],sy=pySyl(p||"");if(!T.length||hit.every(Boolean))return"";const ok=sy.length===T.length;const TN={1:"thanh 1",2:"thanh 2",3:"thanh 3",4:"thanh 4",5:"thanh nhẹ"};
+  const L=T.map((c,i)=>hit[i]?null:{c,s:ok?sy[i]:cpy(c)}).filter(Boolean).slice(0,6);if(!L.length)return"";
+  return `<div style="font-size:.84rem;margin-top:6px"><span class="muted">Chữ chưa đạt, bấm để nghe riêng:</span><div class="row" style="gap:6px;margin-top:4px">${L.map(x=>`<button class="chip" data-say="${x.c}"><span class="han">${x.c}</span>${x.s?` <span class="py">${pyColor(x.s)}</span> <span class="muted" style="font-size:.74rem">${TN[toneOf(x.s)]}</span>`:""}</button>`).join("")}</div></div>`}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
