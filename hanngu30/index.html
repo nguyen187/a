@@ -2231,13 +2231,13 @@ function mountSpeak(el,sents,dayN){
     const mic=$("#mic");
     const heard=$("#heard");
     const setBtn=on=>{if(!mic)return;mic.classList.toggle("on",on);mic.querySelector("span").textContent=on?"Dừng":"Nói"};
-    const grade=()=>{const got=zhOnly(spCtx.text),tgt=zhOnly(zh);
+    const grade=()=>{const tgt=zhOnly(zh),hn=homNorm(zhOnly(spCtx.text),tgt,p),got=hn.got;
       if(!got){heard.innerHTML=`<div class="heard"><b>Chưa nghe rõ.</b><span class="muted">Nói to và gần micro hơn, rồi thử lại.</span></div>`;return}
       const {hit,score}=lcsMarks(tgt,got);const pct=Math.round(score*100);RES[idx]=Math.max(RES[idx]||0,pct);
       let k=0;$("#tgt").innerHTML=[...zh].map(c=>/\p{Script=Han}/u.test(c)?`<span class="${hit[k++]?"hit":"miss"}">${c}</span>`:esc(c)).join("");
       const col=pct>=85?"var(--good)":pct>=60?"var(--warn)":"var(--bad)";
       heard.innerHTML=`<div class="heard"><div class="row"><b style="color:${col}" class="num">${pct}%</b><span>${pct>=85?"Rất tốt, máy nghe đúng gần hết câu.":pct>=60?"Khá rồi. Chữ gạch đỏ là chữ máy chưa nghe ra.":"Nghe lại mẫu, chú ý thanh điệu của chữ gạch đỏ."}</span></div>
-        <div class="meter"><i style="width:${pct}%;background:${col}"></i></div><div class="muted" style="font-size:.84rem">Máy nghe được: <span class="han">${esc(spCtx.text.trim())}</span></div></div>`;
+        <div class="meter"><i style="width:${pct}%;background:${col}"></i></div><div class="muted" style="font-size:.84rem">Máy nghe được: <span class="han">${esc(spCtx.text.trim())}</span></div>${hn.sw.length?`<div class="muted" style="font-size:.8rem">Tính đúng vì đồng âm: ${hn.sw.map(([a,b])=>`<span class="han">${a}</span>→<span class="han">${b}</span>`).join(", ")}</div>`:""}</div>`;
       if(typeof dayN==="number")markStep(dayN,"speak");S.speak=S.speak||{};const key=dayN+":"+idx;S.speak[key]=Math.max(S.speak[key]||0,pct);touchStreak();save();updateChrome();
     };
     const kb=$("#kbIn");if(kb){const go=()=>{const v=kb.value.trim();if(!v)return;spCtx={text:v};grade();kb.value=""};kb.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();go()}};$("#kbGo").onclick=go;
@@ -2900,10 +2900,18 @@ function toneCheck(typed,p){const sy=pySyl(p);if(!sy.length)return null;const ex
 /* chấm phát âm qua chữ mà micro bàn phím nhận ra */
 function hzPy(t){if(BYH[t])return BYH[t].p;const o=[];for(const c of t){const w=BYH[c];if(!w)return "";o.push(w.p)}return o.join(" ")}
 function spkVerdict(txt,w){const got=hanOnly(txt);if(!got)return txt.trim()?`<span class="muted">Hãy đọc bằng micro trên bàn phím tiếng Trung để máy chuyển thành chữ Hán.</span>`:"";
+  if(got!==hanOnly(w.h)&&homNorm(got,hanOnly(w.h),w.p).got===hanOnly(w.h))return `<span style="color:var(--good)">✓ Máy nghe thành từ đồng âm <b class="han">${esc(got)}</b>: phát âm đúng.</span>`;
   if(got===hanOnly(w.h)){S.spk=(S.spk||0)+1;return `<span style="color:var(--good)">✓ Máy nghe đúng: <b class="han">${esc(got)}</b>. Phát âm rõ ràng!</span>`}
   const gp=hzPy(got);if(gp&&pyBare(gp)===pyBare(w.p)){const tc=toneCheck(gp,w.p);return tc&&!tc.ok?`<span style="color:var(--seal)">≈ Máy nghe thành <b class="han">${esc(got)}</b> (${tc.you}): đúng âm, có thể sai thanh. Đúng là ${tc.right}.</span>`:`<span style="color:var(--good)">✓ Máy nghe thành từ đồng âm <b class="han">${esc(got)}</b>: phát âm đúng.</span>`}
   if(!gp)return `<span class="muted">Máy nghe thành <b class="han">${esc(got)}</b>, có chữ ngoài từ điển của khóa nên chưa chấm được. Bấm 🔊 so với mẫu.</span>`;
   return `<span style="color:var(--bad)">✗ Máy nghe thành <b class="han">${esc(got)}</b>${gp?` (${pyColor(gp)})`:""}. Bấm 🔊 nghe mẫu rồi đọc lại.</span>`}
+
+/* chữ đồng âm: máy nhận giọng hay viết 她 thay 他, 在 thay 再… cùng âm cùng thanh thì tính đúng */
+let CPY=null;const CPY_EX={"她":"tā","它":"tā","妳":"nǐ","嘛":"ma","市":"shì","试":"shì","事":"shì","室":"shì","汇":"huì","友":"yǒu","己":"jǐ","卖":"mài","衣":"yī","医":"yī","理":"lǐ","件":"jiàn","作":"zuò","坐":"zuò","座":"zuò","再":"zài","在":"zài","地":"de","得":"de","的":"de","哪":"nǎ","那":"nà","呐":"na","吧":"ba","八":"bā","爸":"bà","马":"mǎ","妈":"mā","骂":"mà","吗":"ma","做":"zuò","以":"yǐ","已":"yǐ","意":"yì","义":"yì","议":"yì","忆":"yì","亿":"yì","易":"yì","他":"tā"};
+function cpy(c){if(!CPY){CPY=Object.assign({},CPY_EX);ALL.forEach(w=>{const h=[...hanOnly(w.h)],sy=pySyl(w.p);if(h.length===sy.length)h.forEach((c,i)=>{if(!CPY[c])CPY[c]=sy[i]})})}return CPY[c]||""}
+function homNorm(got,tgt,p){const T=[...tgt],sy=pySyl(p||""),tp=T.length===sy.length?sy:T.map(cpy),sw=[];
+  const out=[...got].map(g=>{if(T.includes(g))return g;const gp=cpy(g);if(!gp)return g;const k=T.findIndex((t,i)=>tp[i]&&tp[i].normalize("NFC")===gp.normalize("NFC"));if(k<0)return g;sw.push([g,T[k]]);return T[k]});
+  return {got:out.join(""),sw}}
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
