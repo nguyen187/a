@@ -145,6 +145,7 @@ main{padding-block:24px 64px;display:grid;gap:28px}
 .opt .k{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 6px;font-weight:600}
 .nopy .exl .p,.novi .exl .v{display:none}
 .seg-unk{border-bottom:1px dotted var(--muted)}
+.lite-hide{display:none!important}
 .opt .hz{font-family:var(--f-han);font-size:1.5rem}
 .opt.ok{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
 .opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
@@ -1964,6 +1965,8 @@ function viewToday(){
       <div class="row"><a class="btn ${due?"primary":""}" href="#review">${due?"Ôn ngay":"Mở bộ thẻ"}</a></div>
     </div>
   </section>
+  <div class="row" style="justify-content:center"><button class="btn ghost" id="liteT" style="font-size:.86rem">${S.lite?"Hiện đầy đủ: thử thách, kỹ năng, thống kê ▾":"Giao diện gọn (ẩn thống kê) ▴"}</button></div>
+  <div class="${S.lite?"lite-hide":""}" style="display:grid;gap:inherit">
   ${mixHTML()}
   ${skillHTML()}
   <section class="stats">
@@ -2008,7 +2011,7 @@ function viewToday(){
       <textarea id="bkOut" readonly hidden rows="3" style="width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--sunk);color:var(--ink);word-break:break-all"></textarea>
       <textarea id="bkIn" rows="3" placeholder="Dán mã sao lưu (bắt đầu bằng HN30:) vào đây" style="width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface);color:var(--ink)"></textarea>
       <div class="row" id="bkRow"><button class="btn primary" id="bkLoad">Khôi phục</button></div></div></details>
-    <div id="resetBox" class="row"><button class="btn ghost" id="resetBtn">Đặt lại toàn bộ tiến độ</button></div></section>`;
+    <div id="resetBox" class="row"><button class="btn ghost" id="resetBtn">Đặt lại toàn bộ tiến độ</button></div></section></div>`;
   const pg=$("#placeGo");if(pg)pg.onclick=runPlacement;
   $("#bkMake").onclick=()=>{const o=$("#bkOut");o.value=backupCode();o.hidden=false;$("#bkCopy").hidden=false;o.select()};
   $("#bkCopy").onclick=async()=>{const o=$("#bkOut");try{await navigator.clipboard.writeText(o.value);toast("Đã sao chép mã sao lưu.")}catch(e){o.select();try{document.execCommand("copy");toast("Đã sao chép mã sao lưu.")}catch(_){toast("Hãy chọn và sao chép mã thủ công.")}}};
@@ -2817,6 +2820,8 @@ function lkUnknown(bar,t){bar.innerHTML=`<span class="han" style="font-size:2rem
 document.addEventListener("click",e=>{const b=e.target.closest("#blindRd");if(!b)return;const box=$("#rdBox");if(!box)return;
   if(box.classList.contains("blind")){box.classList.remove("blind");b.textContent="👂 Nghe trước, đọc sau";hush();return}
   box.classList.add("blind");b.textContent="👁 Hiện chữ";const pr=$("#playRd");if(pr&&!pr._g)pr.click();toast("Nghe cả bài, thử hiểu ý chính (và làm câu hỏi đọc hiểu nếu có) rồi mới bấm “Hiện chữ”.")});
+
+document.addEventListener("click",e=>{if(!e.target.closest("#liteT"))return;S.lite=!S.lite;save();const y=window.scrollY;viewToday();window.scrollTo(0,y)});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
