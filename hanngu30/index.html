@@ -280,6 +280,7 @@ details.card summary::marker{color:var(--jade)}
 .tgt .hit{color:var(--good)} .tgt .miss{color:var(--bad);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
 .heard{padding:12px 14px;border-radius:var(--r);background:var(--sunk);display:grid;gap:4px}
 .heard .han{font-size:1.2rem}
+.btn.on:not(.mic){border-color:var(--jade);background:var(--jade-soft);color:var(--jade-ink)}
 .mic.on{background:var(--seal);border-color:var(--seal);color:var(--seal-ink)}
 .meter{height:8px;border-radius:9px;background:var(--sunk);overflow:hidden;max-width:320px}
 .meter i{display:block;height:100%}
@@ -1678,8 +1679,8 @@ function say(text,wait){text=text.replace(/[—…]/g,"，");const e=engine();
 function speak(t){return say(t,false)}
 function speakWait(t){return say(t,true)}
 let AGEN=0;function hush(){AGEN++;try{speechSynthesis.cancel()}catch(e){}try{ttsNS&&ttsNS.stop&&ttsNS.stop()}catch(e){}}
-function playSeq(list){return async e=>{const btn=e&&e.currentTarget;if(btn&&btn._g&&btn._g===AGEN){hush();return}const g=++AGEN;if(btn){btn._g=g;btn.classList.add("on")}
-  for(const t of list){if(g!==AGEN)break;if(!await speakWait(t))break}if(btn){btn.classList.remove("on");if(btn._g===g)btn._g=0}}}
+function playSeq(list){return async e=>{const btn=e&&e.currentTarget;if(btn&&btn._g&&btn._g===AGEN){hush();return}const g=++AGEN;let html;if(btn){btn._g=g;btn.classList.add("on");html=btn.innerHTML;btn.innerHTML="■ Dừng"}
+  for(const t of list){if(g!==AGEN)break;if(!await speakWait(t))break}if(btn){btn.classList.remove("on");btn.innerHTML=html;if(btn._g===g)btn._g=0}}}
 function dayQuizDone(n){const d=DAYS[n-1],pass=d.final?80:70;return (sc,tot,wrong)=>{const body=$("#dayBody");if(!body)return;
         const pct=Math.round(sc/tot*100);S.best[n]=Math.max(S.best[n]||0,pct);
         const passed=pct>=pass;
