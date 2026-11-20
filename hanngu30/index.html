@@ -2872,6 +2872,21 @@ async function lkMore(b){const h=b.dataset.h,o=$("#lkMoreO");if(!o)return;b.disa
     if(!o.isConnected)return;o.innerHTML=r.map(([z,p,m])=>`<div class="row" style="gap:6px;align-items:flex-start;margin-top:4px;flex-wrap:nowrap"><button class="say" data-say="${z}" aria-label="Nghe" style="flex:none">${SPK}</button><div style="min-width:0;font-size:.88rem"><span class="han">${z}</span> <span class="py" style="font-size:.78rem">${pyColor(p)}</span><div class="muted" style="font-size:.8rem">${m}</div></div>${bmBtn(z,p,m)}</div>`).join("");b.remove()}
   catch(e){if(b.isConnected){b.disabled=false;b.textContent="Thử lại"}}}
 document.addEventListener("click",e=>{const b=e.target.closest("#lkMore");if(b)lkMore(b)});
+
+function expHTML(){return `<details class="card" id="expBox" style="margin-top:12px"><summary><b>Xuất sang Anki / Quizlet</b> <span class="muted" style="font-size:.84rem">· chép danh sách để học trên app khác</span></summary>
+  <div class="muted" style="font-size:.86rem;margin:8px 0">Mỗi dòng: chữ Hán ⇥ pinyin ⇥ nghĩa (kèm Hán Việt). Dán vào Anki (Tệp → Nhập, chọn phân tách bằng Tab) hoặc Quizlet (Nhập, “Giữa thuật ngữ và định nghĩa: Tab”).</div>
+  <div class="row" style="gap:8px;flex-wrap:wrap">${[["learned","Từ đã học"],["weak","Từ hay sai"],["due","Thẻ đến hạn"],["bm","Câu đã lưu"],["all","Toàn bộ khóa"]].map(([k,l])=>`<button class="btn" data-exp="${k}">${l} <span class="muted num">${expRows(k).length}</span></button>`).join("")}</div>
+  <textarea id="expOut" readonly hidden style="width:100%;box-sizing:border-box;height:140px;margin-top:8px;font:inherit;font-size:.82rem"></textarea></details>`}
+function expRows(k){const wr=w=>[w.h,w.p,w.m+(w.v?" ("+w.v+")":"")];
+  if(k==="bm")return savedList().map(([z,p,v])=>[z,p||"",v||""]);
+  if(k==="all")return ALL.map(wr);
+  if(k==="due")return dueList().filter(h=>BYH[h]).map(h=>wr(BYH[h]));
+  if(k==="weak")return weakList().map(({w})=>wr(w));
+  return Object.keys(S.srs).filter(h=>BYH[h]).map(h=>wr(BYH[h]))}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-exp]");if(!b)return;const rows=expRows(b.dataset.exp);if(!rows.length){toast("Danh sách này đang trống.");return}
+  const txt=rows.map(r=>r.map(x=>String(x).replace(/[\t\n]/g," ")).join("\t")).join("\n"),o=$("#expOut");o.hidden=false;o.value=txt;
+  let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(_){try{o.focus();o.select();ok=document.execCommand("copy")}catch(_){}}
+  toast(ok?`Đã chép ${rows.length} dòng. Dán vào Anki hoặc Quizlet.`:`Chưa chép tự động được: chọn hết ô bên dưới rồi sao chép (${rows.length} dòng).`);if(!ok){o.focus();o.select()}});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -3492,7 +3507,7 @@ function viewDict(){
     <div class="row"><input id="dq" class="search" type="search" placeholder="Tìm: 你好, nihao, xin chào, hảo" value="${esc(dictQ)}" aria-label="Tìm từ">
       <select id="dw" class="btn" aria-label="Lọc theo chặng"><option value="0">Mọi chặng</option>${WEEKS.filter(w=>w.n!==5).map(w=>`<option value="${w.n}" ${dictWk==w.n?"selected":""}>Chặng ${w.n}: ${w.name}</option>`).join("")}</select><select id="dd" class="btn" aria-label="Lọc theo bài" style="flex:1 1 200px;min-width:0;max-width:100%;width:100%;text-overflow:ellipsis"><option value="0">Mọi bài</option>${DAYS.filter(d=>d.words.length).map(d=>`<option value="${d.n}" ${dictDay==d.n?"selected":""}>Ngày ${d.n}: ${esc(d.t)}</option>`).join("")}</select>
       <label class="row" style="gap:6px;font-size:.9rem"><input type="checkbox" id="donly" ${dictOnly?"checked":""}> Chỉ từ đã học</label></div>
-    <div class="eyebrow num" id="dcount"></div><div class="dlist" id="dlist"></div>${cwHTML()}</section>`;
+    <div class="eyebrow num" id="dcount"></div><div class="dlist" id="dlist"></div>${cwHTML()}${expHTML()}</section>`;
   wirePairs();wirePhrases();rpRole();
   const draw=()=>{const q=nrm(dictQ),raw=dictQ.trim();
     const res=ALL.filter(w=>(dictWk==="0"||DAYS[w.day-1].week==+dictWk)&&(dictDay==="0"||w.day==+dictDay)&&(!dictOnly||S.srs[w.h])&&(!q||w.h.includes(raw)||w.k.some(k=>k.includes(q))));
