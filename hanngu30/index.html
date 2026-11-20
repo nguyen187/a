@@ -2019,7 +2019,7 @@ function viewPlan(){
     return `<section class="week"><div class="week-head"><h3>Chặng ${wk.n} · ${wk.name}</h3><span class="muted">${wk.sub}</span><span class="spacer"></span>${dn===ds.length?`<span class="chip seal-c">成 Hoàn thành</span>`:`<span class="chip num">${dn}/${ds.length}</span>`}${stageOK(wk.n)?`<button class="btn" data-stq="${wk.n}" style="padding:5px 12px;font-size:.84rem">Ôn chặng${S.stageBest&&S.stageBest[wk.n]!=null?` · ${S.stageBest[wk.n]}%`:""}</button>`:""}</div>
     <div id="stq-${wk.n}"></div>
     <div class="days">${ds.map(d=>`<a class="dcard ${S.done[d.n]?"done":d.n===cd?"cur":""}" href="#day-${d.n}"><span class="n">${d.n}</span><b>${esc(d.t)}</b>
-      <small>${d.words.length?d.words.length+" từ"+(stepCount(d.n)?" · "+stepCount(d.n)+"/5 bước":""):d.final?"Kiểm tra":"Tổng ôn"}${S.best[d.n]!=null?" · cao nhất "+S.best[d.n]+"%":""}</small></a>`).join("")}</div></section>`}).join("")}`;
+      <small>${d.words.length?d.words.length+" từ"+(stepCount(d.n)?" · "+stepCount(d.n)+"/5 bước":""):d.final?"Kiểm tra":"Tổng ôn"}${S.best[d.n]!=null?" · cao nhất "+S.best[d.n]+"%":""}</small></a>`).join("")}</div></section>`}).join("")}${mockHTML()}`;
 }
 
 /* ===================== VIEW: NGÀY ===================== */
@@ -2704,6 +2704,26 @@ function qaPick(box,text,hd){const got=zhOnly(text||"");if(!got){if(hd)hd.textCo
   if(best&&bs>=.5){best.click();return true}if(hd)hd.textContent+=" — chưa khớp câu nào, thử lại hoặc chọn bằng tay.";return false}
 document.addEventListener("keydown",e=>{const i=e.target&&e.target.closest&&e.target.closest("[data-qakb]");if(!i||e.key!=="Enter")return;e.preventDefault();const box=i.closest(".quiz");if(box&&i.value.trim()){if(qaPick(box,i.value,box.querySelector("[data-qaheard]")))i.disabled=true;else i.select()}});
 document.addEventListener("input",e=>{const i=e.target&&e.target.closest&&e.target.closest("[data-qakb]");if(!i)return;clearTimeout(i._t);if(zhOnly(i.value).length>=2)i._t=setTimeout(()=>{const box=i.closest(".quiz");if(box&&i.isConnected&&!i.disabled){if(qaPick(box,i.value,box.querySelector("[data-qaheard]")))i.disabled=true}},1300)});
+
+const MOCK=[[1,"HSK 1",1,14],[2,"HSK 2",1,28],[3,"HSK 3",1,40]];
+function mockHTML(){const B=S.mock||{};return `<section class="card sect" id="mockBox"><div class="eyebrow">Thi thử</div><h3>Đề thi thử kiểu HSK</h3>
+  <div class="muted" style="font-size:.86rem">20 câu trong 15 phút: 10 câu nghe (cần giọng đọc) và 10 câu đọc. Điểm quy đổi thang 200, từ 120 là đạt. Từ vựng lấy theo phạm vi các ngày học tương ứng.</div>
+  <div class="row" style="margin-top:10px;gap:8px">${MOCK.map(([k,l])=>`<button class="btn ${k===1?"primary":""}" data-mock="${k}">${l}${B[k]!=null?` · <span class="num">${B[k]}</span>`:""}</button>`).join("")}</div><div id="mockW"></div></section>`}
+let MOCKT=null;
+function mockQs(k){const [,,a,b]=MOCK[k-1],ws=ALL.filter(w=>w.day>=a&&w.day<=b&&!w.p.includes("…")),ex=DAYS.slice(a-1,b).flatMap(d=>(d.exs||[]).concat(d.rds||[])).filter(x=>x&&x[0]&&!x[0].includes("—"));
+  const ls=canSpeak(),L=[],R=[];
+  if(ls){pick(ws,4).forEach(w=>L.push(makeQ(w,ws,["tf"])));pick(ws,3).forEach(w=>L.push(makeQ(w,ws,["listen"])));L.push(...qaQs(3,QA.filter(x=>x[0]<=Math.ceil(b/3)+1)))}
+  pick(ws,4).forEach(w=>R.push(makeQ(w,ws,["mean"])));pick(ws,2).forEach(w=>R.push(makeQ(w,ws,["hanzi"])));
+  shuffle(ex.slice()).forEach(e=>{if(R.length>=(ls?10:20))return;const q=R.length%2?makeClozeQ(e,ws,new Set()):makeOrderQ(e);if(q)R.push(q)});
+  while(R.length<(ls?10:20))R.push(makeQ(pick(ws,1)[0],ws,["mean","hanzi"]));
+  return L.concat(R)}
+function mockTick(){const t=$("#mockT");if(!MOCKT)return;const left=Math.max(0,MOCKT.end-Date.now());if(t)t.textContent=`${Math.floor(left/60000)}:${String(Math.floor(left/1000)%60).padStart(2,"0")}`;if(left<=0)MOCKT.finish(true)}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-mock]");if(!b)return;const k=+b.dataset.mock,w=$("#mockW");if(!w)return;if(MOCKT){clearInterval(MOCKT.iv);MOCKT=null}const qs=mockQs(k);
+  w.innerHTML=`<div class="row" style="margin-top:12px"><span class="eyebrow">${MOCK[k-1][1]} · ${qs.length} câu</span><span class="spacer"></span><span class="chip num" id="mockT">15:00</span></div><div id="mockQ"></div>`;
+  let done=false;const fin=(sc,tot,timeout)=>{if(done)return;done=true;if(MOCKT){clearInterval(MOCKT.iv);MOCKT=null}document.onkeydown=null;const pts=Math.round(sc/tot*200);S.mock=S.mock||{};S.mock[k]=Math.max(S.mock[k]||0,pts);touchStreak(6);save();updateChrome();
+    w.innerHTML=`<div class="result"><div class="eyebrow">${MOCK[k-1][1]}${timeout?" · hết giờ":""}</div><div class="score num">${pts}/200</div><p>${pts>=120?"<b>Đạt!</b> ":"Chưa đạt (cần 120). "}${sc}/${tot} câu đúng.</p><button class="btn" data-mock="${k}">Làm đề khác</button></div>`};
+  MOCKT={end:Date.now()+15*60000,finish:t=>fin(QZ&&QZ.qs===qs?QZ.score:0,qs.length,t)};MOCKT.iv=setInterval(mockTick,1000);
+  runQuiz($("#mockQ"),qs,(sc,tot)=>fin(sc,tot,false));w.scrollIntoView({behavior:"smooth",block:"start"})});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -3343,7 +3363,7 @@ document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.close
 function updateChrome(){const s=streakNow();$("#streakChip").textContent=`Chuỗi ${s} ngày${(S.streak.fz==null?1:S.streak.fz)>0?" · 🧊"+(S.streak.fz==null?1:S.streak.fz):""}`;$("#streakChip").title="🧊 = ngày nghỉ: bỏ lỡ một ngày mà vẫn giữ chuỗi. Cứ 7 ngày liên tục được thêm 1 (tối đa 2).";const b=$("#dueBadge");if(b){const n=dueList().length;b.hidden=!n;b.textContent=n>99?"99+":n}}
 let lastDay=null;
 function route(){
-  document.onkeydown=null;QZ=null;TR=null;IME=null;DCT=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
+  document.onkeydown=null;if(MOCKT){clearInterval(MOCKT.iv);MOCKT=null}QZ=null;TR=null;IME=null;DCT=null;$("#lk").hidden=true;if(dictNS&&dictNS.active())dictNS.stop().catch(()=>{});spCtx=null;psvRun++;
   const h=(location.hash||"#today").slice(1);
   let key=h.startsWith("day-")?"plan":h;
   if(h.startsWith("day-")){const n=+h.slice(4);if(n!==lastDay){dayTab="vocab";lastDay=n}viewDay(n)}
