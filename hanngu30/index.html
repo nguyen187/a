@@ -2851,6 +2851,8 @@ function guideHTML(){if(S.guideOff||Object.keys(S.done).length>=3)return"";retur
   </ol>
   <div class="muted" style="font-size:.84rem;margin-top:8px">Mẹo: âm Hán Việt là lợi thế lớn của người Việt, hãy để ý nó ở mỗi từ, nhưng nhớ đọc mục “Bẫy Hán Việt” trong tab Từ điển.</div></section>`}
 document.addEventListener("click",e=>{if(!e.target.closest("#guideX"))return;S.guideOff=true;save();const g=$("#guideBox");if(g)g.remove()});
+const CHARSET=new Set(ALL.flatMap(w=>[...w.h]));let pendingWrite=null;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-writew]");if(!b)return;pendingWrite=b.dataset.writew;$("#lk").hidden=true;if(location.hash==="#write")route();else location.hash="#write"});
 function savedList(){return (Array.isArray(S.bm)?S.bm:[]).slice().sort((a,b)=>b[3]-a[3]).map(([zh,p,v])=>[zh,p,v])}
 function savedHTML(){const L=savedList();return `<div class="card sect" id="savedBox"><div class="row"><div style="min-width:0;flex:1 1 240px"><div class="eyebrow">Câu đã lưu</div><h3>${L.length?L.length+" câu của bạn":"Chưa lưu câu nào"}</h3>
   <div class="muted" style="font-size:.86rem">${L.length?"Nghe, luyện nói và sắp xếp lại những câu bạn muốn thuộc lòng.":"Bấm ☆ cạnh câu ví dụ, bài đọc, hội thoại hoặc mẫu câu để lưu vào đây."}</div></div>
@@ -3162,7 +3164,7 @@ function loadStrokes(){if(STROKES)return Promise.resolve(STROKES);
   if(!strokesP)strokesP=fetch("strokes.json").then(r=>{if(!r.ok)throw new Error("no data");return r.json()}).then(d=>STROKES=d).catch(()=>{strokesP=null;return null});
   return strokesP}
 const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-function mountWriter(el,words,blind,dayN){
+function mountWriter(el,words,blind,dayN){const tok=el._mwTok=Math.random();
   let chars=[...new Set(words.flatMap(w=>[...w.h].filter(c=>/\p{Script=Han}/u.test(c))))];
   if(blind)chars=shuffle(chars).slice(0,10);const solved=new Set();
   if(!chars.length){el.innerHTML=`<div class="card">Chưa có chữ để luyện.</div>`;return}
@@ -3230,7 +3232,7 @@ function mountWriter(el,words,blind,dayN){
   $("#cl").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;cur=b.dataset.c;drawList();info();build()};
   el.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;syncMode();info();build()});
   syncMode();drawList();info();
-  loadStrokes().then(d=>{if(!el.isConnected)return;if(d&&window.HanziWriter&&d[cur]){info();build()}else fallback()});
+  loadStrokes().then(d=>{if(!el.isConnected||el._mwTok!==tok)return;if(d&&window.HanziWriter&&d[cur]){info();build()}else fallback()});
 }
 function viewWrite(){
   const cd=currentDay();const learnedDays=DAYS.filter(d=>d.words.length&&(S.done[d.n]||d.n===cd));
@@ -3244,6 +3246,7 @@ function viewWrite(){
   const sel=$("#wday");const go=()=>{if(sel.value==="rand"){const ds=DAYS.filter(d=>d.words.length&&(S.done[d.n]||d.n<=Math.max(2,cd)));mountWriter($("#wbody"),ds.flatMap(d=>d.words),true)}else mountWriter($("#wbody"),DAYS[+sel.value-1].words)};
   if(!learnedDays.find(d=>d.n==sel.value))sel.value=(learnedDays[learnedDays.length-1]||DAYS[0]).n;
   sel.onchange=go;go();
+  if(pendingWrite){const w=BYH[pendingWrite];pendingWrite=null;if(w){mountWriter($("#wbody"),[w]);setTimeout(()=>{const b=$("#wbody");if(b)b.scrollIntoView({block:"start"})},50)}}
 }
 
 /* ===================== BẪY HÁN VIỆT & CẶP TỪ DỄ NHẦM ===================== */
@@ -3486,7 +3489,7 @@ function viewDict(){
 }
 document.addEventListener("click",e=>{const bar=$("#lk");const sp=e.target.closest("[data-lk]");
   if(sp){const w=BYH[sp.dataset.lk];if(!w){lkUnknown(bar,sp.dataset.lk);return}
-    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${noteHTML(w.h)}${famHTML(w)}${w.extra?`<span class="muted" style="font-size:.8rem">Từ bổ sung, ngoài 40 ngày học</span>`:`${w.day?`<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a>`:`<span class="muted" style="font-size:.8rem">Từ bạn tự thêm</span>`}`}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button><button class="say" id="lkx" aria-label="Đóng">✕</button>`;
+    bar.innerHTML=`<span class="han" style="font-size:2rem;line-height:1">${w.h}</span><div style="min-width:0;flex:1"><div class="py">${pyHTML(w.p)}</div><div>${esc(w.m)}${w.v?` · <span class="hvs" style="font-size:.74rem">${esc(w.v)}</span>`:""}</div>${noteHTML(w.h)}${famHTML(w)}${w.extra?`<span class="muted" style="font-size:.8rem">Từ bổ sung, ngoài 40 ngày học</span>`:`${w.day?`<a href="#day-${w.day}" class="muted" style="font-size:.8rem">Học ở Ngày ${w.day}</a>`:`<span class="muted" style="font-size:.8rem">Từ bạn tự thêm</span>`}`}</div><button class="say" data-say="${esc(w.h)}" aria-label="Nghe">${SPK}</button>${[...w.h].every(c=>CHARSET.has(c))?`<button class="say" data-writew="${esc(w.h)}" aria-label="Tập viết ${esc(w.h)}" title="Tập viết">✍</button>`:""}<button class="say" id="lkx" aria-label="Đóng">✕</button>`;
     bar.hidden=false;speak(w.h);return}
   if(!e.target.isConnected)return;
   if(!e.target.closest("#lk")||e.target.closest("#lkx")||e.target.closest("#lk a"))bar.hidden=true;
